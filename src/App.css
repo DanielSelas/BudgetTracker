@@ -1,0 +1,879 @@
+/* ===== פריסה ===== */
+
+.app {
+  width: 100%;
+  max-width: 460px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 1.25rem 1rem max(2.5rem, env(safe-area-inset-bottom));
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+}
+
+.topbar h1 {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.center {
+  text-align: center;
+}
+
+.error {
+  margin: 0;
+  color: var(--bad);
+  font-size: 0.875rem;
+}
+
+/* ===== כרטיס ===== */
+
+.card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-align: right;
+}
+
+.card h2 {
+  font-size: 1rem;
+}
+
+.card ul {
+  margin: 0;
+  padding-inline-start: 1rem;
+}
+
+/* ===== כפתורים ===== */
+
+button {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  padding: 0.625rem 1rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button.secondary {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text-h);
+}
+
+button.secondary:hover:not(:disabled) {
+  background: var(--surface-sunken);
+  border-color: var(--border-strong);
+}
+
+button.icon {
+  min-height: 2.25rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text);
+}
+
+button.link {
+  min-height: auto;
+  padding: 0.25rem;
+  background: none;
+  border-color: transparent;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-decoration: underline;
+}
+
+button.link:hover:not(:disabled) {
+  background: none;
+  color: var(--text-h);
+}
+
+.topbar-actions button {
+  min-height: 2.25rem;
+  padding: 0.3125rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+/* ===== שדות ===== */
+
+label {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+input {
+  width: 100%;
+  /* ל-input יש רוחב מובנה של ~20 תווים, והוא לא מתכווץ מתחתיו בתוך
+     grid או flex (min-width: auto), בלי שני אלה הוא פורץ את המסגרת. */
+  min-width: 0;
+  padding: 0.625rem 0.75rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 1rem; /* מתחת ל-16px ספארי מזנק זום בפוקוס */
+  direction: ltr;
+  text-align: left;
+  transition: border-color 0.15s ease;
+}
+
+input::placeholder {
+  color: var(--text-muted);
+}
+
+input:focus {
+  border-color: var(--accent);
+}
+
+input.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+label.checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  color: var(--text-h);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+label.checkbox input {
+  width: auto;
+  min-height: auto;
+  margin: 0.125rem 0 0;
+  accent-color: var(--accent);
+}
+
+/* ===== התחברות ===== */
+
+.login {
+  justify-content: center;
+  min-height: 100svh;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.tabs button {
+  flex: 1;
+}
+
+/* ===== דף הבית ===== */
+
+.budget-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.budget-card {
+  width: 100%;
+  min-height: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-h);
+  text-align: right;
+  font-weight: 500;
+}
+
+.budget-card:hover:not(:disabled) {
+  background: var(--surface);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-md);
+}
+
+.budget-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.budget-card .hint {
+  flex-shrink: 0;
+}
+
+.badge-static {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.badge-static.personal {
+  background: var(--surface-sunken);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.badge-static.shared {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.badge-static.loading {
+  opacity: 0.4;
+}
+
+/* ===== ניווט ===== */
+
+.tabs-main {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+}
+
+.tabs-main button {
+  flex: 1;
+  min-height: 2.25rem;
+  padding: 0.375rem;
+  font-size: 0.875rem;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
+}
+
+.tabs-main button:not(.secondary) {
+  background: var(--surface);
+  color: var(--text-h);
+  box-shadow: var(--shadow-sm);
+}
+
+.tabs-main button.secondary:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-h);
+}
+
+.month-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.month-label {
+  flex: 1;
+  min-height: 2.25rem;
+  padding: 0.375rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.month-label:disabled {
+  opacity: 1;
+  color: var(--text-h);
+  cursor: default;
+}
+
+/* ===== סיכום ===== */
+
+.summary-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.summary-hero .amount {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text-h);
+}
+
+.summary-hero .amount.negative {
+  color: var(--bad);
+}
+
+.summary-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.summary-split > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.summary-split strong {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.base-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  font-size: 0.875rem;
+}
+
+.base-line strong {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.group-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.group-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.8125rem;
+}
+
+.group-list .values {
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.group-list .values {
+  text-align: center;
+}
+
+.group-list .deviation {
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.positive,
+.under { color: var(--good); }
+.over { color: var(--bad); }
+
+/* ===== קטגוריה ===== */
+
+.category-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.category-head h2 {
+  font-size: 1rem;
+}
+
+.category-total {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.target-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  margin-top: -0.375rem;
+}
+
+.target-line strong {
+  font-weight: 600;
+}
+
+.bar {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.bar-fill.over {
+  background: var(--bad);
+}
+
+.unplanned .category-total {
+  color: var(--accent);
+}
+
+/* ===== שורות ===== */
+
+.entry-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.entry-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.entry-row:last-child {
+  border-bottom: none;
+}
+
+.entry-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+}
+
+.entry-name {
+  color: var(--text-h);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry-planned,
+.entry-author {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.entry-planned.over {
+  color: var(--bad);
+}
+
+button.amount-button {
+  min-height: 2.25rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+button.amount-button:hover:not(:disabled) {
+  background: var(--surface-sunken);
+  border-color: var(--border);
+}
+
+.entry-row button.icon {
+  min-height: 2.25rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.entry-row button.icon:hover {
+  background: var(--bad-bg);
+  border-color: transparent;
+  color: var(--bad);
+}
+
+button.badge {
+  align-self: flex-start;
+  min-height: auto;
+  margin-top: 0.125rem;
+  padding: 0.0625rem 0.4375rem;
+  border-radius: 999px;
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+button.badge:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.empty {
+  margin: 0;
+  padding: 0.5rem 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* ===== טפסים בכרטיס ===== */
+
+.entry-form,
+.inline-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.inline-edit {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  border-top: none;
+  padding-top: 0;
+}
+
+.inline-edit .entry-name {
+  flex: 1;
+}
+
+.inline-edit input {
+  width: 6rem;
+  flex: 0 0 auto;
+}
+
+.inline-edit button {
+  min-height: 2.25rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.amounts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.625rem;
+}
+
+.amounts label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.row-actions button {
+  flex: 1;
+}
+
+/* ===== הזמנה ===== */
+
+.invite-code {
+  display: block;
+  padding: 0.875rem;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font-family: var(--mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-align: center;
+  user-select: all;
+}
+
+.code-input {
+  font-family: var(--mono);
+  font-size: 1.125rem;
+  letter-spacing: 0.2em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ===== היסטוריה ===== */
+
+.toggle-group {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.1875rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+}
+
+.toggle-group button {
+  flex: 1;
+  min-height: 2rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.8125rem;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text);
+}
+
+.toggle-group button:not(.secondary) {
+  background: var(--surface);
+  color: var(--text-h);
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-group button.secondary:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-h);
+}
+
+.charts {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  /* ResponsiveContainer מודד את ההורה; בלי זה פריט flex לא מתכווץ
+     מתחת לרוחב התוכן והגרף גולש מהמסך. */
+  min-width: 0;
+}
+
+.charts figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.charts figcaption {
+  margin-bottom: 0.5rem;
+  color: var(--text-h);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.charts figcaption .hint {
+  display: inline;
+  font-weight: 400;
+}
+
+/* Recharts מחשב text-anchor לפי הנחת LTR. כשה-SVG יורש direction: rtl
+   המשמעות של start/end מתהפכת והתוויות נדחפות אל תוך הגרף. */
+.recharts-wrapper text {
+  direction: ltr;
+}
+
+.chart-tooltip {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  color: var(--text-h);
+  font-size: 0.8125rem;
+  text-align: right;
+}
+
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.1875rem;
+}
+
+.tooltip-value {
+  margin-inline-start: auto;
+  font-weight: 600;
+}
+
+.swatch {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 -0.25rem;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.history-table th,
+.history-table td {
+  padding: 0.5rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.history-table tbody th {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.history-table tbody tr:last-child th,
+.history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ===== PWA ===== */
+
+.offline-banner {
+  margin: 0;
+  padding: 0.625rem 1rem;
+  background: var(--accent-bg);
+  border-bottom: 1px solid var(--accent-border);
+  color: var(--text-h);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.toast {
+  position: fixed;
+  inset-inline: 1rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  max-width: 428px;
+  margin: 0 auto;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  color: var(--text-h);
+  font-size: 0.875rem;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
+.toast-actions button {
+  min-height: 2.25rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
