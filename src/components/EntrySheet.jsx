@@ -30,6 +30,7 @@ const AMOUNT_LABEL = {
  */
 export default function EntrySheet({
   initialCategory = 'fixed',
+  initialAmount = 0,
   summary,
   me,
   partner,
@@ -37,7 +38,7 @@ export default function EntrySheet({
   onClose,
 }) {
   const [category, setCategory] = useState(initialCategory)
-  const [amount, setAmount] = useState('')
+  const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : '')
   const [name, setName] = useState('')
   const [planned, setPlanned] = useState('')
   const [recurring, setRecurring] = useState(false)

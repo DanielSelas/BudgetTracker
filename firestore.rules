@@ -94,6 +94,12 @@ service cloud.firestore {
       allow read, write: if signedIn() && uid == request.auth.uid;
     }
 
+    // מכשירים שרשומים לקבלת התראות. פרטי למשתמש; השולח קורא דרך Admin SDK
+    // שעוקף את הכללים, ולכן אין כאן הרשאת קריאה לאף אחד אחר.
+    match /users/{uid}/devices/{token} {
+      allow read, write: if signedIn() && uid == request.auth.uid;
+    }
+
     // הקוד עצמו הוא הסוד; מי שמחזיק בו רשאי לראות לאיזה תקציב הוא שייך
     match /invites/{code} {
       allow get: if signedIn();
