@@ -17,7 +17,7 @@ export default function Sheet({ onClose, children }) {
   // מגיע באותו tick כמו pointermove הסף ייבדק מול ערך ישן.
   const dragDelta = useRef(0)
   const [dragY, setDragY] = useState(0)
-  const [maxHeight, setMaxHeight] = useState('92svh')
+  const [frame, setFrame] = useState(null)
 
   // נעילת גלילת הרקע כל עוד המגירה פתוחה.
   // ספארי באייפון מתעלם מ-overflow: hidden על ה-body, ולכן הדרך היחידה
@@ -44,13 +44,23 @@ export default function Sheet({ onClose, children }) {
     }
   }, [])
 
+  // כשהמקלדת נפתחת ב-iOS חלון הפריסה לא משתנה, רק ה-visualViewport.
+  // לכן לא מספיק לכווץ את הגובה: צריך גם למקם את המגירה מעל המקלדת,
+  // אחרת היא נשארת צמודה לתחתית שמאחוריה ורק הידית מציצה.
   useEffect(() => {
     const viewport = window.visualViewport
     if (!viewport) return
-    const update = () => setMaxHeight(`${Math.round(viewport.height * 0.92)}px`)
+    const update = () => setFrame({
+      top: Math.round(viewport.offsetTop),
+      height: Math.round(viewport.height),
+    })
     update()
     viewport.addEventListener('resize', update)
-    return () => viewport.removeEventListener('resize', update)
+    viewport.addEventListener('scroll', update)
+    return () => {
+      viewport.removeEventListener('resize', update)
+      viewport.removeEventListener('scroll', update)
+    }
   }, [])
 
   useEffect(() => {
@@ -90,6 +100,7 @@ export default function Sheet({ onClose, children }) {
   return (
     <div
       className="sheet-backdrop"
+      style={frame ? { top: frame.top, height: frame.height, bottom: 'auto' } : undefined}
       onClick={(event) => { if (event.target === event.currentTarget) onClose() }}
     >
       <div
@@ -98,7 +109,7 @@ export default function Sheet({ onClose, children }) {
         role="dialog"
         aria-modal="true"
         style={{
-          maxHeight,
+          maxHeight: frame ? Math.round(frame.height * 0.92) : undefined,
           transform: dragY ? `translateY(${dragY}px)` : undefined,
           transition: dragStart.current === null ? 'transform 200ms var(--ease-soft)' : 'none',
         }}

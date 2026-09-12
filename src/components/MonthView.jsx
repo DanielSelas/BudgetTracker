@@ -50,6 +50,9 @@ export default function MonthView({ budgetId, budget, uid }) {
   }), [base, budgetId, month, uid])
 
   const summary = useMemo(() => summarizeMonth(entries), [entries])
+  // בלי הכנסה אין סכום בסיס, ולכן כל היעדים אפס וכל המסך חסר משמעות.
+  // זו הפעולה הראשונה שצריך לעשות בחודש חדש, ולכן היא מקבלת הבלטה.
+  const needsIncome = !loading && summary.totalIncome === 0
   const members = useMemo(() => memberIndex(budget?.members), [budget?.members])
   const me = members.get(uid)
   const partner = members.sorted.find((member) => member.uid !== uid)
@@ -77,6 +80,23 @@ export default function MonthView({ budgetId, budget, uid }) {
         {loading ? <Skeleton /> : (
           <>
             <SummaryCard summary={summary} />
+
+            {needsIncome && (
+              <button
+                type="button"
+                className="prompt-card"
+                data-category="income"
+                onClick={() => setSheet('income')}
+              >
+                <span className="prompt-title">מתחילים מהכנסה</span>
+                <span className="prompt-body">
+                  סכום הבסיס והיעדים של 50/30/20 מחושבים מההכנסה של החודש.
+                  עד שתזינו אותה, כל היעדים יישארו אפס.
+                </span>
+                <span className="prompt-cta">+ הוספת הכנסה</span>
+              </button>
+            )}
+
             <UnplannedCard summary={summary} />
 
             {ORDER.map((category) => (
@@ -95,8 +115,12 @@ export default function MonthView({ budgetId, budget, uid }) {
         )}
       </div>
 
-      <button type="button" className="fab" onClick={() => setSheet('fixed')}>
-        <span className="plus">+</span> הוצאה
+      <button
+        type="button"
+        className="fab"
+        onClick={() => setSheet(needsIncome ? 'income' : 'fixed')}
+      >
+        <span className="plus">+</span> {needsIncome ? 'הכנסה' : 'הוצאה'}
       </button>
 
       {sheet && (
