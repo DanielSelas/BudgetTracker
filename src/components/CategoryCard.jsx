@@ -1,44 +1,52 @@
-import { useState } from 'react'
-import EntryForm from './EntryForm'
 import EntryRow from './EntryRow'
 import { shekels } from '../lib/format'
-import { CATEGORIES, isOverageGood } from '../lib/model'
+import { BUDGET_GROUP_RATIOS, CATEGORIES, isOverageGood } from '../lib/model'
 
-/**
- * כרטיס קטגוריה גנרי. מקבל category כ-prop ומציג את היעד,
- * את היתרה היורדת בזמן אמת, את השורות ואת טופס ההוספה.
- */
-export default function CategoryCard({ category, entries, group, actions, onStopRecurring }) {
-  const [adding, setAdding] = useState(false)
-  const total = entries.reduce((sum, entry) => sum + (entry.actualAmount || 0), 0)
+const ADD_LABEL = {
+  income: '+ הוספת הכנסה',
+  fixed: '+ הוספת הוצאה קבועה',
+  leisure: '+ הוספת הוצאת פנאי',
+  fund: '+ הפקדה לקרן',
+}
+
+export default function CategoryCard({ category, entries, group, authorOf, actions, onAdd, onStopRecurring }) {
   const { label, budgetGroup } = CATEGORIES[category]
+  const ratio = BUDGET_GROUP_RATIOS[budgetGroup]
+
+  const total = entries.reduce((sum, entry) => sum + (entry.actualAmount || 0), 0)
   const hasTarget = Boolean(group) && group.target > 0
   const exceeded = hasTarget && group.remaining < 0
   const goodToExceed = isOverageGood(budgetGroup)
-  const over = exceeded && !goodToExceed
+  const danger = exceeded && !goodToExceed
   const progress = hasTarget ? Math.min(100, (group.actual / group.target) * 100) : 0
 
   return (
-    <section className="card category">
-      <header className="category-head">
-        <h2>{label}</h2>
-        <span className="category-total num">{shekels(total)}</span>
-      </header>
+    <section className="cat-card" data-category={category}>
+      <div className="cat-head">
+        <span className="cat-title">
+          <span className="dot" />
+          <h2>{label}</h2>
+          {ratio && <span className="pct-tag">{Math.round(ratio * 100)}%</span>}
+        </span>
+        <span className="cat-total num">{shekels(total)}</span>
+      </div>
 
       {hasTarget && (
-        <>
-          <div className="target-line">
-            <span className="num">יעד {shekels(group.target)}</span>
-            <strong className={`num ${over ? 'over' : 'under'}`}>
+        <div className="target-block">
+          <div className="target-row">
+            <span className={`left ${danger ? 'danger' : ''}`}>
               {exceeded
-                ? `${goodToExceed ? 'מעבר ליעד' : 'חריגה'} ${shekels(Math.abs(group.remaining))}`
-                : `נותרו ${shekels(group.remaining)}`}
-            </strong>
+                ? goodToExceed
+                  ? <>מעבר ליעד <strong className="num">{shekels(-group.remaining)}</strong>, יפה!</>
+                  : <>חריגה <strong className="num">{shekels(-group.remaining)}</strong></>
+                : <>נותרו <strong className="num">{shekels(group.remaining)}</strong></>}
+            </span>
+            <span className="right num">מתוך יעד {shekels(group.target)}</span>
           </div>
-          <div className="bar" role="presentation">
-            <div className={`bar-fill ${over ? 'over' : ''}`} style={{ width: `${progress}%` }} />
+          <div className="bar">
+            <div className={`bar-fill ${danger ? 'danger' : ''}`} style={{ width: `${progress}%` }} />
           </div>
-        </>
+        </div>
       )}
 
       {entries.length > 0 ? (
@@ -47,6 +55,7 @@ export default function CategoryCard({ category, entries, group, actions, onStop
             <EntryRow
               key={entry.id}
               entry={entry}
+              author={authorOf?.(entry.addedBy)}
               onUpdate={actions.update}
               onRemove={actions.remove}
               onStopRecurring={onStopRecurring}
@@ -57,20 +66,9 @@ export default function CategoryCard({ category, entries, group, actions, onStop
         <p className="empty">אין עדיין שורות</p>
       )}
 
-      {adding ? (
-        <EntryForm
-          category={category}
-          onSubmit={async (values) => {
-            await actions.add(values)
-            setAdding(false)
-          }}
-          onCancel={() => setAdding(false)}
-        />
-      ) : (
-        <button type="button" className="secondary" onClick={() => setAdding(true)}>
-          + הוספת שורה
-        </button>
-      )}
+      <button type="button" className="btn-text" onClick={() => onAdd(category)}>
+        {ADD_LABEL[category]}
+      </button>
     </section>
   )
 }

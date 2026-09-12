@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { createInvite } from '../lib/budgets'
 
-export default function InvitePanel({ budgetId }) {
+export default function InvitePanel({ budgetId, budgetName, showName }) {
   const { user } = useAuth()
   const [invite, setInvite] = useState(null)
   const [copied, setCopied] = useState(false)
@@ -32,34 +32,36 @@ export default function InvitePanel({ budgetId }) {
   }
 
   return (
-    <section className="card">
-      <h2>הזמנת שותף</h2>
+    <section className="invite-panel">
+      <h2>להזמין את בן/בת הזוג</h2>
+      <p className="sub">
+        {invite
+          ? `קוד חד פעמי, תקף עד ${invite.expiresAt.toLocaleDateString('he-IL')}.`
+          : 'קוד חד פעמי לשבוע, נשלח בוואטסאפ.'}
+        {showName && budgetName ? ` לתקציב "${budgetName}".` : ''}
+      </p>
 
       {invite ? (
         <>
-          <p className="subtitle">
-            הקוד תקף עד {invite.expiresAt.toLocaleDateString('he-IL')}, וניתן לשימוש פעם אחת.
-          </p>
-          <output className="invite-code">{invite.code}</output>
-          <button type="button" className="secondary" onClick={handleCopy}>
-            {copied ? 'הועתק ✓' : 'העתק קוד'}
-          </button>
-          <button type="button" className="link" onClick={handleCreate} disabled={busy}>
-            צור קוד אחר
-          </button>
+          <span className="invite-code">{invite.code}</span>
+          <div className="invite-actions">
+            <button type="button" className="chip-button" onClick={handleCopy}>
+              {copied ? 'הועתק ✓' : 'העתקת הקוד'}
+            </button>
+            <button type="button" className="chip-button" onClick={handleCreate} disabled={busy}>
+              קוד אחר
+            </button>
+          </div>
         </>
       ) : (
-        <>
-          <p className="subtitle">
-            צור קוד חד-פעמי ושלח אותו. מי שמזין אותו מצטרף לתקציב הזה.
-          </p>
-          <button type="button" onClick={handleCreate} disabled={busy}>
-            {busy ? 'יוצר...' : 'צור קוד הזמנה'}
+        <div className="invite-actions">
+          <button type="button" className="chip-button" onClick={handleCreate} disabled={busy}>
+            {busy ? 'יוצר...' : 'יצירת קוד הזמנה'}
           </button>
-        </>
+        </div>
       )}
 
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && <p className="notice block" role="alert">{error}</p>}
     </section>
   )
 }

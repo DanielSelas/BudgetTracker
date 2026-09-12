@@ -1,17 +1,16 @@
 import { monthLabel } from '../lib/format'
 import { monthKey, shiftMonth } from '../lib/model'
 
-export default function MonthPicker({ month, onChange }) {
+export default function MonthPicker({ month, onChange, subtitle }) {
   const isCurrent = month === monthKey()
 
   return (
     <div className="month-picker">
-      {/* ציר הזמן זורם ימין-לשמאל כמו הטקסט: אחורה בזמן זה ימינה.
-          לא משתמשים ב-‹ › כי הם תווים משוקפי-דו-כיווניות ומוצגים
-          הפוך ממה שנכתב כאן; ← → אינם משוקפים. */}
+      {/* ציר הזמן זורם ימין לשמאל כמו הטקסט, ולכן אחורה בזמן זה ימינה.
+          לא משתמשים ב-‹ › כי הם תווים משוקפי דו-כיווניות ומוצגים הפוך. */}
       <button
         type="button"
-        className="secondary icon"
+        className="btn-round sm"
         aria-label="החודש הקודם"
         onClick={() => onChange(shiftMonth(month, -1))}
       >
@@ -20,17 +19,18 @@ export default function MonthPicker({ month, onChange }) {
 
       <button
         type="button"
-        className="month-label secondary"
+        className="month-label"
         onClick={() => onChange(monthKey())}
         disabled={isCurrent}
         title={isCurrent ? '' : 'חזרה לחודש הנוכחי'}
       >
-        {monthLabel(month)}
+        <span className="m">{monthLabel(month)}</span>
+        {subtitle && <span className="sub">{subtitle}</span>}
       </button>
 
       <button
         type="button"
-        className="secondary icon"
+        className="btn-round sm"
         aria-label="החודש הבא"
         onClick={() => onChange(shiftMonth(month, 1))}
       >

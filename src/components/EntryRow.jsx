@@ -1,14 +1,12 @@
 import { useState } from 'react'
+import Avatar from './Avatar'
 import { shekels } from '../lib/format'
-import { isEntryConcerning } from '../lib/model'
+import { displayName } from '../lib/members'
 
-export default function EntryRow({ entry, onUpdate, onRemove, onStopRecurring, showAuthor }) {
+export default function EntryRow({ entry, author, onUpdate, onRemove, onStopRecurring }) {
   const [editing, setEditing] = useState(false)
   const [actual, setActual] = useState(String(entry.actualAmount ?? 0))
   const [busy, setBusy] = useState(false)
-
-  const planned = entry.plannedAmount || 0
-  const concerning = isEntryConcerning(entry)
 
   async function save(event) {
     event.preventDefault()
@@ -23,21 +21,30 @@ export default function EntryRow({ entry, onUpdate, onRemove, onStopRecurring, s
 
   if (editing) {
     return (
-      <li className="entry-row editing">
-        <form onSubmit={save} className="inline-edit">
+      <li className="entry-row">
+        <form className="inline-edit" onSubmit={save}>
           <span className="entry-name">{entry.name}</span>
           <input
+            className="input num"
             type="number"
-            inputMode="numeric"
+            inputMode="decimal"
             min="0"
             step="1"
             value={actual}
             onChange={(event) => setActual(event.target.value)}
             autoFocus
           />
-          <button type="submit" disabled={busy}>שמור</button>
-          <button type="button" className="secondary" onClick={() => setEditing(false)}>
+          <button type="submit" className="mini save" disabled={busy}>שמור</button>
+          <button type="button" className="mini cancel" onClick={() => setEditing(false)}>
             ביטול
+          </button>
+          <button
+            type="button"
+            className="mini remove"
+            onClick={() => onRemove(entry.id, entry)}
+            title={entry.recurringId ? 'הסרה מהחודש הזה' : 'מחיקת השורה'}
+          >
+            מחיקה
           </button>
         </form>
       </li>
@@ -46,39 +53,35 @@ export default function EntryRow({ entry, onUpdate, onRemove, onStopRecurring, s
 
   return (
     <li className="entry-row">
-      <div className="entry-main">
-        <span className="entry-name">{entry.name}</span>
-        {planned > 0 && (
-          <span className={`entry-planned num ${concerning ? 'over' : ''}`}>
-            מתוכנן {shekels(planned)}
-          </span>
-        )}
-        {showAuthor && entry.addedBy && (
-          <span className="entry-author">{showAuthor}</span>
-        )}
-        {entry.recurringId && (
-          <button
-            type="button"
-            className="badge"
-            title="לחיצה מפסיקה את החיוב הקבוע מהחודש הבא"
-            onClick={() => onStopRecurring?.(entry)}
-          >
-            קבוע ↻
-          </button>
-        )}
-      </div>
+      <span className="entry-name">{entry.name}</span>
 
-      <button type="button" className="amount-button num" onClick={() => setEditing(true)}>
-        {shekels(entry.actualAmount)}
-      </button>
+      {entry.recurringId && (
+        <button
+          type="button"
+          className="recurring-tag"
+          title="לחיצה מפסיקה את החיוב הקבוע מהחודש הבא"
+          onClick={() => onStopRecurring?.(entry)}
+        >
+          קבוע
+        </button>
+      )}
+
+      {author && (
+        <Avatar
+          member={author.member}
+          index={author.index}
+          size="sm"
+          title={`הוזן על ידי ${displayName(author.member)}`}
+        />
+      )}
 
       <button
         type="button"
-        className="icon"
-        aria-label={entry.recurringId ? `הסרת ${entry.name} מהחודש הזה` : `מחיקת ${entry.name}`}
-        onClick={() => onRemove(entry.id, entry)}
+        className="entry-amount button num"
+        onClick={() => setEditing(true)}
+        aria-label={`עריכה או מחיקה של ${entry.name}`}
       >
-        ✕
+        {shekels(entry.actualAmount)}
       </button>
     </li>
   )

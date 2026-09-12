@@ -18,8 +18,8 @@ export default function OfflineBanner() {
   if (online) return null
 
   return (
-    <p className="offline-banner" role="status">
-      אין חיבור לאינטרנט. השינויים נשמרים במכשיר ויסונכרנו כשהחיבור יחזור.
+    <p className="float-strip" role="status">
+      אין חיבור. השינויים נשמרים במכשיר ויסונכרנו כשהחיבור יחזור.
     </p>
   )
 }

@@ -1,56 +1,31 @@
-import { shekels, signedShekels } from '../lib/format'
-import { isOverageGood } from '../lib/model'
-
-const GROUP_LABELS = {
-  fixed: 'קבועות · 50%',
-  leisure: 'פנאי · 30%',
-  savings: 'חיסכון · 20%',
-}
+import { shekels } from '../lib/format'
 
 export default function SummaryCard({ summary }) {
   return (
-    <section className="card summary">
-      {/* היתרה היא המספר שמסתכלים עליו קודם, ולכן היא לבדה בראש */}
+    <section className="summary">
       <div className="summary-hero">
-        <span className="label">יתרה החודש</span>
+        <span className="cap">נשאר לכם החודש</span>
         <span className={`amount num ${summary.balance < 0 ? 'negative' : ''}`}>
           {shekels(summary.balance)}
         </span>
       </div>
 
-      <div className="summary-split">
+      <div className="summary-tiles">
         <div>
-          <span className="label">הכנסות</span>
-          <strong className="num">{shekels(summary.totalIncome)}</strong>
+          <span className="cap">הכנסות</span>
+          <span className="val income num">{shekels(summary.totalIncome)}</span>
         </div>
         <div>
-          <span className="label">הוצאות</span>
-          <strong className="num">{shekels(summary.totalExpenses)}</strong>
+          <span className="cap">הוצאות</span>
+          <span className="val num">{shekels(summary.totalExpenses)}</span>
         </div>
       </div>
 
-      <div className="base-line">
+      {/* מוצג בלבד. אין בממשק שום דרך לערוך את הבסיס. */}
+      <div className="base-row">
         <span>סכום בסיס <strong className="num">{shekels(summary.baseAmount)}</strong></span>
-        <span className="hint">מחושב מההכנסה</span>
+        <span className="note">מחושב מההכנסה · לא לעריכה</span>
       </div>
-
-      <ul className="group-list">
-        {Object.entries(GROUP_LABELS).map(([group, label]) => {
-          const data = summary.groups[group]
-          const over = data.deviation > 0 && !isOverageGood(group)
-          return (
-            <li key={group}>
-              <span className="label">{label}</span>
-              <span className="values num">
-                {shekels(data.actual)} <span className="hint">/ {shekels(data.target)}</span>
-              </span>
-              <span className={`deviation num ${over ? 'over' : 'under'}`}>
-                {signedShekels(data.deviation)}
-              </span>
-            </li>
-          )
-        })}
-      </ul>
     </section>
   )
 }

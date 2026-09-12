@@ -6,10 +6,10 @@ const JOIN_MESSAGES = {
   invalid: 'הקוד חייב להכיל 8 תווים',
   'not-found': 'לא נמצאה הזמנה עם הקוד הזה',
   used: 'הקוד הזה כבר נוצל',
-  expired: 'תוקף הקוד פג. בקש קוד חדש',
+  expired: 'תוקף הקוד פג. בקשו קוד חדש',
 }
 
-export default function BudgetSetup({ onDone, canCancel = false }) {
+export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
   const { user } = useAuth()
   const [mode, setMode] = useState('create')
   const [name, setName] = useState('')
@@ -17,48 +17,47 @@ export default function BudgetSetup({ onDone, canCancel = false }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  async function handleCreate(event) {
+  const who = user.displayName || user.email || ''
+
+  async function handleSubmit(event) {
     event.preventDefault()
     setError('')
     setBusy(true)
     try {
-      const budgetId = await createBudget({ uid: user.uid, name })
-      onDone?.(budgetId)
+      if (mode === 'create') {
+        const budgetId = await createBudget({ uid: user.uid, name, displayName: who })
+        onDone?.(budgetId)
+      } else {
+        const result = await joinBudgetWithInvite({ uid: user.uid, rawCode: code, displayName: who })
+        if (result.status === 'joined') onDone?.(result.budgetId)
+        else { setError(JOIN_MESSAGES[result.status] || 'ההצטרפות נכשלה'); setBusy(false) }
+      }
     } catch {
-      setError('יצירת התקציב נכשלה. נסה שוב')
-    } finally {
+      setError(mode === 'create' ? 'יצירת התקציב נכשלה' : 'ההצטרפות נכשלה. ודאו שהקוד נכון')
       setBusy(false)
     }
   }
 
-  async function handleJoin(event) {
-    event.preventDefault()
-    setError('')
-    setBusy(true)
-    try {
-      const result = await joinBudgetWithInvite({ uid: user.uid, rawCode: code })
-      if (result.status === 'joined') onDone?.(result.budgetId)
-      else setError(JOIN_MESSAGES[result.status] || 'ההצטרפות נכשלה')
-    } catch {
-      setError('ההצטרפות נכשלה. ודא שהקוד נכון ונסה שוב')
-    } finally {
-      setBusy(false)
-    }
-  }
+  const body = (
+    <form className="sheet" onSubmit={handleSubmit} role="dialog" aria-modal="true">
+      {asSheet && <span className="sheet-handle" />}
+      <h2>{mode === 'create' ? 'תקציב חדש' : 'הצטרפות עם קוד'}</h2>
 
-  return (
-    <section className="card">
-      <div className="tabs">
+      <div className="cat-pills">
         <button
           type="button"
-          className={mode === 'create' ? '' : 'secondary'}
+          className="cat-pill"
+          data-category="fixed"
+          aria-pressed={mode === 'create'}
           onClick={() => { setMode('create'); setError('') }}
         >
           תקציב חדש
         </button>
         <button
           type="button"
-          className={mode === 'join' ? '' : 'secondary'}
+          className="cat-pill"
+          data-category="income"
+          aria-pressed={mode === 'join'}
           onClick={() => { setMode('join'); setError('') }}
         >
           הצטרפות עם קוד
@@ -66,43 +65,58 @@ export default function BudgetSetup({ onDone, canCancel = false }) {
       </div>
 
       {mode === 'create' ? (
-        <form onSubmit={handleCreate} className="stack">
-          <label htmlFor="budget-name">שם התקציב</label>
+        <label className="field">
+          שם התקציב
           <input
-            id="budget-name"
-            className="rtl"
+            className="input"
             required
             maxLength={60}
-            placeholder="למשל: תקציב משפחתי"
+            placeholder="למשל: משק הבית"
             value={name}
             onChange={(event) => setName(event.target.value)}
+            autoFocus
           />
-          <button type="submit" disabled={busy || !name.trim()}>
-            {busy ? 'יוצר...' : 'צור תקציב'}
-          </button>
-        </form>
+        </label>
       ) : (
-        <form onSubmit={handleJoin} className="stack">
-          <label htmlFor="invite-code">קוד הזמנה</label>
+        <label className="field">
+          קוד הזמנה
           <input
-            id="invite-code"
-            className="code-input"
+            className="input code ltr"
             required
             maxLength={11}
             placeholder="ABCD2345"
             value={code}
             onChange={(event) => setCode(event.target.value.toUpperCase())}
+            autoFocus
           />
-          <button type="submit" disabled={busy || !code.trim()}>
-            {busy ? 'מצטרף...' : 'הצטרף'}
-          </button>
-        </form>
+        </label>
       )}
 
-      {error && <p className="error" role="alert">{error}</p>}
-      {canCancel && (
-        <button type="button" className="link" onClick={() => onDone?.(null)}>ביטול</button>
-      )}
-    </section>
+      {error && <p className="notice block" role="alert">{error}</p>}
+
+      <div className="sheet-actions">
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={busy || (mode === 'create' ? !name.trim() : !code.trim())}
+        >
+          {busy ? 'רגע...' : mode === 'create' ? 'יצירה' : 'הצטרפות'}
+        </button>
+        {onClose && (
+          <button type="button" className="btn-secondary" onClick={onClose}>ביטול</button>
+        )}
+      </div>
+    </form>
+  )
+
+  if (!asSheet) return body
+
+  return (
+    <div
+      className="sheet-backdrop"
+      onClick={(event) => { if (event.target === event.currentTarget) onClose?.() }}
+    >
+      {body}
+    </div>
   )
 }

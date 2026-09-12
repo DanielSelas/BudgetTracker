@@ -18,11 +18,13 @@ export default function UpdatePrompt() {
       <span>{needRefresh ? 'יש גרסה חדשה של האפליקציה' : 'האפליקציה זמינה גם ללא חיבור'}</span>
       <div className="toast-actions">
         {needRefresh && (
-          <button type="button" onClick={() => updateServiceWorker(true)}>רענן</button>
+          <button type="button" className="go" onClick={() => updateServiceWorker(true)}>
+            רענון
+          </button>
         )}
         <button
           type="button"
-          className="secondary"
+          className="dismiss"
           onClick={() => { setOfflineReady(false); setNeedRefresh(false) }}
         >
           סגור

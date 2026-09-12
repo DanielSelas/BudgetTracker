@@ -3,33 +3,52 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { BudgetProvider, useBudget } from './context/BudgetContext'
 import Login from './components/Login'
 import BudgetSetup from './components/BudgetSetup'
-import InvitePanel from './components/InvitePanel'
-import { isFirebaseConfigured, missingFirebaseKeys } from './lib/firebase'
+import BudgetHome from './components/BudgetHome'
 import MonthView from './components/MonthView'
 import HistoryView from './components/HistoryView'
-import BudgetHome from './components/BudgetHome'
+import BottomNav from './components/BottomNav'
 import UpdatePrompt from './components/UpdatePrompt'
 import OfflineBanner from './components/OfflineBanner'
+import { isFirebaseConfigured, missingFirebaseKeys } from './lib/firebase'
 import './App.css'
 
 function ConfigError() {
   return (
     <main className="app">
-      <h1>BudgetTracker</h1>
-      <section className="card">
-        <p>❌ חסרות הגדרות Firebase בקובץ <code>.env.local</code>:</p>
+      <div className="app-scroll">
+        <header className="screen-head"><h1>BudgetTracker</h1></header>
+        <p className="notice block">חסרות הגדרות Firebase בקובץ <code>.env.local</code>:</p>
         <ul>{missingFirebaseKeys.map((key) => <li key={key}><code>{key}</code></li>)}</ul>
-      </section>
+      </div>
+    </main>
+  )
+}
+
+function Loading({ label }) {
+  return (
+    <main className="app">
+      <div className="app-scroll">
+        <div className="skeleton" style={{ height: 120, marginTop: 24 }} />
+        <div className="skeleton" style={{ height: 200 }} />
+        <span className="hint center">{label}</span>
+      </div>
     </main>
   )
 }
 
 function Onboarding() {
+  const { selectBudget } = useBudget()
   return (
     <main className="app">
-      <h1>BudgetTracker</h1>
-      <p className="subtitle">צור תקציב חדש, או הצטרף לתקציב קיים עם קוד הזמנה.</p>
-      <BudgetSetup />
+      <div className="app-scroll">
+        <header className="screen-head">
+          <div>
+            <h1>בואו נתחיל</h1>
+            <p className="muted">צרו תקציב חדש, או הצטרפו לקיים עם קוד הזמנה.</p>
+          </div>
+        </header>
+        <BudgetSetup onDone={(budgetId) => budgetId && selectBudget(budgetId)} />
+      </div>
     </main>
   )
 }
@@ -37,61 +56,49 @@ function Onboarding() {
 function Workspace() {
   const { user } = useAuth()
   const { budget, budgetId, goHome } = useBudget()
-  const [showInvite, setShowInvite] = useState(false)
   const [tab, setTab] = useState('month')
+
+  function handleNav(next) {
+    if (next === 'budgets') goHome()
+    else setTab(next)
+  }
 
   return (
     <main className="app">
-      <header className="topbar">
-        <button type="button" className="secondary icon" aria-label="חזרה לתקציבים" onClick={goHome}>
-          →
-        </button>
-        <h1>{budget?.name || 'BudgetTracker'}</h1>
-        <div className="topbar-actions">
-          <button type="button" className="secondary" onClick={() => setShowInvite((on) => !on)}>
-            {showInvite ? 'סגור' : 'הזמנה'}
-          </button>
-        </div>
-      </header>
-
-      {showInvite && <InvitePanel budgetId={budgetId} />}
-
-      <nav className="tabs-main">
-        <button
-          type="button"
-          className={tab === 'month' ? '' : 'secondary'}
-          onClick={() => setTab('month')}
-        >
-          החודש
-        </button>
-        <button
-          type="button"
-          className={tab === 'history' ? '' : 'secondary'}
-          onClick={() => setTab('history')}
-        >
-          היסטוריה
-        </button>
-      </nav>
-
       {tab === 'month'
-        ? <MonthView budgetId={budgetId} uid={user.uid} />
+        ? <MonthView budgetId={budgetId} budget={budget} uid={user.uid} />
         : <HistoryView budgetId={budgetId} />}
+      <BottomNav active={tab} onChange={handleNav} />
+    </main>
+  )
+}
 
+function Home() {
+  const { selectBudget, budgets } = useBudget()
+  return (
+    <main className="app">
+      <BudgetHome />
+      <BottomNav
+        active="budgets"
+        onChange={(next) => {
+          if (next !== 'budgets' && budgets[0]) selectBudget(budgets[0].id)
+        }}
+      />
     </main>
   )
 }
 
 function BudgetGate() {
   const { loading, hasNoBudgets, budgetId } = useBudget()
-  if (loading) return <main className="app"><p>טוען תקציבים...</p></main>
+  if (loading) return <Loading label="טוען תקציבים" />
   if (hasNoBudgets) return <Onboarding />
-  if (!budgetId) return <BudgetHome />
+  if (!budgetId) return <Home />
   return <Workspace />
 }
 
 function AuthGate() {
   const { user, loading } = useAuth()
-  if (loading) return <main className="app"><p>טוען...</p></main>
+  if (loading) return <Loading label="מתחבר" />
   if (!user) return <Login />
   return (
     <BudgetProvider>
@@ -104,8 +111,8 @@ export default function App() {
   if (!isFirebaseConfigured) return <ConfigError />
   return (
     <AuthProvider>
-      <OfflineBanner />
       <AuthGate />
+      <OfflineBanner />
       <UpdatePrompt />
     </AuthProvider>
   )

@@ -1,8 +1,8 @@
 export const CATEGORIES = {
   income: { label: 'הכנסות', budgetGroup: 'none' },
-  fixed: { label: 'הוצאות קבועות', budgetGroup: 'fixed' },
-  leisure: { label: 'הוצאות פנאי', budgetGroup: 'leisure' },
-  fund: { label: 'הפקדות לקרן', budgetGroup: 'savings' },
+  fixed: { label: 'קבועות', budgetGroup: 'fixed' },
+  leisure: { label: 'פנאי', budgetGroup: 'leisure' },
+  fund: { label: 'קרן', budgetGroup: 'savings' },
 }
 
 export const BUDGET_GROUP_RATIOS = {

@@ -1,14 +1,36 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import Avatar from './Avatar'
 import BudgetSetup from './BudgetSetup'
+import InvitePanel from './InvitePanel'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
+import { membersSentence, sortMembers } from '../lib/members'
+import { useBudgetBalance } from '../hooks/useBudgetBalance'
+import { shekels } from '../lib/format'
 
-function BudgetBadge({ members }) {
-  if (!members) return <span className="badge-static loading">טוען...</span>
-  const shared = members.length > 1
+function Remaining({ budgetId }) {
+  const balance = useBudgetBalance(budgetId)
+  if (balance === null) return null
   return (
-    <span className={`badge-static ${shared ? 'shared' : 'personal'}`}>
-      {shared ? `👥 משותף · ${members.length}` : '👤 אישי'}
+    <span className="budget-remaining">
+      נשאר החודש <strong className="num">{shekels(balance)}</strong>
+    </span>
+  )
+}
+
+function MemberRow({ budget, isOwner }) {
+  const members = sortMembers(budget.members)
+  if (!budget.members) return <span className="member-row">טוען...</span>
+
+  return (
+    <span className="member-row">
+      {members.map((member, index) => (
+        <Avatar key={member.uid} member={member} index={index} stacked={index > 0} />
+      ))}
+      <span className="names">
+        {members.length > 1 ? membersSentence(members) : 'רק אתה רואה אותו'}
+        {isOwner ? ' · נוצר על ידך' : ''}
+      </span>
     </span>
   )
 }
@@ -17,38 +39,93 @@ export default function BudgetHome() {
   const { user, signOut } = useAuth()
   const { budgets, selectBudget } = useBudget()
   const [adding, setAdding] = useState(false)
+  const [inviteFor, setInviteFor] = useState(null)
+
+  const target = useMemo(
+    () => budgets.find((budget) => budget.id === inviteFor) ?? budgets[0] ?? null,
+    [budgets, inviteFor],
+  )
+
+  useEffect(() => {
+    if (!inviteFor && budgets.length === 1) setInviteFor(budgets[0].id)
+  }, [budgets, inviteFor])
 
   return (
-    <main className="app">
-      <header className="topbar">
-        <h1>התקציבים שלי</h1>
-        <button type="button" className="secondary" onClick={signOut}>התנתקות</button>
-      </header>
+    <>
+      <div className="app-scroll">
+        <header className="screen-head">
+          <div>
+            <h1>התקציבים שלי</h1>
+            <p className="muted">{user.email}</p>
+          </div>
+          <button type="button" className="btn-round" aria-label="התנתקות" onClick={signOut}>
+            ↪
+          </button>
+        </header>
 
-      <ul className="budget-list">
-        {budgets.map((budget) => (
-          <li key={budget.id}>
-            <button type="button" className="budget-card" onClick={() => selectBudget(budget.id)}>
-              <span className="budget-name">{budget.name}</span>
-              <BudgetBadge members={budget.members} />
-              {budget.ownerUid === user.uid && <span className="hint">נוצר על ידך</span>}
-            </button>
-          </li>
-        ))}
-      </ul>
+        <ul className="budget-list">
+          {budgets.map((budget) => {
+            const shared = (budget.members?.length ?? 1) > 1
+            const isOwner = budget.ownerUid === user.uid
+            return (
+              <li key={budget.id}>
+                <button
+                  type="button"
+                  className={`budget-card ${shared ? 'shared' : ''}`}
+                  onClick={() => selectBudget(budget.id)}
+                >
+                  <span className="budget-card-top">
+                    <span className="budget-name">{budget.name}</span>
+                    <span className={`tag ${shared ? 'shared' : ''}`}>
+                      {budget.members
+                        ? shared ? `משותף · ${budget.members.length}` : 'אישי'
+                        : 'טוען...'}
+                    </span>
+                  </span>
 
-      {adding ? (
-        <BudgetSetup canCancel onDone={(budgetId) => {
-          setAdding(false)
-          if (budgetId) selectBudget(budgetId)
-        }} />
-      ) : (
-        <button type="button" className="secondary" onClick={() => setAdding(true)}>
-          + תקציב נוסף או הצטרפות עם קוד
+                  <MemberRow budget={budget} isOwner={isOwner} />
+                  <Remaining budgetId={budget.id} />
+                </button>
+
+                {budgets.length > 1 && (
+                  <div className="invite-actions">
+                    <button
+                      type="button"
+                      className="chip-button"
+                      onClick={() => setInviteFor(budget.id)}
+                    >
+                      הזמנה לתקציב הזה
+                    </button>
+                  </div>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+
+        <button type="button" className="dashed-card" onClick={() => setAdding(true)}>
+          + תקציב חדש או הצטרפות עם קוד
         </button>
-      )}
 
-      <p className="hint center">מחובר כ-{user.email}</p>
-    </main>
+        {target && (
+          <InvitePanel
+            budgetId={target.id}
+            budgetName={target.name}
+            showName={budgets.length > 1}
+          />
+        )}
+      </div>
+
+      {adding && (
+        <BudgetSetup
+          asSheet
+          onClose={() => setAdding(false)}
+          onDone={(budgetId) => {
+            setAdding(false)
+            if (budgetId) selectBudget(budgetId)
+          }}
+        />
+      )}
+    </>
   )
 }

@@ -26,7 +26,7 @@ export function normalizeInviteCode(raw) {
  * יוצר תקציב, את מסמך החבר של היוצר ואת האינדקס האישי, בכתיבה אטומית אחת.
  * מחזיר את מזהה התקציב.
  */
-export async function createBudget({ uid, name }) {
+export async function createBudget({ uid, name, displayName = '' }) {
   const budgetRef = doc(collection(db, 'budgets'))
 
   // שני שלבים ולא כתיבה אטומית אחת: הכלל שמאשר את מסמך החבר של הבעלים
@@ -42,6 +42,7 @@ export async function createBudget({ uid, name }) {
   batch.set(doc(budgetRef, 'members', uid), {
     uid,
     role: 'owner',
+    displayName,
     joinedAt: serverTimestamp(),
   })
   batch.set(doc(db, 'users', uid, 'memberships', budgetRef.id), {
@@ -88,7 +89,7 @@ export async function peekInvite(rawCode) {
  * מצרף את המשתמש לתקציב ומכבה את ההזמנה, הכל או כלום.
  * הכתיבה האטומית היא שמונעת קוד שנוצל אך ההצטרפות נכשלה, או להפך.
  */
-export async function joinBudgetWithInvite({ uid, rawCode }) {
+export async function joinBudgetWithInvite({ uid, rawCode, displayName = '' }) {
   const invite = await peekInvite(rawCode)
   if (invite.status !== 'ok') return invite
 
@@ -98,6 +99,7 @@ export async function joinBudgetWithInvite({ uid, rawCode }) {
   batch.set(doc(db, 'budgets', budgetId, 'members', uid), {
     uid,
     role: 'member',
+    displayName,
     inviteCode: code,
     joinedAt: serverTimestamp(),
   })
