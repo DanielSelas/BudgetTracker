@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Avatar from './Avatar'
+import Sheet from './Sheet'
 import { shekels } from '../lib/format'
 import { CATEGORIES, calcBaseAmount, groupTarget } from '../lib/model'
 
@@ -45,12 +46,6 @@ export default function EntrySheet({
 
   useEffect(() => setCategory(initialCategory), [initialCategory])
 
-  useEffect(() => {
-    const onKey = (event) => { if (event.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
   const value = Number(amount) || 0
 
   // התצוגה המקדימה היא מה שהופך את הטופס לשימושי: רואים את ההשפעה לפני השמירה
@@ -95,12 +90,8 @@ export default function EntrySheet({
   const isIncome = category === 'income'
 
   return (
-    <div
-      className="sheet-backdrop"
-      onClick={(event) => { if (event.target === event.currentTarget) onClose() }}
-    >
-      <form className="sheet" onSubmit={handleSubmit} role="dialog" aria-modal="true">
-        <span className="sheet-handle" />
+    <Sheet onClose={onClose}>
+      <form className="sheet-form" onSubmit={handleSubmit}>
         <h2>{isIncome ? 'הכנסה חדשה' : 'הוצאה חדשה'}</h2>
 
         <div className="cat-pills">
@@ -186,6 +177,6 @@ export default function EntrySheet({
           <button type="button" className="btn-secondary" onClick={onClose}>ביטול</button>
         </div>
       </form>
-    </div>
+    </Sheet>
   )
 }

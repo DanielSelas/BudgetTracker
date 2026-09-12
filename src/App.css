@@ -872,6 +872,10 @@ button:disabled {
   max-width: 480px;
   max-height: 92svh;
   overflow-y: auto;
+  /* בלי זה iOS מגלגל את הדף שמאחור ברגע שמגיעים לקצה המגירה */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   background: var(--color-bg);
   border-radius: 36px 36px 0 0;
   padding: 14px 22px calc(30px + env(safe-area-inset-bottom));
@@ -880,6 +884,22 @@ button:disabled {
   gap: 18px;
   text-align: right;
   animation: rise 260ms var(--ease-soft);
+}
+
+.sheet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* אותו טופס מחוץ למגירה, במסך ה-onboarding */
+.sheet.sheet-static {
+  max-height: none;
+  overflow: visible;
+  animation: none;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  padding: 22px;
 }
 
 @keyframes rise { from { transform: translateY(100%); } }

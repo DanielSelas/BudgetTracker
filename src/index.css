@@ -102,6 +102,8 @@ body {
   min-height: 100svh;
   background: var(--color-bg);
   color: var(--color-text);
+  /* מונע מהמחווה בתוך המגירה להתגלגל אל הדף שמאחוריה */
+  overscroll-behavior-y: none;
 }
 
 #root {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Sheet from './Sheet'
 import { useAuth } from '../context/AuthContext'
 import { createBudget, joinBudgetWithInvite } from '../lib/budgets'
 
@@ -39,8 +40,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
   }
 
   const body = (
-    <form className="sheet" onSubmit={handleSubmit} role="dialog" aria-modal="true">
-      {asSheet && <span className="sheet-handle" />}
+    <form className={asSheet ? 'sheet-form' : 'sheet sheet-static'} onSubmit={handleSubmit}>
       <h2>{mode === 'create' ? 'תקציב חדש' : 'הצטרפות עם קוד'}</h2>
 
       <div className="cat-pills">
@@ -111,12 +111,5 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
 
   if (!asSheet) return body
 
-  return (
-    <div
-      className="sheet-backdrop"
-      onClick={(event) => { if (event.target === event.currentTarget) onClose?.() }}
-    >
-      {body}
-    </div>
-  )
+  return <Sheet onClose={onClose}>{body}</Sheet>
 }
