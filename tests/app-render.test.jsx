@@ -88,3 +88,36 @@ describe('גבול שגיאה', () => {
     expect(container.textContent).toBe('תקין')
   })
 })
+
+describe('כתיבות ל-Firestore', () => {
+  /**
+   * הפונקציה הזו השתמשה ב-updateDoc בלי לייבא אותו, ונפלה רק אחרי
+   * התחברות. בדיקה שקוראת לכל כתיבה בפועל תופסת ייבוא חסר מיד.
+   */
+  it('כל פעולת כתיבה רצה בלי משתנה חסר', async () => {
+    const budgets = await import('../src/lib/budgets')
+    const uid = 'u1'
+
+    await expect(budgets.setMemberName({ budgetId: 'b1', uid, displayName: 'דניאל' }))
+      .resolves.not.toThrow()
+    await expect(budgets.createBudget({ uid, name: 'בית', displayName: 'דניאל' }))
+      .resolves.not.toThrow()
+    await expect(budgets.createInvite({ uid, budgetId: 'b1' }))
+      .resolves.not.toThrow()
+
+    const recurring = await import('../src/lib/recurring')
+    await expect(recurring.createTemplate({
+      budgetId: 'b1', uid, month: '2026-09', category: 'fixed', name: 'שכר דירה',
+      plannedAmount: 0, actualAmount: 100,
+    })).resolves.not.toThrow()
+    await expect(recurring.skipMonth('b1', 'r1', '2026-09')).resolves.not.toThrow()
+    await expect(recurring.stopTemplate('b1', 'r1')).resolves.not.toThrow()
+
+    const { entryActions } = await import('../src/hooks/useEntries')
+    const actions = entryActions({ budgetId: 'b1', month: '2026-09', uid })
+    await expect(actions.add({ category: 'fixed', name: 'x', actualAmount: 1 }))
+      .resolves.not.toThrow()
+    await expect(actions.update('e1', { actualAmount: 2 })).resolves.not.toThrow()
+    await expect(actions.remove('e1')).resolves.not.toThrow()
+  })
+})
