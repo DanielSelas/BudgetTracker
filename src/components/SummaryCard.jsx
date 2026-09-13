@@ -34,7 +34,6 @@ export default function SummaryCard({ summary }) {
         {pending
           ? <span>סכום בסיס <strong>טרם חושב</strong></span>
           : <span>סכום בסיס <strong className="num">{shekels(summary.baseAmount)}</strong></span>}
-        <span className="note">מחושב מההכנסה · לא לעריכה</span>
       </div>
     </section>
   )
