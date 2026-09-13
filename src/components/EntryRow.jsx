@@ -19,6 +19,16 @@ export default function EntryRow({ entry, author, onUpdate, onRemove, onStopRecu
     }
   }
 
+  if (entry.linkedTripId) {
+    return (
+      <li className="entry-row">
+        <span className="entry-name">{entry.name}</span>
+        <span className="recurring-tag as-tag">מקושר</span>
+        <span className="entry-amount num">{shekels(entry.actualAmount)}</span>
+      </li>
+    )
+  }
+
   if (editing) {
     return (
       <li className="entry-row">

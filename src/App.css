@@ -1417,3 +1417,17 @@ select.input {
 .trip-head .muted {
   margin-top: 2px;
 }
+
+.recurring-tag.as-tag {
+  cursor: default;
+  background: var(--color-neutral-200);
+}
+
+.recurring-tag.as-tag:hover {
+  background: var(--color-neutral-200);
+}
+
+.btn-text.danger-text {
+  align-self: center;
+  color: var(--color-danger);
+}

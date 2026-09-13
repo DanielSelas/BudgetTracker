@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test:rules": "firebase emulators:exec --only firestore --project budgettracker-rules-test \"vitest run tests/rules.test.js\"",
-    "test": "vitest run tests/model.test.js tests/recurring.test.js",
+    "test": "vitest run --environment jsdom tests/model.test.js tests/recurring.test.js tests/trips.test.js",
     "deploy": "npm run build && firebase deploy --only hosting,firestore"
   },
   "dependencies": {

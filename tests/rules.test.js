@@ -270,6 +270,11 @@ describe('entries', () => {
   it('אי אפשר לשנות מי הזין את הרשומה', async () => {
     await assertFails(updateDoc(doc(as(PARTNER), 'entries', 'e1'), { addedBy: PARTNER }))
   })
+
+  // בלי בדיקה כזו אפשר לשבור עדכון לגמרי ולא לשים לב, כי כל השאר מאמתות דחיות
+  it('חבר יכול לעדכן סכום של שורה קיימת', async () => {
+    await assertSucceeds(updateDoc(doc(as(OWNER), 'entries', 'e1'), { actualAmount: 6000 }))
+  })
 })
 
 describe('entries query (list)', () => {
@@ -412,6 +417,16 @@ describe('סוגי תקציב ותאריכים', () => {
     await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { type: 'trip' }))
   })
 
+  // תקציבים שנוצרו לפני שהיה שדה type חייבים להישאר ניתנים לעדכון
+  it('תקציב ישן בלי שדה type עדיין ניתן לעדכון', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await setDoc(doc(db, 'budgets', 'legacy'), { name: 'ישן', ownerUid: OWNER })
+      await setDoc(doc(db, 'budgets', 'legacy', 'members', OWNER), { uid: OWNER, role: 'owner' })
+    })
+    await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', 'legacy'), { name: 'ישן ומעודכן' }))
+  })
+
   it('מקבל קטגוריות טיול', async () => {
     await assertSucceeds(
       setDoc(doc(as(OWNER), 'entries', 'tr1'), entry({
@@ -439,6 +454,43 @@ describe('סוגי תקציב ותאריכים', () => {
   it('רשומה בלי תאריך עדיין תקפה', async () => {
     await assertSucceeds(
       setDoc(doc(as(OWNER), 'entries', 'tr4'), entry({ category: 'fixed' })),
+    )
+  })
+})
+
+describe('שורה מסכמת של טיול', () => {
+  const rollup = (overrides = {}) => entry({
+    category: 'unplanned',
+    budgetGroup: 'none',
+    name: 'טיול: יוון',
+    actualAmount: 4650,
+    linkedTripId: 'trip-1',
+    ...overrides,
+  })
+
+  it('חבר בתקציב הבית יכול לכתוב אותה', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'entries', 'trip_trip-1__2026-09'), rollup()),
+    )
+  })
+
+  it('מי שאינו חבר בתקציב הבית לא יכול', async () => {
+    await assertFails(
+      setDoc(doc(as(STRANGER), 'entries', 'trip_trip-1__2026-09'), rollup({ addedBy: STRANGER })),
+    )
+  })
+
+  it('שותף אחר יכול לעדכן את הסכום בלי לגעת במי שיצר', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await setDoc(doc(db, 'entries', 'trip_trip-1__2026-09'), rollup())
+      await setDoc(doc(db, 'budgets', BUDGET, 'members', PARTNER), { uid: PARTNER, role: 'member' })
+    })
+    await assertSucceeds(
+      updateDoc(doc(as(PARTNER), 'entries', 'trip_trip-1__2026-09'), { actualAmount: 5000 }),
+    )
+    await assertFails(
+      updateDoc(doc(as(PARTNER), 'entries', 'trip_trip-1__2026-09'), { addedBy: PARTNER }),
     )
   })
 })

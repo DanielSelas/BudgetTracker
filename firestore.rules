@@ -40,9 +40,12 @@ service cloud.firestore {
 
       // הבעלים וסוג התקציב אינם ניתנים לשינוי. שינוי סוג היה הופך
       // רשומות קיימות לחסרות משמעות מול המסך שמציג אותן.
+      // get עם ברירת מחדל ולא גישה ישירה: לתקציבים שנוצרו לפני שהיה
+      // שדה type אין אותו כלל, וקריאה ישירה הייתה זורקת ושוברת כל עדכון.
       allow update: if isMember(budgetId)
         && request.resource.data.ownerUid == resource.data.ownerUid
-        && request.resource.data.type == resource.data.type;
+        && request.resource.data.get('type', 'household')
+           == resource.data.get('type', 'household');
 
       allow delete: if isOwner(budgetId);
 
