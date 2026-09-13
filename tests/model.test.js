@@ -204,3 +204,67 @@ describe('בלתם כקטגוריה אמיתית', () => {
     expect(summary.groups.savings.actual).toBe(0)
   })
 })
+
+describe('סוג תקציב', () => {
+  it('תקציב ישן בלי שדה type הוא משק בית', async () => {
+    const { budgetType, isTrip } = await import('../src/lib/model')
+    expect(budgetType({ name: 'ישן' })).toBe('household')
+    expect(budgetType(undefined)).toBe('household')
+    expect(isTrip({ type: 'trip' })).toBe(true)
+    expect(isTrip({ type: 'household' })).toBe(false)
+  })
+})
+
+describe('summarizeTrip', () => {
+  const tripEntry = (category, actualAmount) => ({ category, actualAmount })
+
+  it('מסגרת פחות מה שהוצא', async () => {
+    const { summarizeTrip } = await import('../src/lib/model')
+    const summary = summarizeTrip([
+      tripEntry('lodging', 4000),
+      tripEntry('dining', 1200),
+      tripEntry('attractions', 800),
+    ], 12000)
+
+    expect(summary.spent).toBe(6000)
+    expect(summary.remaining).toBe(6000)
+    expect(summary.progress).toBe(50)
+    expect(summary.totals.lodging).toBe(4000)
+  })
+
+  it('חריגה מהמסגרת היא שלילית, והפס נעצר ב-100', async () => {
+    const { summarizeTrip } = await import('../src/lib/model')
+    const summary = summarizeTrip([tripEntry('lodging', 15000)], 12000)
+    expect(summary.remaining).toBe(-3000)
+    expect(summary.progress).toBe(100)
+  })
+
+  it('קטגוריה לא מוכרת נופלת ל"אחר" ולא נעלמת', async () => {
+    const { summarizeTrip } = await import('../src/lib/model')
+    const summary = summarizeTrip([tripEntry('משהו', 500)], 1000)
+    expect(summary.totals.other).toBe(500)
+    expect(summary.spent).toBe(500)
+  })
+
+  it('טיול בלי מסגרת לא מתפוצץ', async () => {
+    const { summarizeTrip } = await import('../src/lib/model')
+    const summary = summarizeTrip([tripEntry('dining', 300)], 0)
+    expect(summary.progress).toBe(0)
+    expect(summary.remaining).toBe(-300)
+  })
+})
+
+describe('תאריך רשומה', () => {
+  it('גוזר חודש מתאריך', async () => {
+    const { monthOfDate } = await import('../src/lib/model')
+    expect(monthOfDate('2026-12-31')).toBe('2026-12')
+    expect(monthOfDate('2027-01-02')).toBe('2027-01')
+    expect(monthOfDate(undefined)).toBe('')
+  })
+
+  it('תאריך היום מרופד נכון', async () => {
+    const { todayDate } = await import('../src/lib/model')
+    expect(todayDate(new Date(2026, 0, 5))).toBe('2026-01-05')
+    expect(todayDate(new Date(2026, 11, 31))).toBe('2026-12-31')
+  })
+})

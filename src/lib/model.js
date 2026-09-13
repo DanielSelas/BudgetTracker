@@ -118,3 +118,76 @@ export function isEntryConcerning(entry) {
   if (entry.category === 'fund') return false
   return actual > planned
 }
+
+/* ===== סוגי תקציב ===== */
+
+export const BUDGET_TYPES = {
+  household: {
+    label: 'משק בית',
+    hint: 'חודש אחרי חודש, לפי עקרון 50/30/20 מתוך ההכנסה.',
+  },
+  trip: {
+    label: 'טיול',
+    hint: 'מסגרת אחת לכל הטיול, בלי חודשים ובלי יעדים לכל קטגוריה.',
+  },
+}
+
+/** תקציבים שנוצרו לפני שהיה שדה type הם משק בית. */
+export const budgetType = (budget) => (budget?.type === 'trip' ? 'trip' : 'household')
+
+export const isTrip = (budget) => budgetType(budget) === 'trip'
+
+/**
+ * קטגוריות הטיול. אין להן budgetGroup כי אין בטיול יחס 50/30/20,
+ * רק מסגרת כוללת.
+ */
+export const TRIP_CATEGORIES = {
+  lodging: { label: 'לינה' },
+  transport: { label: 'התניידות' },
+  attractions: { label: 'אטרקציות' },
+  dining: { label: 'מסעדות' },
+  shopping: { label: 'שופינג' },
+  other: { label: 'אחר' },
+}
+
+export const TRIP_ORDER = Object.keys(TRIP_CATEGORIES)
+
+/** כל קטגוריה חוקית באפליקציה, לצורך ולידציה. */
+export const ALL_CATEGORIES = [...Object.keys(CATEGORIES), ...TRIP_ORDER]
+
+/** סיכום טיול: מסגרת אחת, בלי בסיס ובלי יעדים לקטגוריה. */
+export function summarizeTrip(entries, frame = 0) {
+  const byCategory = Object.fromEntries(TRIP_ORDER.map((key) => [key, []]))
+  let spent = 0
+
+  for (const entry of entries) {
+    const amount = entry.actualAmount || 0
+    spent += amount
+    const bucket = byCategory[entry.category] ? entry.category : 'other'
+    byCategory[bucket].push(entry)
+  }
+
+  const totals = Object.fromEntries(
+    TRIP_ORDER.map((key) => [
+      key,
+      byCategory[key].reduce((sum, entry) => sum + (entry.actualAmount || 0), 0),
+    ]),
+  )
+
+  return {
+    frame,
+    spent,
+    remaining: frame - spent,
+    progress: frame > 0 ? Math.min(100, (spent / frame) * 100) : 0,
+    byCategory,
+    totals,
+  }
+}
+
+/** מפתח חודש מתוך תאריך רשומה, לצורך שיוך הוצאות טיול לחודש. */
+export const monthOfDate = (date) => String(date || '').slice(0, 7)
+
+/** תאריך היום בפורמט שנשמר ברשומה. */
+export function todayDate(now = new Date()) {
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}

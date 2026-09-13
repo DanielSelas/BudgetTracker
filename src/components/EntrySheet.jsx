@@ -2,15 +2,20 @@ import { useEffect, useMemo, useState } from 'react'
 import Avatar from './Avatar'
 import Sheet from './Sheet'
 import { shekels } from '../lib/format'
-import { CATEGORIES, calcBaseAmount, groupTarget } from '../lib/model'
+import { CATEGORIES, TRIP_CATEGORIES, TRIP_ORDER, calcBaseAmount, groupTarget, todayDate } from '../lib/model'
 
-const PILLS = [
+const MONTH_PILLS = [
   { category: 'income', label: 'הכנסה' },
   { category: 'fixed', label: 'קבועה' },
   { category: 'leisure', label: 'פנאי' },
   { category: 'fund', label: 'קרן' },
   { category: 'unplanned', label: 'בלתם' },
 ]
+
+const TRIP_PILLS = TRIP_ORDER.map((category) => ({
+  category,
+  label: TRIP_CATEGORIES[category].label,
+}))
 
 const DEFAULT_NAME = {
   income: 'הכנסה',
@@ -44,6 +49,7 @@ export default function EntrySheet({
   const [name, setName] = useState('')
   const [planned, setPlanned] = useState('')
   const [recurring, setRecurring] = useState(false)
+  const [date, setDate] = useState(todayDate)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -54,6 +60,15 @@ export default function EntrySheet({
   // התצוגה המקדימה היא מה שהופך את הטופס לשימושי: רואים את ההשפעה לפני השמירה
   const impact = useMemo(() => {
     if (!summary) return null
+
+    if (trip) {
+      if (summary.frame <= 0) return 'לא הוגדרה מסגרת לטיול הזה.'
+      const left = summary.remaining - value
+      return left >= 0
+        ? `אחרי זה יישארו ${shekels(left)} מתוך ${shekels(summary.frame)}.`
+        : `אחרי זה תהיה חריגה של ${shekels(-left)} מהמסגרת.`
+    }
+
     if (category === 'income') {
       const nextBase = calcBaseAmount(summary.totalIncome + value)
       return `אחרי ההכנסה הזו סכום הבסיס יהיה ${shekels(nextBase)}.`
@@ -74,7 +89,7 @@ export default function EntrySheet({
     return left >= 0
       ? `אחרי זה יישארו ב${label} ${shekels(left)} מתוך ${shekels(target)}.`
       : `אחרי זה תהיה חריגה של ${shekels(-left)} מעבר ליעד ${shekels(target)}.`
-  }, [summary, category, value])
+  }, [summary, category, value, trip])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -85,13 +100,15 @@ export default function EntrySheet({
     setError('')
     setBusy(true)
     try {
-      await onSubmit({
-        category,
-        name: name.trim() || DEFAULT_NAME[category],
-        actualAmount: value,
-        plannedAmount: Number(planned) || 0,
-        recurring,
-      })
+      await onSubmit(trip
+        ? { category, name: name.trim() || TRIP_CATEGORIES[category].label, actualAmount: value, date }
+        : {
+            category,
+            name: name.trim() || DEFAULT_NAME[category],
+            actualAmount: value,
+            plannedAmount: Number(planned) || 0,
+            recurring,
+          })
       onClose()
     } catch {
       setError('השמירה נכשלה. נסו שוב')
@@ -107,7 +124,7 @@ export default function EntrySheet({
         <h2>{isIncome ? 'הכנסה חדשה' : 'הוצאה חדשה'}</h2>
 
         <div className="cat-pills">
-          {PILLS.map((pill) => (
+          {pills.map((pill) => (
             <button
               key={pill.category}
               type="button"
@@ -122,7 +139,7 @@ export default function EntrySheet({
         </div>
 
         <label className="amount-card">
-          <span className="cap">{AMOUNT_LABEL[category]}</span>
+          <span className="cap">{trip ? 'כמה יצא?' : AMOUNT_LABEL[category]}</span>
           <input
             className="amount-input num"
             type="number"
@@ -145,6 +162,20 @@ export default function EntrySheet({
             onChange={(event) => setName(event.target.value)}
           />
 
+          {trip ? (
+            <label className="field">
+              תאריך
+              <input
+                className="input ltr"
+                type="date"
+                value={date}
+                onChange={(event) => setDate(event.target.value)}
+              />
+              <span className="type-hint">
+                קובע לאיזה חודש ההוצאה תשויך בתקציב הבית.
+              </span>
+            </label>
+          ) : (
           <div className="sheet-row">
             <label className="planned-field">
               <span>מתוכנן</span>
@@ -170,6 +201,7 @@ export default function EntrySheet({
               <span className="switch"><span className="knob" /></span>
             </button>
           </div>
+          )}
         </div>
 
         {me && (

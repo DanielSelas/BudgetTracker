@@ -699,6 +699,19 @@ button:disabled {
 
 .bar-fill.danger { background: var(--color-danger); }
 
+/* כרטיס הסיכום אינו קטגוריה, ולכן אין לו --cat-base לצבוע ממנו */
+.summary .bar {
+  background: var(--color-bg);
+}
+
+.summary .bar-fill {
+  background: var(--color-accent);
+}
+
+.summary .bar-fill.danger {
+  background: var(--color-danger);
+}
+
 .entry-list {
   list-style: none;
   padding: 0;
@@ -1298,4 +1311,109 @@ button:disabled {
   color: var(--color-bg);
   font-family: var(--font-heading);
   font-size: 15px;
+}
+
+/* ========== בורר סוג תקציב ========== */
+
+.type-choice {
+  display: flex;
+  gap: 10px;
+}
+
+.type-option {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border-radius: var(--radius-inner);
+  border: 1.5px solid var(--color-neutral-300);
+  background: var(--color-neutral-100);
+  text-align: right;
+}
+
+.type-option[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-200);
+}
+
+.type-label {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  color: var(--color-text);
+}
+
+.type-hint {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--color-neutral-700);
+}
+
+select.input {
+  appearance: none;
+  padding-inline-end: 22px;
+}
+
+/* קטגוריות הטיול מקבלות את אותם גוונים מאומתים של המערכת */
+[data-category='lodging'] {
+  --cat-bg: var(--cat-fund-bg);
+  --cat-tint: var(--cat-fund-tint);
+  --cat-base: var(--cat-fund-base);
+  --cat-ink: var(--cat-fund-ink);
+}
+
+[data-category='transport'] {
+  --cat-bg: var(--cat-fixed-bg);
+  --cat-tint: var(--cat-fixed-tint);
+  --cat-base: var(--cat-fixed-base);
+  --cat-ink: var(--cat-fixed-ink);
+}
+
+[data-category='attractions'] {
+  --cat-bg: var(--cat-leisure-bg);
+  --cat-tint: var(--cat-leisure-tint);
+  --cat-base: var(--cat-leisure-base);
+  --cat-ink: var(--cat-leisure-ink);
+}
+
+[data-category='dining'] {
+  --cat-bg: var(--cat-income-bg);
+  --cat-tint: var(--cat-income-tint);
+  --cat-base: var(--cat-income-base);
+  --cat-ink: var(--cat-income-ink);
+}
+
+[data-category='shopping'] {
+  --cat-bg: var(--cat-unplanned-bg);
+  --cat-tint: oklch(0.89 0.06 85);
+  --cat-base: var(--cat-unplanned-base);
+  --cat-ink: var(--cat-unplanned-ink);
+}
+
+[data-category='other'] {
+  --cat-bg: var(--color-neutral-200);
+  --cat-tint: var(--color-neutral-300);
+  --cat-base: var(--color-neutral-500);
+  --cat-ink: var(--color-neutral-800);
+}
+
+.tag-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.trip-head {
+  padding: 8px 0 0;
+}
+
+.trip-head h1 {
+  font-size: 28px;
+}
+
+.trip-head .muted {
+  margin-top: 2px;
 }

@@ -26,7 +26,14 @@ export function normalizeInviteCode(raw) {
  * יוצר תקציב, את מסמך החבר של היוצר ואת האינדקס האישי, בכתיבה אטומית אחת.
  * מחזיר את מזהה התקציב.
  */
-export async function createBudget({ uid, name, displayName = '' }) {
+export async function createBudget({
+  uid,
+  name,
+  displayName = '',
+  type = 'household',
+  frame = 0,
+  linkedBudgetId = null,
+}) {
   const budgetRef = doc(collection(db, 'budgets'))
 
   // שני שלבים ולא כתיבה אטומית אחת: הכלל שמאשר את מסמך החבר של הבעלים
@@ -35,6 +42,8 @@ export async function createBudget({ uid, name, displayName = '' }) {
   await setDoc(budgetRef, {
     name: name.trim(),
     ownerUid: uid,
+    type,
+    ...(type === 'trip' ? { frame: Number(frame) || 0, linkedBudgetId } : {}),
     createdAt: serverTimestamp(),
   })
 

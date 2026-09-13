@@ -44,7 +44,7 @@ beforeEach(async () => {
   await testEnv.clearFirestore()
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore()
-    await setDoc(doc(db, 'budgets', BUDGET), { name: 'משפחתי', ownerUid: OWNER })
+    await setDoc(doc(db, 'budgets', BUDGET), { name: 'משפחתי', ownerUid: OWNER, type: 'household' })
     await setDoc(doc(db, 'budgets', BUDGET, 'members', OWNER), { uid: OWNER, role: 'owner' })
   })
 })
@@ -61,10 +61,10 @@ describe('budgets', () => {
 
   it('יצירת תקציב רק עם ownerUid של עצמך', async () => {
     await assertSucceeds(
-      setDoc(doc(as(PARTNER), 'budgets', 'b2'), { name: 'שלי', ownerUid: PARTNER }),
+      setDoc(doc(as(PARTNER), 'budgets', 'b2'), { name: 'שלי', ownerUid: PARTNER, type: 'household' }),
     )
     await assertFails(
-      setDoc(doc(as(PARTNER), 'budgets', 'b3'), { name: 'גניבה', ownerUid: OWNER }),
+      setDoc(doc(as(PARTNER), 'budgets', 'b3'), { name: 'גניבה', ownerUid: OWNER, type: 'household' }),
     )
   })
 
@@ -377,6 +377,68 @@ describe('רשומת בלתם', () => {
   it('עדיין דוחה קטגוריה מומצאת', async () => {
     await assertFails(
       setDoc(doc(as(OWNER), 'entries', 'u2'), entry({ category: 'misc', budgetGroup: 'none' })),
+    )
+  })
+})
+
+describe('סוגי תקציב ותאריכים', () => {
+  it('יצירת תקציב מחייבת סוג חוקי', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(PARTNER), 'budgets', 't-ok'), {
+        name: 'יוון', ownerUid: PARTNER, type: 'trip', frame: 12000,
+      }),
+    )
+    await assertFails(
+      setDoc(doc(as(PARTNER), 'budgets', 't-bad'), {
+        name: 'יוון', ownerUid: PARTNER, type: 'vacation', frame: 12000,
+      }),
+    )
+  })
+
+  it('טיול חייב מסגרת מספרית', async () => {
+    await assertFails(
+      setDoc(doc(as(PARTNER), 'budgets', 't-noframe'), {
+        name: 'יוון', ownerUid: PARTNER, type: 'trip',
+      }),
+    )
+    await assertFails(
+      setDoc(doc(as(PARTNER), 'budgets', 't-strframe'), {
+        name: 'יוון', ownerUid: PARTNER, type: 'trip', frame: '12000',
+      }),
+    )
+  })
+
+  it('אי אפשר לשנות סוג של תקציב קיים', async () => {
+    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { type: 'trip' }))
+  })
+
+  it('מקבל קטגוריות טיול', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'entries', 'tr1'), entry({
+        category: 'lodging', budgetGroup: 'none', name: 'מלון', date: '2026-09-04',
+      })),
+    )
+  })
+
+  it('תאריך שלא מתיישב עם החודש נדחה', async () => {
+    await assertFails(
+      setDoc(doc(as(OWNER), 'entries', 'tr2'), entry({
+        category: 'lodging', budgetGroup: 'none', month: '2026-09', date: '2026-10-04',
+      })),
+    )
+  })
+
+  it('תאריך בפורמט שגוי נדחה', async () => {
+    await assertFails(
+      setDoc(doc(as(OWNER), 'entries', 'tr3'), entry({
+        category: 'lodging', budgetGroup: 'none', date: '04/09/2026',
+      })),
+    )
+  })
+
+  it('רשומה בלי תאריך עדיין תקפה', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'entries', 'tr4'), entry({ category: 'fixed' })),
     )
   })
 })
