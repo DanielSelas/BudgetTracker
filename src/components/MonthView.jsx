@@ -104,8 +104,6 @@ export default function MonthView({ budgetId, budget, uid, nudge }) {
               </button>
             )}
 
-            <UnplannedCard summary={summary} />
-
             {ORDER.map((category) => (
               <CategoryCard
                 key={category}
@@ -118,6 +116,9 @@ export default function MonthView({ budgetId, budget, uid, nudge }) {
                 onStopRecurring={setPendingStop}
               />
             ))}
+
+            {/* בלתם אחרונה: היא רזרבה שנותרה, לא חלק מהתכנון החודשי */}
+            <UnplannedCard summary={summary} />
           </>
         )}
       </div>

@@ -1345,3 +1345,31 @@ button:disabled {
   text-align: left;
   white-space: pre;
 }
+
+/* ההכנסה היא הפעולה הראשונה בחודש וממנה נגזר הכל, ולכן היא בולטת יותר */
+.cat-card[data-category='income'] {
+  padding: 24px 22px;
+  border: 1.5px solid var(--cat-base);
+}
+
+.cat-card[data-category='income'] .cat-title h2 {
+  font-size: 23px;
+}
+
+.cat-card[data-category='income'] .dot {
+  width: 14px;
+  height: 14px;
+}
+
+.cat-card[data-category='income'] .cat-total {
+  font-size: 26px;
+}
+
+.cat-card[data-category='income'] .entry-name,
+.cat-card[data-category='income'] .entry-amount {
+  font-size: 17px;
+}
+
+.cat-card[data-category='income'] .btn-text {
+  font-size: 16px;
+}

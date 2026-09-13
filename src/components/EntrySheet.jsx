@@ -4,8 +4,11 @@ import Sheet from './Sheet'
 import { shekels } from '../lib/format'
 import { CATEGORIES, calcBaseAmount, groupTarget } from '../lib/model'
 
-const PILLS = [
-  { category: 'income', label: 'הכנסה' },
+/**
+ * הכנסה והוצאה הן שתי פעולות שונות, ולכן המגירה לא מערבבת ביניהן.
+ * מי שפתח "הוצאה" לא יכול לגלוש להכנסה בטעות, ולהפך.
+ */
+const EXPENSE_PILLS = [
   { category: 'fixed', label: 'קבועה' },
   { category: 'leisure', label: 'פנאי' },
   { category: 'fund', label: 'קרן' },
@@ -37,6 +40,8 @@ export default function EntrySheet({
   onSubmit,
   onClose,
 }) {
+  // נקבע בפתיחה ולא משתנה, אחרת החלפת קטגוריה הייתה מחליפה את סוג הפעולה
+  const [incomeMode] = useState(() => initialCategory === 'income')
   const [category, setCategory] = useState(initialCategory)
   const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : '')
   const [name, setName] = useState('')
@@ -95,8 +100,9 @@ export default function EntrySheet({
       <form className="sheet-form" onSubmit={handleSubmit}>
         <h2>{isIncome ? 'הכנסה חדשה' : 'הוצאה חדשה'}</h2>
 
+        {!incomeMode && (
         <div className="cat-pills">
-          {PILLS.map((pill) => (
+          {EXPENSE_PILLS.map((pill) => (
             <button
               key={pill.category}
               type="button"
@@ -109,6 +115,7 @@ export default function EntrySheet({
             </button>
           ))}
         </div>
+        )}
 
         <label className="amount-card">
           <span className="cap">{AMOUNT_LABEL[category]}</span>
