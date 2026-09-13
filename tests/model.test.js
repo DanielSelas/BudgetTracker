@@ -32,7 +32,7 @@ describe('summarizeMonth', () => {
     const summary = summarizeMonth([])
     expect(summary.totalIncome).toBe(0)
     expect(summary.baseAmount).toBe(0)
-    expect(summary.unplanned).toBe(0)
+    expect(summary.unplanned.reserve).toBe(0)
     expect(summary.groups.fixed.target).toBe(0)
   })
 
@@ -47,7 +47,7 @@ describe('summarizeMonth', () => {
 
     expect(summary.totalIncome).toBe(24000)
     expect(summary.baseAmount).toBe(20000)
-    expect(summary.unplanned).toBe(4000)
+    expect(summary.unplanned.reserve).toBe(4000)
 
     expect(summary.groups.fixed.target).toBe(10000)
     expect(summary.groups.fixed.remaining).toBe(4000)
@@ -158,6 +158,114 @@ describe('recentMonths', () => {
     for (let i = 1; i < months.length; i += 1) {
       expect(months[i] > months[i - 1]).toBe(true)
     }
+  })
+})
+
+describe('בלתם כקטגוריה אמיתית', () => {
+  const withIncome = (extra = []) => summarizeMonth([
+    entry({ category: 'income', budgetGroup: 'none', actualAmount: 24000 }),
+    ...extra,
+  ])
+
+  it('הרזרבה היא ההכנסה פחות הבסיס', () => {
+    const summary = withIncome()
+    expect(summary.unplanned).toMatchObject({ reserve: 4000, spent: 0, remaining: 4000 })
+  })
+
+  it('הוצאה מהרזרבה מקטינה אותה', () => {
+    const summary = withIncome([
+      entry({ category: 'unplanned', budgetGroup: 'none', actualAmount: 1500 }),
+    ])
+    expect(summary.unplanned).toMatchObject({ reserve: 4000, spent: 1500, remaining: 2500 })
+  })
+
+  it('אפשר לחרוג מהרזרבה, וזה מסומן כשלילי', () => {
+    const summary = withIncome([
+      entry({ category: 'unplanned', budgetGroup: 'none', actualAmount: 5200 }),
+    ])
+    expect(summary.unplanned.remaining).toBe(-1200)
+  })
+
+  it('הוצאה מהרזרבה נספרת בהוצאות ומקטינה את היתרה', () => {
+    const summary = withIncome([
+      entry({ category: 'unplanned', budgetGroup: 'none', actualAmount: 1500 }),
+    ])
+    expect(summary.totalExpenses).toBe(1500)
+    expect(summary.balance).toBe(22500)
+  })
+
+  it('אינה משפיעה על יעדי 50/30/20', () => {
+    const summary = withIncome([
+      entry({ category: 'unplanned', budgetGroup: 'none', actualAmount: 3000 }),
+    ])
+    expect(summary.groups.fixed.target).toBe(10000)
+    expect(summary.groups.fixed.actual).toBe(0)
+    expect(summary.groups.leisure.actual).toBe(0)
+    expect(summary.groups.savings.actual).toBe(0)
+  })
+})
+
+describe('סוג תקציב', () => {
+  it('תקציב ישן בלי שדה type הוא משק בית', async () => {
+    const { budgetType, isTrip } = await import('../src/lib/model')
+    expect(budgetType({ name: 'ישן' })).toBe('household')
+    expect(budgetType(undefined)).toBe('household')
+    expect(isTrip({ type: 'trip' })).toBe(true)
+    expect(isTrip({ type: 'household' })).toBe(false)
+  })
+})
+
+describe('summarizeTrip', () => {
+  const tripEntry = (category, actualAmount) => ({ category, actualAmount })
+
+  it('מסגרת פחות מה שהוצא', async () => {
+    const { summarizeTrip } = await import('../src/lib/model')
+    const summary = summarizeTrip([
+      tripEntry('lodging', 4000),
+      tripEntry('dining', 1200),
+      tripEntry('attractions', 800),
+    ], 12000)
+
+    expect(summary.spent).toBe(6000)
+    expect(summary.remaining).toBe(6000)
+    expect(summary.progress).toBe(50)
+    expect(summary.totals.lodging).toBe(4000)
+  })
+
+  it('חריגה מהמסגרת היא שלילית, והפס נעצר ב-100', async () => {
+    const { summarizeTrip } = await import('../src/lib/model')
+    const summary = summarizeTrip([tripEntry('lodging', 15000)], 12000)
+    expect(summary.remaining).toBe(-3000)
+    expect(summary.progress).toBe(100)
+  })
+
+  it('קטגוריה לא מוכרת נופלת ל"אחר" ולא נעלמת', async () => {
+    const { summarizeTrip } = await import('../src/lib/model')
+    const summary = summarizeTrip([tripEntry('משהו', 500)], 1000)
+    expect(summary.totals.other).toBe(500)
+    expect(summary.spent).toBe(500)
+  })
+
+  it('טיול בלי מסגרת לא מתפוצץ', async () => {
+    const { summarizeTrip } = await import('../src/lib/model')
+    const summary = summarizeTrip([tripEntry('dining', 300)], 0)
+    expect(summary.progress).toBe(0)
+    expect(summary.remaining).toBe(-300)
+  })
+})
+
+describe('תאריך רשומה', () => {
+  it('גוזר חודש מתאריך', async () => {
+    const { monthOfDate } = await import('../src/lib/model')
+    expect(monthOfDate('2026-12-31')).toBe('2026-12')
+    expect(monthOfDate('2027-01-02')).toBe('2027-01')
+    expect(monthOfDate(undefined)).toBe('')
+  })
+
+  it('תאריך היום מרופד נכון', async () => {
+    const { todayDate } = await import('../src/lib/model')
+    expect(todayDate(new Date(2026, 0, 5))).toBe('2026-01-05')
+    expect(todayDate(new Date(2026, 11, 31))).toBe('2026-12-31')
   })
 })
 

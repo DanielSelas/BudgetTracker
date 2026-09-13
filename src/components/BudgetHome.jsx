@@ -6,11 +6,25 @@ import NotificationCard from './NotificationCard'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
 import { membersSentence, sortMembers } from '../lib/members'
-import { useBudgetBalance } from '../hooks/useBudgetBalance'
+import { BUDGET_TYPES, budgetType, isTrip } from '../lib/model'
+import { useMonthBalance, useTripSpent } from '../hooks/useBudgetBalance'
 import { shekels } from '../lib/format'
 
-function Remaining({ budgetId }) {
-  const balance = useBudgetBalance(budgetId)
+function Remaining({ budget }) {
+  const trip = isTrip(budget)
+  // שני ה-hooks נקראים תמיד, ומי שלא רלוונטי מקבל null ולא מאזין לכלום
+  const balance = useMonthBalance(trip ? null : budget.id)
+  const spent = useTripSpent(trip ? budget.id : null)
+
+  if (trip) {
+    if (spent === null) return null
+    return (
+      <span className="budget-remaining">
+        נשאר מהמסגרת <strong className="num">{shekels((budget.frame || 0) - spent)}</strong>
+      </span>
+    )
+  }
+
   if (balance === null) return null
   return (
     <span className="budget-remaining">
@@ -77,15 +91,18 @@ export default function BudgetHome() {
                 >
                   <span className="budget-card-top">
                     <span className="budget-name">{budget.name}</span>
-                    <span className={`tag ${shared ? 'shared' : ''}`}>
-                      {budget.members
-                        ? shared ? `משותף · ${budget.members.length}` : 'אישי'
-                        : 'טוען...'}
+                    <span className="tag-row">
+                      <span className="tag quiet">{BUDGET_TYPES[budgetType(budget)].label}</span>
+                      <span className={`tag ${shared ? 'shared' : ''}`}>
+                        {budget.members
+                          ? shared ? `משותף · ${budget.members.length}` : 'אישי'
+                          : 'טוען...'}
+                      </span>
                     </span>
                   </span>
 
                   <MemberRow budget={budget} isOwner={isOwner} />
-                  <Remaining budgetId={budget.id} />
+                  <Remaining budget={budget} />
                 </button>
 
                 {budgets.length > 1 && (

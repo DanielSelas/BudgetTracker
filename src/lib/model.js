@@ -3,6 +3,9 @@ export const CATEGORIES = {
   fixed: { label: 'קבועות', budgetGroup: 'fixed' },
   leisure: { label: 'פנאי', budgetGroup: 'leisure' },
   fund: { label: 'קרן', budgetGroup: 'savings' },
+  // בלתם היא רזרבה אמיתית שאפשר להוציא ממנה, ולא רק מספר מחושב.
+  // היא מחוץ ל-50/30/20 בכוונה: היא הכסף שלא חולק לקטגוריות.
+  unplanned: { label: 'בלתם', budgetGroup: 'none' },
 }
 
 export const BUDGET_GROUP_RATIOS = {
@@ -47,10 +50,15 @@ export function summarizeMonth(entries) {
 
   const income = entries.filter((entry) => entry.category === 'income')
   const expenses = entries.filter((entry) => entry.category !== 'income')
+  const unplannedEntries = entries.filter((entry) => entry.category === 'unplanned')
 
   const totalIncome = sumActual(income)
   const totalExpenses = sumActual(expenses)
   const baseAmount = calcBaseAmount(totalIncome)
+
+  // הרזרבה היא המרווח הנזיל; מה שהוצא ממנה מקטין אותה בזמן אמת
+  const reserve = calcUnplanned(totalIncome, baseAmount)
+  const unplannedSpent = sumActual(unplannedEntries)
 
   const groups = {}
   for (const group of Object.keys(BUDGET_GROUP_RATIOS)) {
@@ -72,7 +80,12 @@ export function summarizeMonth(entries) {
     totalExpenses,
     balance: totalIncome - totalExpenses,
     baseAmount,
-    unplanned: calcUnplanned(totalIncome, baseAmount),
+    unplanned: {
+      reserve,
+      spent: unplannedSpent,
+      remaining: reserve - unplannedSpent,
+      planned: sumPlanned(unplannedEntries),
+    },
     groups,
   }
 }
@@ -104,4 +117,77 @@ export function isEntryConcerning(entry) {
   if (entry.category === 'income') return actual < planned
   if (entry.category === 'fund') return false
   return actual > planned
+}
+
+/* ===== סוגי תקציב ===== */
+
+export const BUDGET_TYPES = {
+  household: {
+    label: 'משק בית',
+    hint: 'חודש אחרי חודש, לפי עקרון 50/30/20 מתוך ההכנסה.',
+  },
+  trip: {
+    label: 'טיול',
+    hint: 'מסגרת אחת לכל הטיול, בלי חודשים ובלי יעדים לכל קטגוריה.',
+  },
+}
+
+/** תקציבים שנוצרו לפני שהיה שדה type הם משק בית. */
+export const budgetType = (budget) => (budget?.type === 'trip' ? 'trip' : 'household')
+
+export const isTrip = (budget) => budgetType(budget) === 'trip'
+
+/**
+ * קטגוריות הטיול. אין להן budgetGroup כי אין בטיול יחס 50/30/20,
+ * רק מסגרת כוללת.
+ */
+export const TRIP_CATEGORIES = {
+  lodging: { label: 'לינה' },
+  transport: { label: 'התניידות' },
+  attractions: { label: 'אטרקציות' },
+  dining: { label: 'מסעדות' },
+  shopping: { label: 'שופינג' },
+  other: { label: 'אחר' },
+}
+
+export const TRIP_ORDER = Object.keys(TRIP_CATEGORIES)
+
+/** כל קטגוריה חוקית באפליקציה, לצורך ולידציה. */
+export const ALL_CATEGORIES = [...Object.keys(CATEGORIES), ...TRIP_ORDER]
+
+/** סיכום טיול: מסגרת אחת, בלי בסיס ובלי יעדים לקטגוריה. */
+export function summarizeTrip(entries, frame = 0) {
+  const byCategory = Object.fromEntries(TRIP_ORDER.map((key) => [key, []]))
+  let spent = 0
+
+  for (const entry of entries) {
+    const amount = entry.actualAmount || 0
+    spent += amount
+    const bucket = byCategory[entry.category] ? entry.category : 'other'
+    byCategory[bucket].push(entry)
+  }
+
+  const totals = Object.fromEntries(
+    TRIP_ORDER.map((key) => [
+      key,
+      byCategory[key].reduce((sum, entry) => sum + (entry.actualAmount || 0), 0),
+    ]),
+  )
+
+  return {
+    frame,
+    spent,
+    remaining: frame - spent,
+    progress: frame > 0 ? Math.min(100, (spent / frame) * 100) : 0,
+    byCategory,
+    totals,
+  }
+}
+
+/** מפתח חודש מתוך תאריך רשומה, לצורך שיוך הוצאות טיול לחודש. */
+export const monthOfDate = (date) => String(date || '').slice(0, 7)
+
+/** תאריך היום בפורמט שנשמר ברשומה. */
+export function todayDate(now = new Date()) {
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 }
