@@ -10,8 +10,8 @@
     "preview": "vite preview",
     "test:rules": "firebase emulators:exec --only firestore --project budgettracker-rules-test \"vitest run tests/rules.test.js\"",
     "test": "vitest run --environment jsdom tests/model.test.js tests/recurring.test.js tests/nudge.test.js tests/app-render.test.jsx",
-    "deploy": "npm run build && firebase deploy --only hosting,firestore",
-    "nudge": "node scripts/month-end-nudge.mjs"
+    "nudge": "node scripts/month-end-nudge.mjs",
+    "deploy:rules": "firebase deploy --only firestore"
   },
   "dependencies": {
     "firebase": "^12.19.0",

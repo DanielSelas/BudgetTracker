@@ -182,20 +182,26 @@ npm run dev
 | `npm test` | בדיקות הלוגיקה |
 | `npm run test:rules` | בדיקות כללי האבטחה מול אמולטור (דורש Java) |
 | `npm run lint` | oxlint |
-| `npm run deploy` | בנייה והעלאה ל-Firebase, כולל כללים ואינדקסים |
+| `npm run deploy:rules` | העלאת כללי האבטחה והאינדקסים ל-Firestore |
 | `npm run nudge` | הרצה מקומית של שולח התזכורות (דורש מפתח שירות) |
 
 ---
 
 ## פריסה
 
-האפליקציה פרוסה בשני מקומות, על אותו מסד נתונים:
+**Vercel בלבד**, מתוך `main`, אוטומטית בכל push. הכתובת היא
+[budget-tracker-virid-one.vercel.app](https://budget-tracker-virid-one.vercel.app).
 
-- **Vercel** מתוך `main`, אוטומטית בכל push
-- **Firebase Hosting** דרך `npm run deploy`
+בעבר האפליקציה הייתה פרוסה גם ל-Firebase Hosting. שתי כתובות חיות שרק
+אחת מהן מתעדכנת לבד הן מלכודת: תיקון נפרס לאחת, נבדק בשנייה, ונראה כאילו
+לא עבד. Firebase Hosting הוסר מהפרויקט.
 
-שינויים ב-`firestore.rules` או ב-`firestore.indexes.json` מגיעים **רק** דרך
-`npm run deploy`. Vercel לא נוגע בהם.
+מה ש-Vercel **לא** מכסה הוא כללי האבטחה והאינדקסים של Firestore. אחרי
+שינוי ב-`firestore.rules` או ב-`firestore.indexes.json`:
+
+```bash
+npm run deploy:rules
+```
 
 כל דומיין חדש חייב להתווסף ל-Firebase Console ← Authentication ← Settings ←
 Authorized domains, אחרת ההתחברות עם Google נכשלת.
