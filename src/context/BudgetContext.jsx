@@ -3,7 +3,8 @@ import { setMemberName, watchBudget, watchMembers, watchMemberships } from '../l
 import { needsDisplayName } from '../lib/members'
 import { useAuth } from './AuthContext'
 
-const BudgetContext = createContext(null)
+// מיוצא כדי שאפשר יהיה להרכיב אותו בבדיקות רינדור
+export const BudgetContext = createContext(null)
 const STORAGE_KEY = 'budgettracker:selectedBudgetId'
 
 function storeBudgetId(budgetId) {

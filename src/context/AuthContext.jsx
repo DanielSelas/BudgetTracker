@@ -10,7 +10,8 @@ import {
 } from 'firebase/auth'
 import { auth } from '../lib/firebase'
 
-const AuthContext = createContext(null)
+// מיוצא כדי שאפשר יהיה להרכיב אותו בבדיקות רינדור
+export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
