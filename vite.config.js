@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
+      // עדכון אוטומטי ולא בהמתנה לאישור, מאותה סיבה שמתוארת ב-src/sw.js
+      registerType: 'autoUpdate',
       // service worker כתוב ידנית: הוא מחזיק גם את המטמון וגם את קבלת
       // ההתראות ברקע. ראו src/sw.js
       strategies: 'injectManifest',

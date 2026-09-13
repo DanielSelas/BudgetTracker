@@ -15,6 +15,13 @@ import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw'
  * scope לא יכולים לחיות יחד: השני מחליף את הראשון ומבטל את האופליין.
  */
 
+/**
+ * השתלטות מיידית, בלי להמתין לאישור. עדכון שממתין לאישור המשתמש
+ * יוצר מלכוד: אם הגרסה הפעילה שבורה, אין מסך שדרכו אפשר לאשר,
+ * והמכשיר נתקע עליה עד התקנה מחדש.
+ */
+self.skipWaiting()
+
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
@@ -27,7 +34,6 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')))
 
 clientsClaim()
 
-// העדכון נשאר בשליטת המשתמש. הדף שולח את ההודעה כשלוחצים "רענון".
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting()
 })
