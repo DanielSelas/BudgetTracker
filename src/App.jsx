@@ -9,6 +9,7 @@ import HistoryView from './components/HistoryView'
 import BottomNav from './components/BottomNav'
 import UpdatePrompt from './components/UpdatePrompt'
 import OfflineBanner from './components/OfflineBanner'
+import ErrorBoundary from './components/ErrorBoundary'
 import { isFirebaseConfigured, missingFirebaseKeys } from './lib/firebase'
 import { clearNudge, readNudge } from './lib/deepLink'
 import './App.css'
@@ -121,10 +122,12 @@ function AuthGate() {
 export default function App() {
   if (!isFirebaseConfigured) return <ConfigError />
   return (
-    <AuthProvider>
-      <AuthGate />
-      <OfflineBanner />
-      <UpdatePrompt />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AuthGate />
+        <OfflineBanner />
+        <UpdatePrompt />
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }

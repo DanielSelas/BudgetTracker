@@ -70,3 +70,21 @@ describe('עץ האפליקציה עם משתמש מחובר', () => {
     expect(container.textContent).not.toBe('')
   })
 })
+
+describe('גבול שגיאה', () => {
+  it('מציג את השגיאה במקום מסך לבן', async () => {
+    const { default: ErrorBoundary } = await import('../src/components/ErrorBoundary')
+    function Broken() { throw new Error('נפילה לדוגמה') }
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { container } = render(<ErrorBoundary><Broken /></ErrorBoundary>)
+    spy.mockRestore()
+    expect(container.textContent).toContain('משהו נשבר')
+    expect(container.textContent).toContain('נפילה לדוגמה')
+  })
+
+  it('מרנדר רגיל כשאין שגיאה', async () => {
+    const { default: ErrorBoundary } = await import('../src/components/ErrorBoundary')
+    const { container } = render(<ErrorBoundary><p>תקין</p></ErrorBoundary>)
+    expect(container.textContent).toBe('תקין')
+  })
+})
