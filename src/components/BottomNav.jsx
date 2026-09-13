@@ -1,6 +1,7 @@
 const ALL_TABS = {
   month: { id: 'month', label: 'החודש' },
   trip: { id: 'month', label: 'הטיול' },
+  goal: { id: 'month', label: 'המטרה' },
   history: { id: 'history', label: 'היסטוריה' },
   budgets: { id: 'budgets', label: 'תקציבים' },
 }
@@ -9,6 +10,7 @@ const ALL_TABS = {
 const TAB_SETS = {
   household: ['month', 'history', 'budgets'],
   trip: ['trip', 'budgets'],
+  goal: ['goal', 'budgets'],
 }
 
 export default function BottomNav({ active, onChange, type = 'household' }) {

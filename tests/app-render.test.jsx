@@ -161,3 +161,25 @@ describe('סנכרון שורה מסכמת', () => {
     expect(firestore.setDoc).not.toHaveBeenCalled()
   })
 })
+
+describe('שורה מסכמת של מטרה', () => {
+  it('נזקפת לקרן ולא לבלתם', async () => {
+    const firestore = await import('firebase/firestore')
+    firestore.setDoc.mockClear()
+    const { syncRollup } = await import('../src/lib/trips')
+
+    await syncRollup({
+      trip: { id: 'g1', name: 'רכב חדש', type: 'goal', linkedBudgetId: 'b1' },
+      uid: 'u1',
+      entries: [
+        { month: '2026-09', actualAmount: 3000, category: 'deposit' },
+        { month: '2026-09', actualAmount: 500, category: 'withdrawal' },
+      ],
+    })
+
+    expect(firestore.setDoc).toHaveBeenCalledTimes(1)
+    expect(firestore.setDoc.mock.calls[0][1]).toMatchObject({
+      category: 'fund', budgetGroup: 'savings', name: 'חיסכון: רכב חדש', actualAmount: 2500,
+    })
+  })
+})

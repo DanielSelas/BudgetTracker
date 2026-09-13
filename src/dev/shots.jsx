@@ -10,8 +10,9 @@ import EntrySheet from '../components/EntrySheet'
 import EntryRow from '../components/EntryRow'
 import { shekels } from '../lib/format'
 import {
-  BUDGET_TYPES, CATEGORIES, TRIP_CATEGORIES, TRIP_ORDER,
-  summarizeMonth, summarizeTrip,
+  BUDGET_TYPES, CATEGORIES, GOAL_CATEGORIES, GOAL_ORDER,
+  TRIP_CATEGORIES, TRIP_ORDER,
+  summarizeMonth, summarizeTrip, summarizeGoal,
 } from '../lib/model'
 import '../index.css'
 import '../App.css'
@@ -252,9 +253,60 @@ function LoginShot() {
   )
 }
 
+const goalEntries = [
+  { id: 'g1', category: 'deposit', name: 'הפקדה חודשית', actualAmount: 2500, addedBy: 'u1', date: '2026-07-01' },
+  { id: 'g2', category: 'deposit', name: 'בונוס', actualAmount: 4000, addedBy: 'u2', date: '2026-08-01' },
+  { id: 'g3', category: 'deposit', name: 'הפקדה חודשית', actualAmount: 2500, addedBy: 'u1', date: '2026-09-01' },
+  { id: 'g4', category: 'withdrawal', name: 'תיקון דחוף', actualAmount: 1200, addedBy: 'u2', date: '2026-08-20' },
+]
+const goal = summarizeGoal(goalEntries, 40000)
+
+function Goal() {
+  return (
+    <main className="app">
+      <div className="sticky-head">
+        <header className="trip-head"><h1>רכב חדש</h1><p className="muted">משותף · 2</p></header>
+      </div>
+      <div className="app-scroll">
+        <section className="summary">
+          <div className="summary-hero">
+            <span className="cap">נחסך עד היום</span>
+            <span className="amount num">{shekels(goal.saved)}</span>
+          </div>
+          <div className="summary-tiles">
+            <div><span className="cap">יעד</span><span className="val num">{shekels(goal.target)}</span></div>
+            <div><span className="cap">נשאר לחסוך</span><span className="val num">{shekels(goal.remaining)}</span></div>
+          </div>
+          <div className="bar"><div className="bar-fill goal" style={{ width: `${goal.progress}%` }} /></div>
+        </section>
+        <p className="hint center">ההפקדות כאן מופיעות גם בקרן של תקציב הבית, כשורה אחת לכל חודש. מסונכרן ✓</p>
+        {GOAL_ORDER.map((category) => (
+          <section className="cat-card" data-category={category} key={category}>
+            <div className="cat-head">
+              <span className="cat-title"><span className="dot" /><h2>{GOAL_CATEGORIES[category].label}</h2></span>
+              <span className="cat-total num">{shekels(goal.totals[category])}</span>
+            </div>
+            {goal.byCategory[category].length > 0 ? (
+              <ul className="entry-list">
+                {goal.byCategory[category].map((e) => (
+                  <EntryRow key={e.id} entry={e} author={authorOf(e.addedBy)}
+                    onUpdate={actions.update} onRemove={actions.remove} />
+                ))}
+              </ul>
+            ) : <p className="empty">אין עדיין שורות</p>}
+            <button type="button" className="btn-text">+ הוספה</button>
+          </section>
+        ))}
+      </div>
+      <button type="button" className="fab"><span className="plus">+</span> הפקדה</button>
+      <BottomNav active="month" onChange={noop} type="goal" />
+    </main>
+  )
+}
+
 const SCREENS = {
   month: <Month />, reserve: <Reserve />, home: <Home />,
-  types: <Types />, trip: <Trip />, sheet: <SheetShot />, login: <LoginShot />,
+  types: <Types />, trip: <Trip />, goal: <Goal />, sheet: <SheetShot />, login: <LoginShot />,
 }
 const which = new URLSearchParams(location.search).get('s') || 'month'
 createRoot(document.getElementById('root')).render(<StrictMode>{SCREENS[which]}</StrictMode>)

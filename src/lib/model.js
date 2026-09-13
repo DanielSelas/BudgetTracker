@@ -130,12 +130,21 @@ export const BUDGET_TYPES = {
     label: 'טיול',
     hint: 'מסגרת אחת לכל הטיול, בלי חודשים ובלי יעדים לכל קטגוריה.',
   },
+  goal: {
+    label: 'מטרת חיסכון',
+    hint: 'סכום יעד שמצטברים אליו. הפס מתמלא במקום להתרוקן.',
+  },
 }
 
 /** תקציבים שנוצרו לפני שהיה שדה type הם משק בית. */
 export const budgetType = (budget) => (budget?.type === 'trip' ? 'trip' : 'household')
 
 export const isTrip = (budget) => budgetType(budget) === 'trip'
+
+export const isGoal = (budget) => budgetType(budget) === 'goal'
+
+/** טיול ומטרה חולקים צורה: סכום אחד שנקבע מראש, ורשומות מולו. */
+export const isFrameBudget = (budget) => isTrip(budget) || isGoal(budget)
 
 /**
  * קטגוריות הטיול. אין להן budgetGroup כי אין בטיול יחס 50/30/20,
@@ -152,8 +161,21 @@ export const TRIP_CATEGORIES = {
 
 export const TRIP_ORDER = Object.keys(TRIP_CATEGORIES)
 
+/**
+ * מטרת חיסכון. משיכה קיימת כי חיסכון אמיתי לא תמיד חד כיווני,
+ * והיא מקטינה את מה שנצבר במקום להתווסף אליו.
+ */
+export const GOAL_CATEGORIES = {
+  deposit: { label: 'הפקדה', sign: 1 },
+  withdrawal: { label: 'משיכה', sign: -1 },
+}
+
+export const GOAL_ORDER = Object.keys(GOAL_CATEGORIES)
+
 /** כל קטגוריה חוקית באפליקציה, לצורך ולידציה. */
-export const ALL_CATEGORIES = [...Object.keys(CATEGORIES), ...TRIP_ORDER]
+export const ALL_CATEGORIES = [
+  ...Object.keys(CATEGORIES), ...TRIP_ORDER, ...GOAL_ORDER,
+]
 
 /** סיכום טיול: מסגרת אחת, בלי בסיס ובלי יעדים לקטגוריה. */
 export function summarizeTrip(entries, frame = 0) {
@@ -179,6 +201,38 @@ export function summarizeTrip(entries, frame = 0) {
     spent,
     remaining: frame - spent,
     progress: frame > 0 ? Math.min(100, (spent / frame) * 100) : 0,
+    byCategory,
+    totals,
+  }
+}
+
+/**
+ * סיכום מטרת חיסכון. מראה כמה נצבר מתוך היעד, ולא כמה נשאר לבזבז.
+ * משיכה מקטינה את הצבירה, ולכן היא יכולה לרדת בחזרה.
+ */
+export function summarizeGoal(entries, target = 0) {
+  const byCategory = Object.fromEntries(GOAL_ORDER.map((key) => [key, []]))
+  let saved = 0
+
+  for (const entry of entries) {
+    const bucket = byCategory[entry.category] ? entry.category : 'deposit'
+    byCategory[bucket].push(entry)
+    saved += (entry.actualAmount || 0) * GOAL_CATEGORIES[bucket].sign
+  }
+
+  const totals = Object.fromEntries(
+    GOAL_ORDER.map((key) => [
+      key,
+      byCategory[key].reduce((sum, entry) => sum + (entry.actualAmount || 0), 0),
+    ]),
+  )
+
+  return {
+    target,
+    saved,
+    remaining: target - saved,
+    reached: target > 0 && saved >= target,
+    progress: target > 0 ? Math.min(100, Math.max(0, (saved / target) * 100)) : 0,
     byCategory,
     totals,
   }

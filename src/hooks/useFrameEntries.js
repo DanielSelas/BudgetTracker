@@ -6,10 +6,10 @@ import { db } from '../lib/firebase'
 import { monthOfDate, todayDate } from '../lib/model'
 
 /**
- * רשומות הטיול. בניגוד למשק בית, אין כאן סינון לפי חודש:
- * טיול הוא יחידה אחת גם כשהוא חוצה חודשים.
+ * רשומות של תקציב מבוסס מסגרת, טיול או מטרה. בניגוד למשק בית אין כאן
+ * סינון לפי חודש: שניהם יחידה אחת גם כשהם חוצים חודשים.
  */
-export function useTripEntries(budgetId) {
+export function useFrameEntries(budgetId) {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -39,14 +39,14 @@ export function useTripEntries(budgetId) {
   return { entries, loading, error }
 }
 
-export function tripActions({ budgetId, uid }) {
+export function frameActions({ budgetId, uid }) {
   return {
     add: ({ category, name, actualAmount = 0, date }) => {
       const day = date || todayDate()
       return addDoc(collection(db, 'entries'), {
         budgetId,
         category,
-        // אין בטיול יחס 50/30/20, ולכן אין שיוך לקבוצת תקציב
+          // אין כאן יחס 50/30/20, ולכן אין שיוך לקבוצת תקציב
         budgetGroup: 'none',
         name: name.trim(),
         plannedAmount: 0,

@@ -47,7 +47,8 @@ export async function createBudget({
     name: name.trim(),
     ownerUid: uid,
     type,
-    ...(type === 'trip' ? { frame: Number(frame) || 0, linkedBudgetId } : {}),
+    // טיול ומטרה מחזיקים סכום שנקבע מראש; למשק בית אין
+    ...(type === 'household' ? {} : { frame: Number(frame) || 0, linkedBudgetId }),
     createdAt: serverTimestamp(),
   })
 

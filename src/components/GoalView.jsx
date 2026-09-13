@@ -3,7 +3,7 @@ import EntryRow from './EntryRow'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
 import { shekels } from '../lib/format'
-import { TRIP_CATEGORIES, TRIP_ORDER, summarizeTrip } from '../lib/model'
+import { GOAL_CATEGORIES, GOAL_ORDER, summarizeGoal } from '../lib/model'
 import { memberIndex } from '../lib/members'
 import { useFrameEntries, frameActions } from '../hooks/useFrameEntries'
 import { useTripRollup } from '../hooks/useTripRollup'
@@ -12,56 +12,24 @@ import { deleteTrip } from '../lib/trips'
 function Skeleton() {
   return (
     <>
-      <div className="skeleton" style={{ height: 180 }} />
+      <div className="skeleton" style={{ height: 200 }} />
       <div className="skeleton" style={{ height: 140 }} />
     </>
   )
 }
 
-function TripCategory({ category, entries, total, authorOf, actions, onAdd }) {
-  return (
-    <section className="cat-card" data-category={category}>
-      <div className="cat-head">
-        <span className="cat-title">
-          <span className="dot" />
-          <h2>{TRIP_CATEGORIES[category].label}</h2>
-        </span>
-        <span className="cat-total num">{shekels(total)}</span>
-      </div>
-
-      {entries.length > 0 ? (
-        <ul className="entry-list">
-          {entries.map((entry) => (
-            <EntryRow
-              key={entry.id}
-              entry={entry}
-              author={authorOf?.(entry.addedBy)}
-              onUpdate={actions.update}
-              onRemove={actions.remove}
-            />
-          ))}
-        </ul>
-      ) : (
-        <p className="empty">אין עדיין שורות</p>
-      )}
-
-      <button type="button" className="btn-text" onClick={() => onAdd(category)}>
-        + הוספה
-      </button>
-    </section>
-  )
-}
-
-export default function TripView({ budgetId, budget, uid, onDeleted }) {
+export default function GoalView({ budgetId, budget, uid, onDeleted }) {
   const [sheet, setSheet] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const { entries, loading, error } = useFrameEntries(budgetId)
 
   const actions = useMemo(() => frameActions({ budgetId, uid }), [budgetId, uid])
-  const summary = useMemo(() => summarizeTrip(entries, budget?.frame || 0), [entries, budget?.frame])
+  const summary = useMemo(
+    () => summarizeGoal(entries, budget?.frame || 0),
+    [entries, budget?.frame],
+  )
   const members = useMemo(() => memberIndex(budget?.members), [budget?.members])
   const shared = members.sorted.length > 1
-  const over = summary.remaining < 0
   const isOwner = budget?.ownerUid === uid
 
   const { error: rollupError, syncedAt } = useTripRollup({
@@ -84,7 +52,7 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
     <>
       <div className="sticky-head">
         <header className="trip-head">
-          <h1>{budget?.name || 'טיול'}</h1>
+          <h1>{budget?.name || 'מטרת חיסכון'}</h1>
           <p className="muted">{shared ? `משותף · ${members.sorted.length}` : 'אישי'}</p>
         </header>
       </div>
@@ -106,65 +74,82 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
           <>
             <section className="summary">
               <div className="summary-hero">
-                <span className="cap">{over ? 'חריגה מהמסגרת' : 'נשאר מהמסגרת'}</span>
-                <span className={`amount num ${over ? 'negative' : ''}`}>
-                  {shekels(Math.abs(summary.remaining))}
-                </span>
+                <span className="cap">{summary.reached ? 'הגעתם ליעד' : 'נחסך עד היום'}</span>
+                <span className="amount num">{shekels(summary.saved)}</span>
               </div>
 
               <div className="summary-tiles">
                 <div>
-                  <span className="cap">מסגרת</span>
-                  <span className="val num">{shekels(summary.frame)}</span>
+                  <span className="cap">יעד</span>
+                  <span className="val num">{shekels(summary.target)}</span>
                 </div>
                 <div>
-                  <span className="cap">הוצא</span>
-                  <span className="val num">{shekels(summary.spent)}</span>
+                  <span className="cap">{summary.reached ? 'מעבר ליעד' : 'נשאר לחסוך'}</span>
+                  <span className="val num">{shekels(Math.abs(summary.remaining))}</span>
                 </div>
               </div>
 
+              {/* הפס מתמלא במקום להתרוקן: כאן צבירה היא ההישג */}
               <div className="bar">
-                <div
-                  className={`bar-fill ${over ? 'danger' : ''}`}
-                  style={{ width: `${summary.progress}%` }}
-                />
+                <div className="bar-fill goal" style={{ width: `${summary.progress}%` }} />
               </div>
             </section>
 
             {budget?.linkedBudgetId && (
               <p className="hint center">
-                ההוצאות כאן מופיעות גם בבלתם של תקציב הבית, כשורה אחת לכל חודש.
+                ההפקדות כאן מופיעות גם בקרן של תקציב הבית, כשורה אחת לכל חודש.
                 {syncedAt ? ' מסונכרן ✓' : ''}
               </p>
             )}
 
-            {TRIP_ORDER.map((category) => (
-              <TripCategory
-                key={category}
-                category={category}
-                entries={summary.byCategory[category]}
-                total={summary.totals[category]}
-                authorOf={shared ? members.get : null}
-                actions={actions}
-                onAdd={setSheet}
-              />
+            {GOAL_ORDER.map((category) => (
+              <section className="cat-card" data-category={category} key={category}>
+                <div className="cat-head">
+                  <span className="cat-title">
+                    <span className="dot" />
+                    <h2>{GOAL_CATEGORIES[category].label}</h2>
+                  </span>
+                  <span className="cat-total num">{shekels(summary.totals[category])}</span>
+                </div>
+
+                {summary.byCategory[category].length > 0 ? (
+                  <ul className="entry-list">
+                    {summary.byCategory[category].map((entry) => (
+                      <EntryRow
+                        key={entry.id}
+                        entry={entry}
+                        author={shared ? members.get(entry.addedBy) : null}
+                        onUpdate={actions.update}
+                        onRemove={actions.remove}
+                      />
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="empty">אין עדיין שורות</p>
+                )}
+
+                <button type="button" className="btn-text" onClick={() => setSheet(category)}>
+                  + הוספה
+                </button>
+              </section>
             ))}
+
             {isOwner && (
               <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
-                מחיקת הטיול
+                מחיקת המטרה
               </button>
             )}
           </>
         )}
       </div>
 
-      <button type="button" className="fab" onClick={() => setSheet('lodging')}>
-        <span className="plus">+</span> הוצאה
+      <button type="button" className="fab" onClick={() => setSheet('deposit')}>
+        <span className="plus">+</span> הפקדה
       </button>
 
       {sheet && (
         <EntrySheet
-          mode="trip"
+          mode="goal"
           initialCategory={sheet}
           summary={summary}
           me={members.get(uid)}
@@ -175,8 +160,8 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
 
       {confirmDelete && (
         <ConfirmDialog
-          title="למחוק את הטיול?"
-          body={`כל ההוצאות של "${budget?.name}" יימחקו, וגם השורות המסכמות שלו בתקציב הבית. אי אפשר לבטל.`}
+          title="למחוק את המטרה?"
+          body={`כל ההפקדות של "${budget?.name}" יימחקו, וגם השורות המסכמות שלה בתקציב הבית. אי אפשר לבטל.`}
           confirmLabel="מחיקה"
           onConfirm={handleDelete}
           onCancel={() => setConfirmDelete(false)}

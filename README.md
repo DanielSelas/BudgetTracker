@@ -11,7 +11,7 @@ An installable PWA. No developer account, no app store, no native build.
 ![React](https://img.shields.io/badge/React-19-2a78d6?style=flat-square&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-7a8a5e?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-eb6834?style=flat-square&logo=firebase&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-125%20passing-1baf7a?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-135%20passing-1baf7a?style=flat-square)
 
 The interface is in Hebrew and right to left throughout.
 
@@ -34,13 +34,13 @@ The interface is in Hebrew and right to left throughout.
 </tr>
 <tr>
 <td><img src="docs/screens/month.png" alt="The month" /></td>
-<td><img src="docs/screens/sheet.png" alt="Adding an entry" /></td>
 <td><img src="docs/screens/trip.png" alt="A trip budget" /></td>
+<td><img src="docs/screens/goal.png" alt="A saving goal" /></td>
 </tr>
 <tr>
 <td align="center"><b>The month</b><br/>Balance, base amount, targets per group</td>
-<td align="center"><b>Quick entry</b><br/>Amount first, with a live impact line</td>
 <td align="center"><b>A trip</b><br/>One frame, its own categories, no months</td>
+<td align="center"><b>A saving goal</b><br/>A target to fill, deposits and withdrawals</td>
 </tr>
 </table>
 
@@ -56,6 +56,7 @@ The interface is in Hebrew and right to left throughout.
 | **Recurring charges** | Tick a box when adding, and the row is created automatically every month. |
 | **A real reserve** | The unplanned margin is a category you can spend from, not just a number to look at. |
 | **Trips** | A separate budget shape for a trip, which can charge the household reserve. |
+| **Saving goals** | A target to accumulate towards, whose deposits count against the household fund. |
 | **Works offline** | Opens and shows data without a connection. Writes sync when it returns. |
 | **Who entered what** | A coloured avatar on every row. |
 | **End of month nudge** | A notification if money is left over, linking straight to a fund deposit. |
@@ -72,24 +73,34 @@ every entry under it was written against one shape of screen.
 The monthly budget. Income, a computed base amount, and the three targets. Months
 to navigate between, recurring charges, and a history view.
 
-### Trip
+### Trip and saving goal
 
-A different shape rather than a preset of the household one:
+Both are a different shape rather than a preset of the household one. They share
+one amount fixed up front and entries measured against it, and differ in which
+direction that amount moves:
 
-|  | Household | Trip |
-|---|---|---|
-| Time | Calendar months | A date on each entry, no month to navigate |
-| Money in | Income, base amount derived from it | One frame you set |
-| Categories | Four, fixed in code | Six: lodging, transport, attractions, dining, shopping, other |
-| Targets | 50/30/20 of the base | The frame only, nothing per category |
-| Recurring | Yes | Not meaningful |
+|  | Household | Trip | Saving goal |
+|---|---|---|---|
+| Time | Calendar months | A date on each entry, no month to navigate | Same |
+| The amount | Income, base derived from it | A frame to spend down | A target to fill up |
+| Categories | Four, fixed in code | Lodging, transport, attractions, dining, shopping, other | Deposit and withdrawal |
+| Targets | 50/30/20 of the base | The frame only | The target only |
+| Recurring | Yes | Not meaningful | Not meaningful |
+| Rolls up into | - | The unplanned reserve | The fund |
 
-A trip can be linked to a household budget. The trip keeps every line of detail;
-the household gets **one summary row per month**, locked for editing and pointing
-back at the trip, so the same money is never counted twice or edited in two
-places. The row id is derived from the trip and the month, so two devices syncing
+Either can be linked to a household budget. The trip or goal keeps every line of
+detail; the household gets **one summary row per month**, locked for editing and
+pointing back at its source, so the same money is never counted twice or edited in
+two places.
+
+Where that row lands follows the meaning: a trip is a one off expense that was
+planned for, which is what the unplanned reserve is for, and a goal is exactly
+what the 20% fund target exists to hold.
+
+The row id is derived from the source budget and the month, so two devices syncing
 at once write to the same document instead of duplicating it. A month that empties
-out removes its row, and deleting a trip removes all of them.
+out removes its row, and deleting the budget removes all of them. In a goal, a
+withdrawal reduces what is credited for that month rather than adding to it.
 
 ---
 
@@ -163,7 +174,7 @@ valid, unused and unexpired.
 npm run test:rules
 ```
 
-runs 61 tests against a real Firestore emulator, including the adversarial cases:
+runs 63 tests against a real Firestore emulator, including the adversarial cases:
 joining without a code, a used code, an expired code, a code belonging to another
 budget, adding somebody else with a valid code, extending an expiry, taking over
 ownership, listing invites, moving a record between budgets, and forging

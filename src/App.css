@@ -1537,3 +1537,22 @@ input[type='date']::-webkit-date-and-time-value {
 input[type='date']::-webkit-calendar-picker-indicator {
   margin-inline-start: 0;
 }
+
+/* במטרת חיסכון הצבירה היא ההישג, ולכן הפס ירוק ולא בצבע האקסנט */
+.summary .bar-fill.goal {
+  background: var(--cat-income-base);
+}
+
+[data-category='deposit'] {
+  --cat-bg: var(--cat-income-bg);
+  --cat-tint: var(--cat-income-tint);
+  --cat-base: var(--cat-income-base);
+  --cat-ink: var(--cat-income-ink);
+}
+
+[data-category='withdrawal'] {
+  --cat-bg: var(--color-neutral-200);
+  --cat-tint: var(--color-neutral-300);
+  --cat-base: var(--color-neutral-500);
+  --cat-ink: var(--color-neutral-800);
+}

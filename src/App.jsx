@@ -6,6 +6,7 @@ import BudgetSetup from './components/BudgetSetup'
 import BudgetHome from './components/BudgetHome'
 import MonthView from './components/MonthView'
 import TripView from './components/TripView'
+import GoalView from './components/GoalView'
 import HistoryView from './components/HistoryView'
 import BottomNav from './components/BottomNav'
 import UpdatePrompt from './components/UpdatePrompt'
@@ -13,7 +14,7 @@ import OfflineBanner from './components/OfflineBanner'
 import ErrorBoundary from './components/ErrorBoundary'
 import { isFirebaseConfigured, missingFirebaseKeys } from './lib/firebase'
 import { clearNudge, readNudge } from './lib/deepLink'
-import { budgetType, isTrip } from './lib/model'
+import { budgetType, isGoal, isTrip } from './lib/model'
 import './App.css'
 
 function ConfigError() {
@@ -62,6 +63,7 @@ function Workspace({ nudge }) {
   const { budget, budgetId, goHome } = useBudget()
   const [tab, setTab] = useState('month')
   const trip = isTrip(budget)
+  const goal = isGoal(budget)
 
   function handleNav(next) {
     if (next === 'budgets') goHome()
@@ -70,7 +72,9 @@ function Workspace({ nudge }) {
 
   return (
     <main className="app">
-      {trip
+      {goal
+        ? <GoalView budgetId={budgetId} budget={budget} uid={user.uid} onDeleted={goHome} />
+        : trip
         ? <TripView budgetId={budgetId} budget={budget} uid={user.uid} onDeleted={goHome} />
         : tab === 'month'
           ? <MonthView budgetId={budgetId} budget={budget} uid={user.uid} nudge={nudge} onDeleted={goHome} />

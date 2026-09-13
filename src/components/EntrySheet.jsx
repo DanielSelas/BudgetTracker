@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import Avatar from './Avatar'
 import Sheet from './Sheet'
 import { shekels } from '../lib/format'
-import { CATEGORIES, TRIP_CATEGORIES, TRIP_ORDER, calcBaseAmount, groupTarget, todayDate } from '../lib/model'
+import {
+  CATEGORIES, GOAL_CATEGORIES, GOAL_ORDER, TRIP_CATEGORIES, TRIP_ORDER,
+  calcBaseAmount, groupTarget, todayDate,
+} from '../lib/model'
 
 /**
  * הכנסה והוצאה הן שתי פעולות שונות, ולכן המגירה לא מערבבת ביניהן.
@@ -18,6 +21,11 @@ const EXPENSE_PILLS = [
 const TRIP_PILLS = TRIP_ORDER.map((category) => ({
   category,
   label: TRIP_CATEGORIES[category].label,
+}))
+
+const GOAL_PILLS = GOAL_ORDER.map((category) => ({
+  category,
+  label: GOAL_CATEGORIES[category].label,
 }))
 
 const DEFAULT_NAME = {
@@ -50,8 +58,10 @@ export default function EntrySheet({
   onClose,
 }) {
   const trip = mode === 'trip'
+  const goal = mode === 'goal'
+  const frame = trip || goal
   // נקבע בפתיחה ולא משתנה, אחרת החלפת קטגוריה הייתה מחליפה את סוג הפעולה
-  const [incomeMode] = useState(() => !trip && initialCategory === 'income')
+  const [incomeMode] = useState(() => !frame && initialCategory === 'income')
   const [category, setCategory] = useState(initialCategory)
   const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : '')
   const [name, setName] = useState('')
@@ -68,6 +78,16 @@ export default function EntrySheet({
   // התצוגה המקדימה היא מה שהופך את הטופס לשימושי: רואים את ההשפעה לפני השמירה
   const impact = useMemo(() => {
     if (!summary) return null
+
+    if (goal) {
+      if (summary.target <= 0) return 'לא הוגדר סכום יעד למטרה הזו.'
+      const sign = category === 'withdrawal' ? -1 : 1
+      const saved = summary.saved + value * sign
+      const left = summary.target - saved
+      return left > 0
+        ? `אחרי זה ייחסכו ${shekels(saved)}, ויישארו ${shekels(left)} עד היעד.`
+        : `אחרי זה ייחסכו ${shekels(saved)}, כלומר היעד הושג.`
+    }
 
     if (trip) {
       if (summary.frame <= 0) return 'לא הוגדרה מסגרת לטיול הזה.'
@@ -97,7 +117,7 @@ export default function EntrySheet({
     return left >= 0
       ? `אחרי זה יישארו ב${label} ${shekels(left)} מתוך ${shekels(target)}.`
       : `אחרי זה תהיה חריגה של ${shekels(-left)} מעבר ליעד ${shekels(target)}.`
-  }, [summary, category, value, trip])
+  }, [summary, category, value, trip, goal])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -129,11 +149,15 @@ export default function EntrySheet({
   return (
     <Sheet onClose={onClose}>
       <form className="sheet-form" onSubmit={handleSubmit}>
-        <h2>{isIncome ? 'הכנסה חדשה' : 'הוצאה חדשה'}</h2>
+        <h2>
+          {goal
+            ? (category === 'withdrawal' ? 'משיכה חדשה' : 'הפקדה חדשה')
+            : isIncome ? 'הכנסה חדשה' : 'הוצאה חדשה'}
+        </h2>
 
         {!incomeMode && (
         <div className="cat-pills">
-          {(trip ? TRIP_PILLS : EXPENSE_PILLS).map((pill) => (
+          {(goal ? GOAL_PILLS : trip ? TRIP_PILLS : EXPENSE_PILLS).map((pill) => (
             <button
               key={pill.category}
               type="button"
@@ -149,7 +173,11 @@ export default function EntrySheet({
         )}
 
         <label className="amount-card">
-          <span className="cap">{trip ? 'כמה יצא?' : AMOUNT_LABEL[category]}</span>
+          <span className="cap">
+            {goal
+              ? (category === 'withdrawal' ? 'כמה נמשך?' : 'כמה הפקדתם?')
+              : trip ? 'כמה יצא?' : AMOUNT_LABEL[category]}
+          </span>
           <input
             className="amount-input num"
             type="number"
@@ -167,12 +195,12 @@ export default function EntrySheet({
           <input
             className="input"
             maxLength={100}
-            placeholder={isIncome ? 'מקור ההכנסה' : 'על מה'}
+            placeholder={goal ? 'על מה (לא חובה)' : isIncome ? 'מקור ההכנסה' : 'על מה'}
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
 
-          {trip ? (
+          {frame ? (
             <label className="field">
               תאריך
               <input
@@ -182,7 +210,7 @@ export default function EntrySheet({
                 onChange={(event) => setDate(event.target.value)}
               />
               <span className="type-hint">
-                קובע לאיזה חודש ההוצאה תשויך בתקציב הבית.
+                קובע לאיזה חודש השורה תשויך בתקציב הבית.
               </span>
             </label>
           ) : (

@@ -3,7 +3,7 @@ import Sheet from './Sheet'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
 import { createBudget, joinBudgetWithInvite } from '../lib/budgets'
-import { BUDGET_TYPES, isTrip } from '../lib/model'
+import { BUDGET_TYPES, isFrameBudget } from '../lib/model'
 
 const JOIN_MESSAGES = {
   invalid: 'הקוד חייב להכיל 8 תווים',
@@ -26,7 +26,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
 
   const who = user.displayName || user.email || ''
   // אפשר לקשר רק לתקציבי משק בית שאתה כבר חבר בהם
-  const linkTargets = (budgets || []).filter((budget) => !isTrip(budget))
+  const linkTargets = (budgets || []).filter((budget) => !isFrameBudget(budget))
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -45,8 +45,8 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
         name,
         displayName: who,
         type,
-        frame: type === 'trip' ? Number(frame) || 0 : 0,
-        linkedBudgetId: type === 'trip' && linkedBudgetId ? linkedBudgetId : null,
+        frame: frameBudget ? Number(frame) || 0 : 0,
+        linkedBudgetId: frameBudget && linkedBudgetId ? linkedBudgetId : null,
       })
       onDone?.(budgetId)
     } catch {
@@ -56,8 +56,9 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
   }
 
   const creating = mode === 'create'
-  const trip = type === 'trip'
-  const canSubmit = creating ? name.trim() && (!trip || Number(frame) > 0) : code.trim()
+  const goal = type === 'goal'
+  const frameBudget = type === 'trip' || goal
+  const canSubmit = creating ? name.trim() && (!frameBudget || Number(frame) > 0) : code.trim()
 
   const body = (
     <form className={asSheet ? 'sheet-form' : 'sheet sheet-static'} onSubmit={handleSubmit}>
@@ -101,16 +102,20 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
             שם התקציב
             <input
               className="input" required maxLength={60}
-              placeholder={trip ? 'למשל: יוון באוגוסט' : 'למשל: משק הבית'}
+              placeholder={
+                goal ? 'למשל: רכב חדש'
+                  : frameBudget ? 'למשל: יוון באוגוסט'
+                    : 'למשל: משק הבית'
+              }
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
           </label>
 
-          {trip && (
+          {frameBudget && (
             <>
               <label className="field">
-                מסגרת לטיול
+                {goal ? 'סכום היעד' : 'מסגרת לטיול'}
                 <input
                   className="input num" type="number" inputMode="decimal" min="0" step="1"
                   required placeholder="0"
@@ -121,7 +126,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
 
               {linkTargets.length > 0 && (
                 <label className="field">
-                  לחייב את הבלתם של
+                  {goal ? 'לזקוף לקרן של' : 'לחייב את הבלתם של'}
                   <select
                     className="input rtl"
                     value={linkedBudgetId}
@@ -133,7 +138,9 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
                     ))}
                   </select>
                   <span className="type-hint">
-                    הוצאות הטיול יופיעו שם כשורה מסכמת אחת לכל חודש.
+                    {goal
+                      ? 'ההפקדות יופיעו שם כשורה מסכמת אחת לכל חודש.'
+                      : 'הוצאות הטיול יופיעו שם כשורה מסכמת אחת לכל חודש.'}
                   </span>
                 </label>
               )}

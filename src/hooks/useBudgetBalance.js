@@ -30,24 +30,29 @@ export function useMonthBalance(budgetId) {
   return balance
 }
 
-/** סך ההוצאה בטיול, על פני כל החודשים שהוא נמשך. */
-export function useTripSpent(budgetId) {
-  const [spent, setSpent] = useState(null)
+/**
+ * הסכום שנצבר בתקציב מסגרת, על פני כל החודשים.
+ * במטרת חיסכון משיכה מקטינה את הצבירה, ולכן היא נספרת בסימן הפוך.
+ */
+export function useFrameTotal(budgetId, isGoal = false) {
+  const [total, setTotal] = useState(null)
 
   useEffect(() => {
     if (!budgetId) {
-      setSpent(null)
+      setTotal(null)
       return
     }
-    const tripQuery = query(collection(db, 'entries'), where('budgetId', '==', budgetId))
+    const frameQuery = query(collection(db, 'entries'), where('budgetId', '==', budgetId))
     return onSnapshot(
-      tripQuery,
-      (snapshot) => setSpent(
-        snapshot.docs.reduce((total, item) => total + (item.data().actualAmount || 0), 0),
-      ),
-      () => setSpent(null),
+      frameQuery,
+      (snapshot) => setTotal(snapshot.docs.reduce((sum, item) => {
+        const data = item.data()
+        const sign = isGoal && data.category === 'withdrawal' ? -1 : 1
+        return sum + (data.actualAmount || 0) * sign
+      }, 0)),
+      () => setTotal(null),
     )
-  }, [budgetId])
+  }, [budgetId, isGoal])
 
-  return spent
+  return total
 }

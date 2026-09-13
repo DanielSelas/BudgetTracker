@@ -640,3 +640,31 @@ describe('שורה מסכמת מקצה לקצה', () => {
     expect(after.data().actualAmount).toBe(5000)
   })
 })
+
+describe('מטרת חיסכון', () => {
+  it('יצירה מחייבת סכום יעד מספרי', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(PARTNER), 'budgets', 'g-ok'), {
+        name: 'רכב', ownerUid: PARTNER, type: 'goal', frame: 20000,
+      }),
+    )
+    await assertFails(
+      setDoc(doc(as(PARTNER), 'budgets', 'g-bad'), {
+        name: 'רכב', ownerUid: PARTNER, type: 'goal',
+      }),
+    )
+  })
+
+  it('מקבל הפקדה ומשיכה כקטגוריות', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'entries', 'g1'), entry({
+        category: 'deposit', budgetGroup: 'none', name: 'הפקדה',
+      })),
+    )
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'entries', 'g2'), entry({
+        category: 'withdrawal', budgetGroup: 'none', name: 'משיכה',
+      })),
+    )
+  })
+})

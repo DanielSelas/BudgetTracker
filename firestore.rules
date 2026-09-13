@@ -33,8 +33,9 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 60
-        && request.resource.data.type in ['household', 'trip']
-        && (request.resource.data.type != 'trip'
+        && request.resource.data.type in ['household', 'trip', 'goal']
+        // לטיול ולמטרה יש סכום שנקבע מראש; למשק בית אין
+        && (request.resource.data.type == 'household'
             || (request.resource.data.frame is number
                 && request.resource.data.frame >= 0));
 
@@ -145,7 +146,8 @@ service cloud.firestore {
         return data.budgetId is string
           && data.category in [
             'income', 'fixed', 'leisure', 'fund', 'unplanned',
-            'lodging', 'transport', 'attractions', 'dining', 'shopping', 'other'
+            'lodging', 'transport', 'attractions', 'dining', 'shopping', 'other',
+            'deposit', 'withdrawal'
           ]
           && data.budgetGroup in ['fixed', 'leisure', 'savings', 'none']
           && data.name is string && data.name.size() > 0 && data.name.size() <= 100

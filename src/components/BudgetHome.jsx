@@ -6,19 +6,25 @@ import NotificationCard from './NotificationCard'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
 import { membersSentence, sortMembers } from '../lib/members'
-import { BUDGET_TYPES, budgetType, isTrip } from '../lib/model'
-import { useMonthBalance, useTripSpent } from '../hooks/useBudgetBalance'
+import { BUDGET_TYPES, budgetType, isFrameBudget, isGoal } from '../lib/model'
+import { useMonthBalance, useFrameTotal } from '../hooks/useBudgetBalance'
 import { shekels } from '../lib/format'
 
 function Remaining({ budget }) {
-  const trip = isTrip(budget)
+  const frame = isFrameBudget(budget)
+  const goal = isGoal(budget)
   // שני ה-hooks נקראים תמיד, ומי שלא רלוונטי מקבל null ולא מאזין לכלום
-  const balance = useMonthBalance(trip ? null : budget.id)
-  const spent = useTripSpent(trip ? budget.id : null)
+  const balance = useMonthBalance(frame ? null : budget.id)
+  const spent = useFrameTotal(frame ? budget.id : null, goal)
 
-  if (trip) {
+  if (frame) {
     if (spent === null) return null
-    return (
+    return goal ? (
+      <span className="budget-remaining">
+        נחסך <strong className="num">{shekels(spent)}</strong>
+        {' '}מתוך {shekels(budget.frame || 0)}
+      </span>
+    ) : (
       <span className="budget-remaining">
         נשאר מהמסגרת <strong className="num">{shekels((budget.frame || 0) - spent)}</strong>
       </span>
