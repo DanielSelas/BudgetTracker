@@ -1,6 +1,11 @@
 /// <reference lib="webworker" />
 import { clientsClaim } from 'workbox-core'
-import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
+import {
+  cleanupOutdatedCaches,
+  createHandlerBoundToURL,
+  precacheAndRoute,
+} from 'workbox-precaching'
+import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { initializeApp } from 'firebase/app'
 import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw'
 
@@ -12,6 +17,14 @@ import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw'
 
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
+
+/**
+ * מסלול הניווט. בגרסה שנוצרת אוטומטית הוא מתווסף לבד, וכשעברתי
+ * ל-service worker כתוב ידנית הוא נשמט. בלעדיו כל פתיחה של האפליקציה
+ * המותקנת לא מקבלת את index.html, והמסך נשאר לבן.
+ */
+registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')))
+
 clientsClaim()
 
 // העדכון נשאר בשליטת המשתמש. הדף שולח את ההודעה כשלוחצים "רענון".
