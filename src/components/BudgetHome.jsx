@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Avatar from './Avatar'
 import BudgetSetup from './BudgetSetup'
 import InvitePanel from './InvitePanel'
+import NotificationCard from './NotificationCard'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
 import { membersSentence, sortMembers } from '../lib/members'
@@ -106,6 +107,8 @@ export default function BudgetHome() {
         <button type="button" className="dashed-card" onClick={() => setAdding(true)}>
           + תקציב חדש או הצטרפות עם קוד
         </button>
+
+        <NotificationCard />
 
         {target && (
           <InvitePanel

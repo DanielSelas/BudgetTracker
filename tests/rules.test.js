@@ -364,3 +364,30 @@ describe('recurring templates', () => {
     )
   })
 })
+
+describe('רישום מכשירים להתראות', () => {
+  const TOKEN = 'fcm-token-abc123'
+
+  it('כל אחד כותב וקורא רק את המכשירים של עצמו', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'users', OWNER, 'devices', TOKEN), { token: TOKEN }),
+    )
+    await assertSucceeds(getDoc(doc(as(OWNER), 'users', OWNER, 'devices', TOKEN)))
+    await assertFails(getDoc(doc(as(PARTNER), 'users', OWNER, 'devices', TOKEN)))
+    await assertFails(
+      setDoc(doc(as(PARTNER), 'users', OWNER, 'devices', TOKEN), { token: TOKEN }),
+    )
+  })
+
+  it('אנונימי לא נוגע בכלל', async () => {
+    await assertFails(getDoc(doc(anon(), 'users', OWNER, 'devices', TOKEN)))
+  })
+
+  it('אפשר להסיר מכשיר של עצמך', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'users', OWNER, 'devices', TOKEN), { token: TOKEN })
+    })
+    await assertFails(deleteDoc(doc(as(PARTNER), 'users', OWNER, 'devices', TOKEN)))
+    await assertSucceeds(deleteDoc(doc(as(OWNER), 'users', OWNER, 'devices', TOKEN)))
+  })
+})
