@@ -23,9 +23,10 @@ function Skeleton() {
   )
 }
 
-export default function MonthView({ budgetId, budget, uid }) {
+export default function MonthView({ budgetId, budget, uid, nudge }) {
   const [month, setMonth] = useState(monthKey)
-  const [sheet, setSheet] = useState(null)
+  const [sheet, setSheet] = useState(nudge ? nudge.category : null)
+  const [prefill, setPrefill] = useState(nudge?.amount ?? 0)
   const [pendingStop, setPendingStop] = useState(null)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
 
@@ -86,7 +87,7 @@ export default function MonthView({ budgetId, budget, uid }) {
                 type="button"
                 className="prompt-card"
                 data-category="income"
-                onClick={() => setSheet('income')}
+                onClick={() => { setPrefill(0); setSheet('income') }}
               >
                 <span className="prompt-title">מתחילים מהכנסה</span>
                 <span className="prompt-body">
@@ -114,7 +115,7 @@ export default function MonthView({ budgetId, budget, uid }) {
                 group={summary.groups[CATEGORIES[category].budgetGroup]}
                 authorOf={shared ? members.get : null}
                 actions={actions}
-                onAdd={(next) => setSheet(next)}
+                onAdd={(next) => { setPrefill(0); setSheet(next) }}
                 onStopRecurring={setPendingStop}
               />
             ))}
@@ -125,7 +126,7 @@ export default function MonthView({ budgetId, budget, uid }) {
       <button
         type="button"
         className="fab"
-        onClick={() => setSheet(needsIncome ? 'income' : 'fixed')}
+        onClick={() => { setPrefill(0); setSheet(needsIncome ? 'income' : 'fixed') }}
       >
         <span className="plus">+</span> {needsIncome ? 'הכנסה' : 'הוצאה'}
       </button>
@@ -133,11 +134,12 @@ export default function MonthView({ budgetId, budget, uid }) {
       {sheet && (
         <EntrySheet
           initialCategory={sheet}
+          initialAmount={prefill}
           summary={summary}
           me={me}
           partner={partner ? displayName(partner) : ''}
           onSubmit={actions.add}
-          onClose={() => setSheet(null)}
+          onClose={() => { setSheet(null); setPrefill(0) }}
         />
       )}
 

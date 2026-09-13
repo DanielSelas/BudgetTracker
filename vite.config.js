@@ -7,6 +7,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
+      // service worker כתוב ידנית: הוא מחזיק גם את המטמון וגם את קבלת
+      // ההתראות ברקע. ראו src/sw.js
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       includeAssets: ['apple-touch-icon.png', 'favicon.svg'],
       manifest: {
         name: 'BudgetTracker: מעקב תקציב משפחתי',
@@ -26,18 +31,10 @@ export default defineConfig({
           { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: {
+      // Firestore מנהל את הסנכרון והאופליין של הנתונים בעצמו.
+      // ה-service worker אחראי רק על קליפת האפליקציה.
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // Firestore מנהל את הסנכרון והאופליין של הנתונים בעצמו.
-        // ה-service worker אחראי רק על קליפת האפליקציה.
-        navigateFallbackDenylist: [/^\/__/],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\//,
-            handler: 'CacheFirst',
-            options: { cacheName: 'fonts', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } },
-          },
-        ],
       },
     }),
   ],

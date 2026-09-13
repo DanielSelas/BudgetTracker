@@ -55,6 +55,7 @@
 | **בלתם** | המרווח הנזיל שלא חולק לקטגוריות, כרזרבה להוצאות בלתי צפויות. |
 | **עובד אופליין** | נפתח ומציג נתונים בלי רשת. כתיבות מסתנכרנות כשהחיבור חוזר. |
 | **מי הזין** | אווטאר צבעוני לכל שורה, כדי לדעת מי רשם מה. |
+| **תזכורת סוף חודש** | התראה ביום האחרון של החודש אם נשאר כסף, עם קישור שפותח הפקדה לקרן. |
 
 ---
 
@@ -133,6 +134,36 @@ entries/{entryId}                budgetId, month, category, budgetGroup, סכו�
 
 ---
 
+## תזכורת סוף חודש
+
+ביום האחרון של החודש, אם נשאר כסף שלא הוצא, כל חבר בתקציב מקבל התראה
+עם הסכום וקישור שפותח ישירות הפקדה לקרן עם הסכום ממולא.
+
+השליחה רצה ב-GitHub Actions ולא ב-Cloud Functions, כדי שהכל יישאר
+בתוכנית החינמית של Firebase. הסקריפט רץ כל יום ב-16:00 UTC ובודק בעצמו
+אם היום הוא האחרון בחודש לפי שעון ישראל.
+
+### מה צריך להגדיר פעם אחת
+
+1. **מפתח Web Push**: Firebase Console ← Project settings ← Cloud Messaging ←
+   Web Push certificates ← Generate key pair. להוסיף כ-`VITE_FIREBASE_VAPID_KEY`
+   ב-`.env.local` וגם במשתני הסביבה של Vercel.
+2. **מפתח שירות**: Firebase Console ← Project settings ← Service accounts ←
+   Generate new private key. להדביק את כל תוכן ה-JSON כ-Secret בשם
+   `FIREBASE_SERVICE_ACCOUNT` תחת GitHub ← Settings ← Secrets and variables ←
+   Actions. **המפתח הזה נותן גישה מלאה לפרויקט. לעולם לא בקוד.**
+3. להפעיל את המתג במסך "התקציבים שלי", מתוך האפליקציה המותקנת.
+
+### בדיקה
+
+GitHub ← Actions ← "תזכורת סוף חודש" ← Run workflow, עם `force` מסומן.
+כך אפשר לשלוח גם כשזה לא סוף החודש.
+
+באייפון ההתראות עובדות **רק** באפליקציה שהותקנה למסך הבית. בלשונית רגילה
+של ספארי ה-API לא קיים בכלל, והממשק יסביר את זה במקום להציג מתג שבור.
+
+---
+
 ## הרצה מקומית
 
 ```bash
@@ -152,6 +183,7 @@ npm run dev
 | `npm run test:rules` | בדיקות כללי האבטחה מול אמולטור (דורש Java) |
 | `npm run lint` | oxlint |
 | `npm run deploy` | בנייה והעלאה ל-Firebase, כולל כללים ואינדקסים |
+| `npm run nudge` | הרצה מקומית של שולח התזכורות (דורש מפתח שירות) |
 
 ---
 
@@ -185,8 +217,10 @@ src/
   context/       AuthContext, BudgetContext
   hooks/         useEntries, useHistory, useRecurring, useBudgetBalance
   lib/           model, budgets, recurring, members, format, firebase
+  sw.js          service worker: מטמון והתראות ברקע
   index.css      טוקני העיצוב
   App.css        סגנונות הרכיבים
+scripts/         שולח תזכורות סוף החודש
 tests/           בדיקות לוגיקה וכללי אבטחה
 docs/screens/    צילומי המסך שב-README
 firestore.rules  כללי האבטחה

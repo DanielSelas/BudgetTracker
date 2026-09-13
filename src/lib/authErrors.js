@@ -9,6 +9,9 @@ const MESSAGES = {
   'auth/popup-blocked': 'הדפדפן חסם את חלון ההתחברות. אפשר חלונות קופצים ונסה שוב',
   'auth/account-exists-with-different-credential': 'לאימייל הזה כבר קיים חשבון עם שיטת התחברות אחרת',
   'auth/unauthorized-domain': 'הדומיין הזה לא מאושר ב-Firebase Auth',
+  'auth/email-already-in-use': 'כבר קיים חשבון עם האימייל הזה. אפשר פשוט להתחבר',
+  'auth/weak-password': 'הסיסמה קצרה מדי. צריך לפחות שישה תווים',
+  'auth/operation-not-allowed': 'הרשמה עם אימייל אינה מופעלת בפרויקט',
 }
 
 export function authErrorMessage(error) {

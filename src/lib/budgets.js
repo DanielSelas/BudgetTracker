@@ -135,6 +135,11 @@ export function watchMemberships(uid, onChange, onError) {
   )
 }
 
+/** מעדכן את השם שלך במסמך החבר. מותר רק על עצמך, לפי כללי האבטחה. */
+export function setMemberName({ budgetId, uid, displayName }) {
+  return updateDoc(doc(db, 'budgets', budgetId, 'members', uid), { displayName })
+}
+
 /** מאזין לרשימת החברים של תקציב, משמש להבחנה בין אישי למשותף. */
 export function watchMembers(budgetId, onChange, onError) {
   return onSnapshot(

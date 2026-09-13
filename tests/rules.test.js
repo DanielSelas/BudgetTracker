@@ -494,3 +494,76 @@ describe('שורה מסכמת של טיול', () => {
     )
   })
 })
+
+describe('רישום מכשירים להתראות', () => {
+  const TOKEN = 'fcm-token-abc123'
+
+  it('כל אחד כותב וקורא רק את המכשירים של עצמו', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'users', OWNER, 'devices', TOKEN), { token: TOKEN }),
+    )
+    await assertSucceeds(getDoc(doc(as(OWNER), 'users', OWNER, 'devices', TOKEN)))
+    await assertFails(getDoc(doc(as(PARTNER), 'users', OWNER, 'devices', TOKEN)))
+    await assertFails(
+      setDoc(doc(as(PARTNER), 'users', OWNER, 'devices', TOKEN), { token: TOKEN }),
+    )
+  })
+
+  it('אנונימי לא נוגע בכלל', async () => {
+    await assertFails(getDoc(doc(anon(), 'users', OWNER, 'devices', TOKEN)))
+  })
+
+  it('אפשר להסיר מכשיר של עצמך', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'users', OWNER, 'devices', TOKEN), { token: TOKEN })
+    })
+    await assertFails(deleteDoc(doc(as(PARTNER), 'users', OWNER, 'devices', TOKEN)))
+    await assertSucceeds(deleteDoc(doc(as(OWNER), 'users', OWNER, 'devices', TOKEN)))
+  })
+})
+
+describe('עדכון שם החבר', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'budgets', BUDGET, 'members', PARTNER), {
+        uid: PARTNER, role: 'member',
+      })
+    })
+  })
+
+  it('אפשר להשלים את השם של עצמך', async () => {
+    await assertSucceeds(
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'members', PARTNER), { displayName: 'נועה' }),
+    )
+  })
+
+  it('אי אפשר לשנות שם של מישהו אחר', async () => {
+    await assertFails(
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'members', OWNER), { displayName: 'נועה' }),
+    )
+  })
+
+  it('אי אפשר להפוך את עצמך לבעלים דרך העדכון הזה', async () => {
+    await assertFails(
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'members', PARTNER), {
+        displayName: 'נועה', role: 'owner',
+      }),
+    )
+  })
+
+  it('אי אפשר להחליף זהות במסמך החבר', async () => {
+    await assertFails(
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'members', PARTNER), {
+        displayName: 'נועה', uid: OWNER,
+      }),
+    )
+  })
+
+  it('שם ארוך מדי נדחה', async () => {
+    await assertFails(
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'members', PARTNER), {
+        displayName: 'א'.repeat(61),
+      }),
+    )
+  })
+})

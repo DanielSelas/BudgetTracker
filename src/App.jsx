@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { BudgetProvider, useBudget } from './context/BudgetContext'
 import Login from './components/Login'
@@ -11,6 +11,7 @@ import BottomNav from './components/BottomNav'
 import UpdatePrompt from './components/UpdatePrompt'
 import OfflineBanner from './components/OfflineBanner'
 import { isFirebaseConfigured, missingFirebaseKeys } from './lib/firebase'
+import { clearNudge, readNudge } from './lib/deepLink'
 import './App.css'
 
 function ConfigError() {
@@ -54,7 +55,7 @@ function Onboarding() {
   )
 }
 
-function Workspace() {
+function Workspace({ nudge }) {
   const { user } = useAuth()
   const { budget, budgetId, goHome } = useBudget()
   const [tab, setTab] = useState('month')
@@ -67,7 +68,7 @@ function Workspace() {
   return (
     <main className="app">
       {tab === 'month'
-        ? <MonthView budgetId={budgetId} budget={budget} uid={user.uid} />
+        ? <MonthView budgetId={budgetId} budget={budget} uid={user.uid} nudge={nudge} />
         : <HistoryView budgetId={budgetId} />}
       <BottomNav active={tab} onChange={handleNav} />
     </main>
@@ -90,11 +91,21 @@ function Home() {
 }
 
 function BudgetGate() {
-  const { loading, hasNoBudgets, budgetId } = useBudget()
+  const { loading, hasNoBudgets, budgetId, budgetIds, selectBudget } = useBudget()
+  const [nudge, setNudge] = useState(readNudge)
+
+  // קישור מהתראה פותח את התקציב הנכון, ומיד מנוקה מהכתובת
+  useEffect(() => {
+    if (!nudge?.budgetId || !budgetIds) return
+    if (budgetIds.includes(nudge.budgetId)) selectBudget(nudge.budgetId)
+    else setNudge(null)
+    clearNudge()
+  }, [nudge, budgetIds, selectBudget])
+
   if (loading) return <Loading label="טוען תקציבים" />
   if (hasNoBudgets) return <Onboarding />
   if (!budgetId) return <Home />
-  return <Workspace />
+  return <Workspace nudge={nudge} />
 }
 
 function AuthGate() {

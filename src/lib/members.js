@@ -38,3 +38,12 @@ export function membersSentence(members) {
   if (names.length === 2) return `${names[0]} ו${names[1]}`
   return `${names.slice(0, 2).join(', ')} ועוד ${names.length - 2}`
 }
+
+/**
+ * משלים שם חסר במסמך החבר. חברים שנוצרו לפני שהשדה הזה נוסף מוצגים
+ * כ"שותף", וזה מתקן את עצמו בכניסה הבאה בלי שהמשתמש יעשה דבר.
+ */
+export function needsDisplayName(member, name) {
+  if (!member || !name) return false
+  return member.displayName !== name
+}

@@ -1,0 +1,32 @@
+name: תזכורת סוף חודש
+
+on:
+  schedule:
+    # 16:00 UTC, כלומר 18:00 או 19:00 בישראל לפי שעון קיץ.
+    # רץ כל יום, והסקריפט עצמו מחליט אם היום הוא האחרון בחודש.
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: לשלוח גם אם היום אינו האחרון בחודש
+        type: boolean
+        default: false
+
+jobs:
+  nudge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: שליחת התזכורות
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FORCE_SEND: ${{ inputs.force }}
+        run: node scripts/month-end-nudge.mjs
