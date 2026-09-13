@@ -2,235 +2,285 @@
 
 <img src="docs/icon.png" width="96" alt="BudgetTracker" />
 
-# בית ותקציב
+# BudgetTracker
 
-**מעקב הכנסות והוצאות משותף לזוג, לפי עקרון 50/30/20.**
-אפליקציית PWA שמותקנת למסך הבית באייפון, בלי חשבון מפתח ובלי חנות אפליקציות.
+**A shared budget for two people, built around the 50/30/20 rule.**
+An installable PWA. No developer account, no app store, no native build.
 
 [![Live](https://img.shields.io/badge/live-budget--tracker-c67139?style=flat-square)](https://budget-tracker-virid-one.vercel.app)
 ![React](https://img.shields.io/badge/React-19-2a78d6?style=flat-square&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-7a8a5e?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-eb6834?style=flat-square&logo=firebase&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-60%20passing-1baf7a?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-125%20passing-1baf7a?style=flat-square)
+
+The interface is in Hebrew and right to left throughout.
 
 </div>
 
 ---
 
-## המסכים
+## Screens
 
 <table>
 <tr>
-<td width="33%"><img src="docs/screens/login.png" alt="מסך התחברות" /></td>
-<td width="33%"><img src="docs/screens/home.png" alt="רשימת התקציבים" /></td>
-<td width="33%"><img src="docs/screens/month.png" alt="מסך החודש" /></td>
+<td width="33%"><img src="docs/screens/login.png" alt="Sign in" /></td>
+<td width="33%"><img src="docs/screens/home.png" alt="Budget list" /></td>
+<td width="33%"><img src="docs/screens/types.png" alt="Creating a budget" /></td>
 </tr>
 <tr>
-<td align="center"><b>התחברות</b><br/>אימייל או Google</td>
-<td align="center"><b>התקציבים שלי</b><br/>אישי מול משותף, עם קוד הזמנה</td>
-<td align="center"><b>החודש</b><br/>יתרה, סכום בסיס ובלתם</td>
+<td align="center"><b>Sign in</b><br/>Email and password, or Google</td>
+<td align="center"><b>My budgets</b><br/>Personal or shared, with an invite code</td>
+<td align="center"><b>New budget</b><br/>Pick a type, and link a trip to a household</td>
 </tr>
 <tr>
-<td><img src="docs/screens/cats.png" alt="כרטיסי קטגוריה" /></td>
-<td><img src="docs/screens/sheet.png" alt="הוספת רשומה" /></td>
-<td><img src="docs/screens/history.png" alt="היסטוריה" /></td>
+<td><img src="docs/screens/month.png" alt="The month" /></td>
+<td><img src="docs/screens/sheet.png" alt="Adding an entry" /></td>
+<td><img src="docs/screens/trip.png" alt="A trip budget" /></td>
 </tr>
 <tr>
-<td align="center"><b>קטגוריות</b><br/>יעד, יתרה יורדת ופס התקדמות</td>
-<td align="center"><b>הוספה מהירה</b><br/>סכום ראשון, עם תצוגת השפעה</td>
-<td align="center"><b>היסטוריה</b><br/>שישה חודשים ועמידה ביעדים</td>
+<td align="center"><b>The month</b><br/>Balance, base amount, targets per group</td>
+<td align="center"><b>Quick entry</b><br/>Amount first, with a live impact line</td>
+<td align="center"><b>A trip</b><br/>One frame, its own categories, no months</td>
 </tr>
 </table>
 
 ---
 
-## מה זה עושה
+## What it does
 
 | | |
 |---|---|
-| **תקציב משותף** | שני חשבונות נפרדים, מאגר אחד. כל שינוי מופיע אצל השני מיד, בלי רענון. |
-| **הזמנה בקוד** | קוד בן 8 תווים, חד פעמי, בתוקף שבוע. אין צורך לגעת בכללי האבטחה. |
-| **כמה תקציבים** | תקציב משותף למשק הבית ותקציב אישי בנפרד, עם חברים שונים בכל אחד. |
-| **חיובים קבועים** | סימון בטופס ההוספה, והשורה נוצרת אוטומטית בכל חודש. |
-| **בלתם** | המרווח הנזיל שלא חולק לקטגוריות, כרזרבה להוצאות בלתי צפויות. |
-| **עובד אופליין** | נפתח ומציג נתונים בלי רשת. כתיבות מסתנכרנות כשהחיבור חוזר. |
-| **מי הזין** | אווטאר צבעוני לכל שורה, כדי לדעת מי רשם מה. |
-| **תזכורת סוף חודש** | התראה ביום האחרון של החודש אם נשאר כסף, עם קישור שפותח הפקדה לקרן. |
+| **One budget, two accounts** | Separate sign ins, shared data. A change shows up on the other phone immediately. |
+| **Invite by code** | Eight characters, single use, valid for a week. No editing security rules to add someone. |
+| **Several budgets** | A shared household one and a personal one, with different members in each. |
+| **Recurring charges** | Tick a box when adding, and the row is created automatically every month. |
+| **A real reserve** | The unplanned margin is a category you can spend from, not just a number to look at. |
+| **Trips** | A separate budget shape for a trip, which can charge the household reserve. |
+| **Works offline** | Opens and shows data without a connection. Writes sync when it returns. |
+| **Who entered what** | A coloured avatar on every row. |
+| **End of month nudge** | A notification if money is left over, linking straight to a fund deposit. |
 
 ---
 
-## עקרון 50/30/20
+## Budget types
 
-היחס לא מחושב מכל ההכנסה אלא מ**סכום בסיס**, כדי שיישאר מרווח נזיל בעו"ש
-שלא מוקצה לשום קטגוריה.
+A budget carries a `type`, chosen when it is created and fixed afterwards, because
+every entry under it was written against one shape of screen.
+
+### Household
+
+The monthly budget. Income, a computed base amount, and the three targets. Months
+to navigate between, recurring charges, and a history view.
+
+### Trip
+
+A different shape rather than a preset of the household one:
+
+|  | Household | Trip |
+|---|---|---|
+| Time | Calendar months | A date on each entry, no month to navigate |
+| Money in | Income, base amount derived from it | One frame you set |
+| Categories | Four, fixed in code | Six: lodging, transport, attractions, dining, shopping, other |
+| Targets | 50/30/20 of the base | The frame only, nothing per category |
+| Recurring | Yes | Not meaningful |
+
+A trip can be linked to a household budget. The trip keeps every line of detail;
+the household gets **one summary row per month**, locked for editing and pointing
+back at the trip, so the same money is never counted twice or edited in two
+places. The row id is derived from the trip and the month, so two devices syncing
+at once write to the same document instead of duplicating it. A month that empties
+out removes its row, and deleting a trip removes all of them.
+
+---
+
+## The 50/30/20 rule
+
+The ratio is not taken from the whole income but from a **base amount**, so a
+liquid margin stays in the account without being allocated to anything.
 
 ```
 base = floor((income - 1) / 5000) * 5000
 ```
 
-הבסיס הוא הכפולה הקרובה של 5,000 שקטנה **ממש** מההכנסה:
+The base is the nearest multiple of 5,000 strictly **below** the income:
 
-| הכנסה בפועל | סכום בסיס | בלתם |
+| Income | Base | Reserve |
 |---:|---:|---:|
-| 24,000 ₪ | 20,000 ₪ | 4,000 ₪ |
-| 26,000 ₪ | 25,000 ₪ | 1,000 ₪ |
-| 25,000 ₪ | 20,000 ₪ | 5,000 ₪ |
+| 24,000 | 20,000 | 4,000 |
+| 26,000 | 25,000 | 1,000 |
+| 25,000 | 20,000 | 5,000 |
 
-השורה השלישית היא המקרה שקל לטעות בו: הכנסה שהיא כפולה מדויקת של 5,000
-יורדת מדרגה, ולכן `- 1` בנוסחה.
+The third row is the one that is easy to get wrong: an income that is an exact
+multiple of 5,000 drops a step, which is what the `- 1` is for.
 
-מתוך הבסיס נגזרים היעדים: **50%** קבועות, **30%** פנאי, **20%** קרן.
-הבסיס אינו ניתן לעריכה בשום מקום בממשק, הוא תמיד ערך מחושב.
+Targets come out of the base: **50%** fixed, **30%** leisure, **20%** fund. The
+base is not editable anywhere in the interface; it is always derived.
 
-חריגה בקבועות ובפנאי מסומנת באדום. **חריגה בקרן לא**, כי הפקדה מעל היעד
-היא מצב רצוי ומוצגת כ"מעבר ליעד".
+Overspending in fixed or leisure is marked in red. **Overspending the fund is
+not**, because paying in more than the target is the point, and it is shown as
+"beyond target" instead.
 
----
-
-## טכנולוגיות
-
-- **React 19** + **Vite 8**
-- **Firebase**: Firestore לנתונים, Auth להתחברות
-- **vite-plugin-pwa** ל-service worker ולמניפסט
-- **Vitest** + **@firebase/rules-unit-testing** לבדיקות
-- ללא ספריית UI וללא ספריית גרפים. ה-CSS כתוב ידנית מעל טוקנים.
+With no income the month has no base, every target is zero, and a balance would
+read as a large deficit that is not real. Those numbers are suspended until an
+income exists, and the screen leads with a prompt to enter one.
 
 ---
 
-## מבנה הנתונים
+## Data model
 
 ```
-budgets/{budgetId}               name, ownerUid
-  members/{uid}                  החברוּת בפועל. כל אחד יוצר רק את עצמו
-  recurring/{recurringId}        תבנית של חיוב קבוע
-users/{uid}/memberships/{id}     אינדקס פרטי: באילו תקציבים אני חבר
+budgets/{budgetId}               name, ownerUid, type, frame, linkedBudgetId
+  members/{uid}                  membership itself; each person creates only their own
+  recurring/{recurringId}        a template a monthly row is derived from
+users/{uid}/memberships/{id}     private index: which budgets am I in
+users/{uid}/devices/{token}      notification registrations, private to that user
 invites/{code}                   budgetId, active, expiresAt
-entries/{entryId}                budgetId, month, category, budgetGroup, סכומים
+entries/{entryId}                budgetId, month, date, category, budgetGroup, amounts
 ```
 
-שתי החלטות ששווה להכיר:
+Two decisions worth knowing:
 
-**`budgetGroup` נגזר מ-`category`** ואינו נבחר ידנית. הכנסות הן `none`,
-קבועות הן `fixed`, פנאי הוא `leisure`, וקרן היא `savings`.
+**`budgetGroup` is derived from `category`** and never chosen by hand. Income is
+`none`, fixed is `fixed`, leisure is `leisure`, fund is `savings`, and the
+unplanned reserve is `none` so that it stays outside the ratio.
 
-**`baseAmount` לא נשמר.** הוא מחושב מחדש בכל פעם מסכום ההכנסות בפועל של
-אותו חודש, כך שאין שום דרך שהוא יסתור את הנתונים.
-
----
-
-## אבטחה
-
-הגישה נאכפת ב-`firestore.rules` בשתי שכבות: חברוּת בתקציב, ומעליה ולידציה
-של כל שדה בכל רשומה.
-
-מנגנון ההזמנות מיושם כולו בכללים, בלי Cloud Functions, כדי שיעבוד בתוכנית
-החינמית. מוזמן יוצר מסמך חבר של **עצמו בלבד**, והכלל מאשר זאת רק אם הוא
-מציג קוד הזמנה תקף שעדיין לא נוצל ולא פג.
-
-`npm run test:rules` מריץ 34 בדיקות מול אמולטור Firestore אמיתי, כולל
-תרחישים זדוניים: הצטרפות בלי קוד, קוד שנוצל, קוד שפג, קוד של תקציב אחר,
-צירוף של מישהו אחר עם קוד תקף, הארכת תוקף, חטיפת בעלות, סריקת רשימת
-ההזמנות, העברת רשומה בין תקציבים וזיוף `addedBy`.
+**`baseAmount` is not stored.** It is recomputed from the month's actual income
+every time, so there is no way for it to contradict the data.
 
 ---
 
-## תזכורת סוף חודש
+## Security
 
-ביום האחרון של החודש, אם נשאר כסף שלא הוצא, כל חבר בתקציב מקבל התראה
-עם הסכום וקישור שפותח ישירות הפקדה לקרן עם הסכום ממולא.
+Access is enforced in `firestore.rules` in two layers: membership of a budget,
+and field by field validation of every record written.
 
-השליחה רצה ב-GitHub Actions ולא ב-Cloud Functions, כדי שהכל יישאר
-בתוכנית החינמית של Firebase. הסקריפט רץ כל יום ב-16:00 UTC ובודק בעצמו
-אם היום הוא האחרון בחודש לפי שעון ישראל.
+Invites are implemented entirely in rules, with no Cloud Functions, so the project
+stays on the free plan. Someone joining creates a membership document **for
+themselves only**, and the rule accepts it only against an invite code that is
+valid, unused and unexpired.
 
-### מה צריך להגדיר פעם אחת
+```bash
+npm run test:rules
+```
 
-1. **מפתח Web Push**: Firebase Console ← Project settings ← Cloud Messaging ←
-   Web Push certificates ← Generate key pair. להוסיף כ-`VITE_FIREBASE_VAPID_KEY`
-   ב-`.env.local` וגם במשתני הסביבה של Vercel.
-2. **מפתח שירות**: Firebase Console ← Project settings ← Service accounts ←
-   Generate new private key. להדביק את כל תוכן ה-JSON כ-Secret בשם
-   `FIREBASE_SERVICE_ACCOUNT` תחת GitHub ← Settings ← Secrets and variables ←
-   Actions. **המפתח הזה נותן גישה מלאה לפרויקט. לעולם לא בקוד.**
-3. להפעיל את המתג במסך "התקציבים שלי", מתוך האפליקציה המותקנת.
-
-### בדיקה
-
-GitHub ← Actions ← "תזכורת סוף חודש" ← Run workflow, עם `force` מסומן.
-כך אפשר לשלוח גם כשזה לא סוף החודש.
-
-באייפון ההתראות עובדות **רק** באפליקציה שהותקנה למסך הבית. בלשונית רגילה
-של ספארי ה-API לא קיים בכלל, והממשק יסביר את זה במקום להציג מתג שבור.
+runs 61 tests against a real Firestore emulator, including the adversarial cases:
+joining without a code, a used code, an expired code, a code belonging to another
+budget, adding somebody else with a valid code, extending an expiry, taking over
+ownership, listing invites, moving a record between budgets, and forging
+`addedBy`.
 
 ---
 
-## הרצה מקומית
+## End of month nudge
+
+On the last day of the month, if the budget still has unspent money, every member
+gets a notification with the amount and a link that opens a fund deposit with that
+amount already filled in.
+
+Sending runs from **GitHub Actions**, not a Cloud Function, so the project stays on
+the free plan. The job runs daily and decides for itself whether today is the last
+day of the month in `Asia/Jerusalem`.
+
+Two one time setup steps:
+
+1. **Web Push key**: Firebase Console → Project settings → Cloud Messaging → Web
+   Push certificates → Generate key pair. Add it as `VITE_FIREBASE_VAPID_KEY` in
+   `.env.local` and in the Vercel environment variables.
+2. **Service account**: Firebase Console → Project settings → Service accounts →
+   Generate new private key. Paste the whole JSON as a repository secret named
+   `FIREBASE_SERVICE_ACCOUNT`. **That key grants full access to the project. Never
+   put it in the code.**
+
+To try it without waiting for the end of the month: GitHub → Actions → run the
+workflow with `force` ticked.
+
+On iOS notifications only work in an app that has been added to the Home Screen.
+In an ordinary Safari tab the API does not exist at all, and the interface says so
+rather than showing a switch that cannot work.
+
+---
+
+## Running locally
 
 ```bash
 npm install
-cp .env.example .env.local   # ולמלא מ-Firebase Console
+cp .env.example .env.local   # fill in from the Firebase console
 npm run dev
 ```
 
-את הערכים לוקחים מ-Firebase Console ← Project settings ← Your apps.
+Values come from Firebase Console → Project settings → Your apps.
 
-| סקריפט | מה הוא עושה |
+| Script | What it does |
 |---|---|
-| `npm run dev` | שרת פיתוח |
-| `npm run build` | בנייה לייצור |
-| `npm run preview` | תצוגה מקדימה של הבנייה, כולל service worker |
-| `npm test` | בדיקות הלוגיקה |
-| `npm run test:rules` | בדיקות כללי האבטחה מול אמולטור (דורש Java) |
-| `npm run lint` | oxlint |
-| `npm run deploy:rules` | העלאת כללי האבטחה והאינדקסים ל-Firestore |
-| `npm run nudge` | הרצה מקומית של שולח התזכורות (דורש מפתח שירות) |
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run preview` | Serve the build, service worker included |
+| `npm test` | Logic, rollup and render tests |
+| `npm run test:rules` | Security rules against the emulator (needs Java) |
+| `npm run lint` | oxlint, with `no-undef` on |
+| `npm run deploy:rules` | Push security rules and indexes to Firestore |
+| `npm run nudge` | Run the month end sender locally (needs a service account) |
+
+### Testing
+
+Three layers, and each exists because something slipped past the others:
+
+**Logic** covers the base amount, the month summary, recurring templates and the
+trip rollup as pure functions.
+
+**Rules** run against a real emulator, since reasoning about Firestore rules by
+reading them is unreliable.
+
+**Render** mounts every screen, and the whole tree with a signed in user. A
+component that throws while rendering used to pass the entire suite and ship.
 
 ---
 
-## פריסה
+## Deployment
 
-**Vercel בלבד**, מתוך `main`, אוטומטית בכל push. הכתובת היא
-[budget-tracker-virid-one.vercel.app](https://budget-tracker-virid-one.vercel.app).
+**Vercel only**, from `main`, automatically on every push:
+[budget-tracker-virid-one.vercel.app](https://budget-tracker-virid-one.vercel.app)
 
-בעבר האפליקציה הייתה פרוסה גם ל-Firebase Hosting. שתי כתובות חיות שרק
-אחת מהן מתעדכנת לבד הן מלכודת: תיקון נפרס לאחת, נבדק בשנייה, ונראה כאילו
-לא עבד. Firebase Hosting הוסר מהפרויקט.
+The app was once deployed to Firebase Hosting as well. Two live copies where only
+one updates by itself is a trap: a fix goes to one address and gets tested on the
+other, and it looks like nothing worked. Firebase Hosting has been removed.
 
-מה ש-Vercel **לא** מכסה הוא כללי האבטחה והאינדקסים של Firestore. אחרי
-שינוי ב-`firestore.rules` או ב-`firestore.indexes.json`:
+What Vercel does **not** cover is Firestore rules and indexes. After changing
+`firestore.rules` or `firestore.indexes.json`:
 
 ```bash
 npm run deploy:rules
 ```
 
-כל דומיין חדש חייב להתווסף ל-Firebase Console ← Authentication ← Settings ←
-Authorized domains, אחרת ההתחברות עם Google נכשלת.
+---
+
+## Installing on iPhone
+
+Open the address in **Safari**, which is the only browser that can install a PWA
+on iOS, then Share → Add to Home Screen. It opens full screen with no address bar.
+
+Updates take over as soon as they are deployed. An update that waits for the user
+to confirm is a trap: when the running version is broken there is no screen left to
+confirm from.
 
 ---
 
-## התקנה באייפון
-
-לפתוח את הכתובת ב**ספארי** (רק הוא תומך בהתקנה ב-iOS), כפתור השיתוף,
-ואז **הוספה למסך הבית**. האפליקציה תיפתח במסך מלא, בלי שורת כתובת.
-
----
-
-## מבנה התיקיות
+## Project layout
 
 ```
 src/
-  components/    רכיבי הממשק
+  components/    the interface
   context/       AuthContext, BudgetContext
-  hooks/         useEntries, useHistory, useRecurring, useBudgetBalance
-  lib/           model, budgets, recurring, members, format, firebase
-  sw.js          service worker: מטמון והתראות ברקע
-  index.css      טוקני העיצוב
-  App.css        סגנונות הרכיבים
-scripts/         שולח תזכורות סוף החודש
-tests/           בדיקות לוגיקה וכללי אבטחה
-docs/screens/    צילומי המסך שב-README
-firestore.rules  כללי האבטחה
+  hooks/         entries, history, recurring, trips, balances
+  lib/           model, budgets, trips, recurring, members, format, messaging
+  sw.js          service worker: caching and background notifications
+  index.css      design tokens
+  App.css        component styles
+scripts/         the month end sender
+tests/           logic, rules and render tests
+docs/screens/    the screenshots in this file
+firestore.rules  security rules
 ```
 
-צילומי המסך נוצרים מ-`shots.html` (זמין רק בשרת הפיתוח, לא נכנס לבנייה)
-עם Chrome headless ברוחב 500px.
+The screenshots come from `shots.html`, which is served only by the dev server and
+is not part of the build, captured with headless Chrome at 500px wide.
