@@ -613,3 +613,30 @@ describe('מחיקת תקציב', () => {
     await assertFails(deleteDoc(doc(as(PARTNER), 'budgets', BUDGET)))
   })
 })
+
+describe('שורה מסכמת מקצה לקצה', () => {
+  // מדמה בדיוק את מה ש-syncRollup עושה: בודק אם קיימת, ואז יוצר
+  it('יצירה של שורה מסכמת חדשה עוברת', async () => {
+    const db = as(OWNER)
+    const ref = doc(db, 'entries', 'trip_abc__2026-09')
+
+    const existing = await getDoc(ref)
+    expect(existing.exists()).toBe(false)
+
+    await assertSucceeds(setDoc(ref, {
+      budgetId: BUDGET,
+      month: '2026-09',
+      category: 'unplanned',
+      budgetGroup: 'none',
+      name: 'טיול: איטליה',
+      plannedAmount: 0,
+      actualAmount: 5000,
+      note: '',
+      addedBy: OWNER,
+      linkedTripId: 'abc',
+    }))
+
+    const after = await getDoc(ref)
+    expect(after.data().actualAmount).toBe(5000)
+  })
+})

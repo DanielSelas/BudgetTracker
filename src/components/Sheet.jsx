@@ -63,6 +63,23 @@ export default function Sheet({ onClose, children }) {
     }
   }, [])
 
+  /**
+   * כשהמקלדת נפתחת המגירה מתכווצת, והשדה שנגעו בו עלול להישאר מחוץ
+   * לאזור הנראה. גלילה אליו אחרי שהמקלדת סיימה לעלות פותרת את זה.
+   */
+  useEffect(() => {
+    const node = sheetRef.current
+    if (!node) return
+    const onFocus = (event) => {
+      if (!event.target.matches?.('input, textarea, select')) return
+      setTimeout(() => {
+        event.target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      }, 300)
+    }
+    node.addEventListener('focusin', onFocus)
+    return () => node.removeEventListener('focusin', onFocus)
+  }, [])
+
   useEffect(() => {
     const onKey = (event) => { if (event.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)

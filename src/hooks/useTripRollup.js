@@ -8,6 +8,7 @@ import { syncRollup, totalsByMonth } from '../lib/trips'
  */
 export function useTripRollup({ trip, entries, uid, ready }) {
   const [error, setError] = useState(null)
+  const [syncedAt, setSyncedAt] = useState(null)
   const seenMonths = useRef(new Set())
   const lastSignature = useRef('')
 
@@ -23,9 +24,9 @@ export function useTripRollup({ trip, entries, uid, ready }) {
     for (const month of totals.keys()) seenMonths.current.add(month)
 
     syncRollup({ trip, entries, uid, knownMonths })
-      .then(() => setError(null))
+      .then(() => { setError(null); setSyncedAt(Date.now()) })
       .catch(setError)
   }, [trip, entries, uid, ready])
 
-  return { error }
+  return { error, syncedAt }
 }

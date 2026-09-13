@@ -64,7 +64,7 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
   const over = summary.remaining < 0
   const isOwner = budget?.ownerUid === uid
 
-  const { error: rollupError } = useTripRollup({
+  const { error: rollupError, syncedAt } = useTripRollup({
     trip: budget ? { ...budget, id: budgetId } : null,
     entries,
     uid,
@@ -134,6 +134,7 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
             {budget?.linkedBudgetId && (
               <p className="hint center">
                 ההוצאות כאן מופיעות גם בבלתם של תקציב הבית, כשורה אחת לכל חודש.
+                {syncedAt ? ' מסונכרן ✓' : ''}
               </p>
             )}
 

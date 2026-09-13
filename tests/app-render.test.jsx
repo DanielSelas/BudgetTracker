@@ -121,3 +121,43 @@ describe('כתיבות ל-Firestore', () => {
     await expect(actions.remove('e1')).resolves.not.toThrow()
   })
 })
+
+describe('סנכרון שורה מסכמת', () => {
+  it('יוצר שורה אחת לכל חודש שבו הייתה הוצאה', async () => {
+    const firestore = await import('firebase/firestore')
+    firestore.setDoc.mockClear()
+    const { syncRollup } = await import('../src/lib/trips')
+
+    const result = await syncRollup({
+      trip: { id: 't1', name: 'איטליה', linkedBudgetId: 'b1' },
+      uid: 'u1',
+      entries: [
+        { month: '2026-09', actualAmount: 5000 },
+        { month: '2026-09', actualAmount: 1000 },
+        { month: '2026-10', actualAmount: 800 },
+      ],
+    })
+
+    expect(result.synced).toBe(2)
+    expect(firestore.setDoc).toHaveBeenCalledTimes(2)
+    const payloads = firestore.setDoc.mock.calls.map((call) => call[1])
+    expect(payloads.map((p) => p.actualAmount).sort((a, b) => a - b)).toEqual([800, 6000])
+    expect(payloads[0]).toMatchObject({
+      budgetId: 'b1', category: 'unplanned', budgetGroup: 'none',
+      name: 'טיול: איטליה', addedBy: 'u1', linkedTripId: 't1',
+    })
+  })
+
+  it('לא עושה כלום כשאין קישור', async () => {
+    const firestore = await import('firebase/firestore')
+    firestore.setDoc.mockClear()
+    const { syncRollup } = await import('../src/lib/trips')
+    const result = await syncRollup({
+      trip: { id: 't1', name: 'איטליה', linkedBudgetId: null },
+      uid: 'u1',
+      entries: [{ month: '2026-09', actualAmount: 5000 }],
+    })
+    expect(result.synced).toBe(0)
+    expect(firestore.setDoc).not.toHaveBeenCalled()
+  })
+})

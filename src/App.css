@@ -912,6 +912,15 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  /* מרווח לגלילה, כדי שהכפתורים לא יישארו צמודים לקצה מתחת למקלדת */
+  padding-bottom: 8px;
+}
+
+.sheet-actions {
+  position: sticky;
+  bottom: 0;
+  padding: 10px 0 2px;
+  background: var(--color-bg);
 }
 
 /* אותו טופס מחוץ למגירה, במסך ה-onboarding */
