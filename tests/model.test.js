@@ -32,7 +32,7 @@ describe('summarizeMonth', () => {
     const summary = summarizeMonth([])
     expect(summary.totalIncome).toBe(0)
     expect(summary.baseAmount).toBe(0)
-    expect(summary.unplanned).toBe(0)
+    expect(summary.unplanned.reserve).toBe(0)
     expect(summary.groups.fixed.target).toBe(0)
   })
 
@@ -47,7 +47,7 @@ describe('summarizeMonth', () => {
 
     expect(summary.totalIncome).toBe(24000)
     expect(summary.baseAmount).toBe(20000)
-    expect(summary.unplanned).toBe(4000)
+    expect(summary.unplanned.reserve).toBe(4000)
 
     expect(summary.groups.fixed.target).toBe(10000)
     expect(summary.groups.fixed.remaining).toBe(4000)
@@ -158,5 +158,49 @@ describe('recentMonths', () => {
     for (let i = 1; i < months.length; i += 1) {
       expect(months[i] > months[i - 1]).toBe(true)
     }
+  })
+})
+
+describe('בלתם כקטגוריה אמיתית', () => {
+  const withIncome = (extra = []) => summarizeMonth([
+    entry({ category: 'income', budgetGroup: 'none', actualAmount: 24000 }),
+    ...extra,
+  ])
+
+  it('הרזרבה היא ההכנסה פחות הבסיס', () => {
+    const summary = withIncome()
+    expect(summary.unplanned).toMatchObject({ reserve: 4000, spent: 0, remaining: 4000 })
+  })
+
+  it('הוצאה מהרזרבה מקטינה אותה', () => {
+    const summary = withIncome([
+      entry({ category: 'unplanned', budgetGroup: 'none', actualAmount: 1500 }),
+    ])
+    expect(summary.unplanned).toMatchObject({ reserve: 4000, spent: 1500, remaining: 2500 })
+  })
+
+  it('אפשר לחרוג מהרזרבה, וזה מסומן כשלילי', () => {
+    const summary = withIncome([
+      entry({ category: 'unplanned', budgetGroup: 'none', actualAmount: 5200 }),
+    ])
+    expect(summary.unplanned.remaining).toBe(-1200)
+  })
+
+  it('הוצאה מהרזרבה נספרת בהוצאות ומקטינה את היתרה', () => {
+    const summary = withIncome([
+      entry({ category: 'unplanned', budgetGroup: 'none', actualAmount: 1500 }),
+    ])
+    expect(summary.totalExpenses).toBe(1500)
+    expect(summary.balance).toBe(22500)
+  })
+
+  it('אינה משפיעה על יעדי 50/30/20', () => {
+    const summary = withIncome([
+      entry({ category: 'unplanned', budgetGroup: 'none', actualAmount: 3000 }),
+    ])
+    expect(summary.groups.fixed.target).toBe(10000)
+    expect(summary.groups.fixed.actual).toBe(0)
+    expect(summary.groups.leisure.actual).toBe(0)
+    expect(summary.groups.savings.actual).toBe(0)
   })
 })

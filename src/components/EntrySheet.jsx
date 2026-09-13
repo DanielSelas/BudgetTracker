@@ -9,6 +9,7 @@ const PILLS = [
   { category: 'fixed', label: 'קבועה' },
   { category: 'leisure', label: 'פנאי' },
   { category: 'fund', label: 'קרן' },
+  { category: 'unplanned', label: 'בלתם' },
 ]
 
 const DEFAULT_NAME = {
@@ -16,6 +17,7 @@ const DEFAULT_NAME = {
   fixed: 'הוצאה קבועה',
   leisure: 'הוצאת פנאי',
   fund: 'הפקדה לקרן',
+  unplanned: 'הוצאה בלתי צפויה',
 }
 
 const AMOUNT_LABEL = {
@@ -23,6 +25,7 @@ const AMOUNT_LABEL = {
   fixed: 'כמה יצא?',
   leisure: 'כמה יצא?',
   fund: 'כמה הפקדתם?',
+  unplanned: 'כמה יצא?',
 }
 
 /**
@@ -55,6 +58,15 @@ export default function EntrySheet({
       const nextBase = calcBaseAmount(summary.totalIncome + value)
       return `אחרי ההכנסה הזו סכום הבסיס יהיה ${shekels(nextBase)}.`
     }
+    if (category === 'unplanned') {
+      const { reserve, remaining } = summary.unplanned
+      if (reserve <= 0) return 'עדיין לא הוזנה הכנסה, ולכן אין רזרבה החודש.'
+      const left = remaining - value
+      return left >= 0
+        ? `אחרי זה תישאר רזרבה של ${shekels(left)} מתוך ${shekels(reserve)}.`
+        : `אחרי זה תהיה חריגה של ${shekels(-left)} מעבר לרזרבה.`
+    }
+
     const { budgetGroup, label } = CATEGORIES[category]
     const target = groupTarget(summary.baseAmount, budgetGroup)
     if (target <= 0) return 'עדיין לא הוזנה הכנסה, ולכן אין יעד לחודש הזה.'

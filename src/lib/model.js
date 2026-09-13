@@ -3,6 +3,9 @@ export const CATEGORIES = {
   fixed: { label: 'קבועות', budgetGroup: 'fixed' },
   leisure: { label: 'פנאי', budgetGroup: 'leisure' },
   fund: { label: 'קרן', budgetGroup: 'savings' },
+  // בלתם היא רזרבה אמיתית שאפשר להוציא ממנה, ולא רק מספר מחושב.
+  // היא מחוץ ל-50/30/20 בכוונה: היא הכסף שלא חולק לקטגוריות.
+  unplanned: { label: 'בלתם', budgetGroup: 'none' },
 }
 
 export const BUDGET_GROUP_RATIOS = {
@@ -47,10 +50,15 @@ export function summarizeMonth(entries) {
 
   const income = entries.filter((entry) => entry.category === 'income')
   const expenses = entries.filter((entry) => entry.category !== 'income')
+  const unplannedEntries = entries.filter((entry) => entry.category === 'unplanned')
 
   const totalIncome = sumActual(income)
   const totalExpenses = sumActual(expenses)
   const baseAmount = calcBaseAmount(totalIncome)
+
+  // הרזרבה היא המרווח הנזיל; מה שהוצא ממנה מקטין אותה בזמן אמת
+  const reserve = calcUnplanned(totalIncome, baseAmount)
+  const unplannedSpent = sumActual(unplannedEntries)
 
   const groups = {}
   for (const group of Object.keys(BUDGET_GROUP_RATIOS)) {
@@ -72,7 +80,12 @@ export function summarizeMonth(entries) {
     totalExpenses,
     balance: totalIncome - totalExpenses,
     baseAmount,
-    unplanned: calcUnplanned(totalIncome, baseAmount),
+    unplanned: {
+      reserve,
+      spent: unplannedSpent,
+      remaining: reserve - unplannedSpent,
+      planned: sumPlanned(unplannedEntries),
+    },
     groups,
   }
 }

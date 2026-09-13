@@ -63,7 +63,7 @@ export function useEntries(budgetId, month) {
   }, [budgetId, month, attempt])
 
   const byCategory = useMemo(() => {
-    const grouped = { income: [], fixed: [], leisure: [], fund: [] }
+    const grouped = { income: [], fixed: [], leisure: [], fund: [], unplanned: [] }
     for (const entry of entries) {
       if (grouped[entry.category]) grouped[entry.category].push(entry)
     }

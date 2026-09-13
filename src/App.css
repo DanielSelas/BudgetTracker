@@ -599,6 +599,13 @@ button:disabled {
   --cat-ink: var(--cat-leisure-ink);
 }
 
+[data-category='unplanned'] {
+  --cat-bg: var(--cat-unplanned-bg);
+  --cat-tint: oklch(0.89 0.06 85);
+  --cat-base: var(--cat-unplanned-base);
+  --cat-ink: var(--cat-unplanned-ink);
+}
+
 [data-category='fund'] {
   --cat-bg: var(--cat-fund-bg);
   --cat-tint: var(--cat-fund-tint);
@@ -606,13 +613,7 @@ button:disabled {
   --cat-ink: var(--cat-fund-ink);
 }
 
-.cat-card.unplanned {
-  --cat-bg: var(--cat-unplanned-bg);
-  --cat-base: var(--cat-unplanned-base);
-  --cat-ink: var(--cat-unplanned-ink);
-  padding: 20px 22px;
-  gap: 8px;
-}
+
 
 .cat-head {
   display: flex;
@@ -656,12 +657,11 @@ button:disabled {
   white-space: nowrap;
 }
 
-.cat-card.unplanned .cat-total { font-size: 26px; }
-
-.cat-card.unplanned .note {
+.cat-card .note {
   margin: 0;
   font-size: 13px;
   color: var(--cat-ink);
+  opacity: 0.85;
 }
 
 .target-block {

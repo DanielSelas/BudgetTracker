@@ -43,7 +43,7 @@ service cloud.firestore {
       // חיובים קבועים: תבנית שממנה נגזרת שורה בכל חודש
       match /recurring/{recurringId} {
         function validTemplate(data) {
-          return data.category in ['income', 'fixed', 'leisure', 'fund']
+          return data.category in ['income', 'fixed', 'leisure', 'fund', 'unplanned']
             && data.budgetGroup in ['fixed', 'leisure', 'savings', 'none']
             && data.name is string && data.name.size() > 0 && data.name.size() <= 100
             && data.plannedAmount is number && data.plannedAmount >= 0
@@ -119,7 +119,7 @@ service cloud.firestore {
     match /entries/{entryId} {
       function validEntry(data) {
         return data.budgetId is string
-          && data.category in ['income', 'fixed', 'leisure', 'fund']
+          && data.category in ['income', 'fixed', 'leisure', 'fund', 'unplanned']
           && data.budgetGroup in ['fixed', 'leisure', 'savings', 'none']
           && data.name is string && data.name.size() > 0 && data.name.size() <= 100
           && data.plannedAmount is number && data.plannedAmount >= 0

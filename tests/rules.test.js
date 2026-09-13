@@ -364,3 +364,19 @@ describe('recurring templates', () => {
     )
   })
 })
+
+describe('רשומת בלתם', () => {
+  it('מתקבלת כקטגוריה חוקית', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'entries', 'u1'), entry({
+        category: 'unplanned', budgetGroup: 'none', name: 'תיקון רכב', actualAmount: 1500,
+      })),
+    )
+  })
+
+  it('עדיין דוחה קטגוריה מומצאת', async () => {
+    await assertFails(
+      setDoc(doc(as(OWNER), 'entries', 'u2'), entry({ category: 'misc', budgetGroup: 'none' })),
+    )
+  })
+})
