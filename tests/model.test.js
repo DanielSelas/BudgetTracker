@@ -288,3 +288,23 @@ describe('השלמת שם חסר', () => {
     expect(needsDisplayName(null, 'דניאל')).toBe(false)
   })
 })
+
+describe('זיהוי סוג התקציב', () => {
+  it('מזהה את כל הסוגים, ולא רק את הראשון שנוסף', async () => {
+    const { budgetType, isTrip, isGoal, isFrameBudget } = await import('../src/lib/model')
+    expect(budgetType({ type: 'household' })).toBe('household')
+    expect(budgetType({ type: 'trip' })).toBe('trip')
+    expect(budgetType({ type: 'goal' })).toBe('goal')
+    expect(isGoal({ type: 'goal' })).toBe(true)
+    expect(isTrip({ type: 'goal' })).toBe(false)
+    expect(isFrameBudget({ type: 'goal' })).toBe(true)
+    expect(isFrameBudget({ type: 'household' })).toBe(false)
+  })
+
+  it('סוג לא מוכר או חסר נקרא כמשק בית', async () => {
+    const { budgetType } = await import('../src/lib/model')
+    expect(budgetType({})).toBe('household')
+    expect(budgetType({ type: 'משהו' })).toBe('household')
+    expect(budgetType(undefined)).toBe('household')
+  })
+})

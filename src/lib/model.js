@@ -136,8 +136,13 @@ export const BUDGET_TYPES = {
   },
 }
 
-/** תקציבים שנוצרו לפני שהיה שדה type הם משק בית. */
-export const budgetType = (budget) => (budget?.type === 'trip' ? 'trip' : 'household')
+/**
+ * תקציבים שנוצרו לפני שהיה שדה type הם משק בית, וכך גם סוג שאינו מוכר.
+ * נגזר מ-BUDGET_TYPES ולא מרשימה קשיחה, אחרת סוג חדש נבלע בשקט
+ * ונפתח כמסך הלא נכון.
+ */
+export const budgetType = (budget) =>
+  (budget?.type in BUDGET_TYPES ? budget.type : 'household')
 
 export const isTrip = (budget) => budgetType(budget) === 'trip'
 
