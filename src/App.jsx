@@ -73,7 +73,7 @@ function Workspace({ nudge }) {
       {trip
         ? <TripView budgetId={budgetId} budget={budget} uid={user.uid} onDeleted={goHome} />
         : tab === 'month'
-          ? <MonthView budgetId={budgetId} budget={budget} uid={user.uid} nudge={nudge} />
+          ? <MonthView budgetId={budgetId} budget={budget} uid={user.uid} nudge={nudge} onDeleted={goHome} />
           : <HistoryView budgetId={budgetId} />}
       <BottomNav active={tab} onChange={handleNav} type={budgetType(budget)} />
     </main>

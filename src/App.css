@@ -128,6 +128,9 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  /* בלי זה פריט flex לא מתכווץ מתחת לרוחב התוכן, ושדה תאריך בספארי
+     מגיע עם רוחב מובנה רחב שפורץ את המגירה */
+  min-width: 0;
   font-size: 13px;
   font-weight: 700;
   color: var(--color-neutral-700);

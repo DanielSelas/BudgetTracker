@@ -2,6 +2,9 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
+  query,
+  where,
   onSnapshot,
   serverTimestamp,
   setDoc,
@@ -134,6 +137,32 @@ export function watchMemberships(uid, onChange, onError) {
     (snapshot) => onChange(snapshot.docs.map((item) => item.id)),
     onError,
   )
+}
+
+/**
+ * מוחק תקציב על כל מה שתלוי בו: הרשומות, החיובים הקבועים, החברים
+ * והמצביעים האישיים. הכל בכתיבה אטומית אחת, אחרת סגירה באמצע הייתה
+ * משאירה רשומות יתומות שאף אחד כבר לא יכול לראות או למחוק.
+ */
+export async function deleteBudget({ budgetId, ownerUid, memberUids }) {
+  const [entries, templates] = await Promise.all([
+    getDocs(query(collection(db, 'entries'), where('budgetId', '==', budgetId))),
+    getDocs(collection(db, 'budgets', budgetId, 'recurring')),
+  ])
+
+  const batch = writeBatch(db)
+  for (const entry of entries.docs) batch.delete(entry.ref)
+  for (const template of templates.docs) batch.delete(template.ref)
+
+  for (const uid of memberUids) {
+    batch.delete(doc(db, 'users', uid, 'memberships', budgetId))
+    if (uid !== ownerUid) batch.delete(doc(db, 'budgets', budgetId, 'members', uid))
+  }
+  // הבעלים נמחק אחרון: כלל המחיקה של חבר בודק מי הבעלים
+  batch.delete(doc(db, 'budgets', budgetId, 'members', ownerUid))
+  batch.delete(doc(db, 'budgets', budgetId))
+
+  await batch.commit()
 }
 
 /** מעדכן את השם שלך במסמך החבר. מותר רק על עצמך, לפי כללי האבטחה. */

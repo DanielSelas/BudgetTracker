@@ -10,6 +10,7 @@ import { useRecurring } from '../hooks/useRecurring'
 import { createTemplate, skipMonth, stopTemplate } from '../lib/recurring'
 import { CATEGORIES, monthKey, summarizeMonth } from '../lib/model'
 import { displayName, memberIndex } from '../lib/members'
+import { deleteBudget } from '../lib/budgets'
 
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
 
@@ -23,11 +24,12 @@ function Skeleton() {
   )
 }
 
-export default function MonthView({ budgetId, budget, uid, nudge }) {
+export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
   const [month, setMonth] = useState(monthKey)
   const [sheet, setSheet] = useState(nudge ? nudge.category : null)
   const [prefill, setPrefill] = useState(nudge?.amount ?? 0)
   const [pendingStop, setPendingStop] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
 
   const base = useMemo(() => entryActions({ budgetId, month, uid }), [budgetId, month, uid])
@@ -58,6 +60,17 @@ export default function MonthView({ budgetId, budget, uid, nudge }) {
   const me = members.get(uid)
   const partner = members.sorted.find((member) => member.uid !== uid)
   const shared = members.sorted.length > 1
+  const isOwner = budget?.ownerUid === uid
+
+  async function handleDelete() {
+    setConfirmDelete(false)
+    await deleteBudget({
+      budgetId,
+      ownerUid: budget.ownerUid,
+      memberUids: members.sorted.map((member) => member.uid),
+    })
+    onDeleted?.()
+  }
 
   // שתי תקלות שונות לגמרי, ולכן שתי הודעות שונות. איחוד שלהן לטקסט
   // אחד הפך אבחון של permission-denied לניחוש.
@@ -126,6 +139,12 @@ export default function MonthView({ budgetId, budget, uid, nudge }) {
               onAdd={(next) => { setPrefill(0); setSheet(next) }}
               onStopRecurring={setPendingStop}
             />
+
+            {isOwner && (
+              <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
+                מחיקת התקציב
+              </button>
+            )}
           </>
         )}
       </div>
@@ -147,6 +166,16 @@ export default function MonthView({ budgetId, budget, uid, nudge }) {
           partner={partner ? displayName(partner) : ''}
           onSubmit={actions.add}
           onClose={() => { setSheet(null); setPrefill(0) }}
+        />
+      )}
+
+      {confirmDelete && (
+        <ConfirmDialog
+          title="למחוק את התקציב?"
+          body={`כל הרשומות והחיובים הקבועים של "${budget?.name}" יימחקו, וגם החברים שבו. אי אפשר לבטל.`}
+          confirmLabel="מחיקה"
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmDelete(false)}
         />
       )}
 

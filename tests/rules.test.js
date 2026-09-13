@@ -212,8 +212,9 @@ describe('members', () => {
     await assertSucceeds(deleteDoc(doc(as(OWNER), 'budgets', BUDGET, 'members', PARTNER)))
   })
 
-  it('הבעלים לא יכול להסיר את עצמו ולהשאיר תקציב יתום', async () => {
-    await assertFails(deleteDoc(doc(as(OWNER), 'budgets', BUDGET, 'members', OWNER)))
+  // הבעלים כן יכול, כי מחיקת תקציב מוחקת את מסמך החבר שלו באותה כתיבה
+  it('הבעלים יכול להסיר את מסמך החבר של עצמו', async () => {
+    await assertSucceeds(deleteDoc(doc(as(OWNER), 'budgets', BUDGET, 'members', OWNER)))
   })
 })
 
@@ -565,5 +566,50 @@ describe('עדכון שם החבר', () => {
         displayName: 'א'.repeat(61),
       }),
     )
+  })
+})
+
+describe('קריאת מסמך שאינו קיים', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'entries', 'קיים'), entry())
+    })
+  })
+
+  // בלי זה, יצירת שורה מסכמת של טיול נכשלת: הלקוח בודק אם היא קיימת,
+  // והכלל נשבר על מסמך שטרם נוצר
+  it('חבר יכול לבדוק אם שורה קיימת בלי שזה ייחשב הפרה', async () => {
+    await assertSucceeds(getDoc(doc(as(OWNER), 'entries', 'לא-קיים')))
+  })
+
+  it('זר עדיין לא קורא שורה שכן קיימת', async () => {
+    await assertFails(getDoc(doc(as(STRANGER), 'entries', 'קיים')))
+  })
+})
+
+describe('מחיקת תקציב', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'entries', 'e1'), entry())
+    })
+  })
+
+  it('הבעלים מוחק את התקציב ואת מה שתלוי בו', async () => {
+    const db = as(OWNER)
+    const batch = writeBatch(db)
+    batch.delete(doc(db, 'entries', 'e1'))
+    batch.delete(doc(db, 'users', OWNER, 'memberships', BUDGET))
+    batch.delete(doc(db, 'budgets', BUDGET, 'members', OWNER))
+    batch.delete(doc(db, 'budgets', BUDGET))
+    await assertSucceeds(batch.commit())
+  })
+
+  it('מי שאינו הבעלים לא מוחק את התקציב', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'budgets', BUDGET, 'members', PARTNER), {
+        uid: PARTNER, role: 'member',
+      })
+    })
+    await assertFails(deleteDoc(doc(as(PARTNER), 'budgets', BUDGET)))
   })
 })

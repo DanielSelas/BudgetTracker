@@ -85,10 +85,12 @@ service cloud.firestore {
             || validInvite(request.resource.data.inviteCode, budgetId)
           );
 
-        // עזיבה עצמית, או הסרה בידי הבעלים
+        // עזיבה עצמית, או הסרה בידי הבעלים. הבעלים יכול להסיר גם את
+        // עצמו, כי מחיקת תקציב היא כתיבה אטומית אחת שכוללת את מסמך
+        // החבר שלו, והכללים מוערכים מול המצב שלפני הכתיבה כולה.
+        // הממשק לא מציע לבעלים לעזוב, רק למחוק את התקציב כולו.
         allow delete: if signedIn()
-          && (uid == request.auth.uid || isOwner(budgetId))
-          && get(/databases/$(database)/documents/budgets/$(budgetId)).data.ownerUid != uid;
+          && (uid == request.auth.uid || isOwner(budgetId));
 
         // עדכון השם שלך בלבד. הזהות והתפקיד נעולים, אחרת אפשר היה
         // להפוך את עצמך לבעלים או לגנוב מסמך חבר של מישהו אחר.
@@ -159,7 +161,9 @@ service cloud.firestore {
           && data.addedBy is string;
       }
 
-      allow read, delete: if isMember(resource.data.budgetId);
+      // resource הוא null כשהמסמך לא קיים, וגישה ל-resource.data הייתה
+      // זורקת ודוחה גם קריאה תמימה של מסמך שטרם נוצר.
+      allow read, delete: if resource == null || isMember(resource.data.budgetId);
 
       allow create: if validEntry(request.resource.data)
         && request.resource.data.addedBy == request.auth.uid
