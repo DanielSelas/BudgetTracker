@@ -40,6 +40,7 @@ const AMOUNT_LABEL = {
  * מגירה תחתונה להזנה מהירה. הסכום ראשון, כי הוא הדבר היחיד שחייב להיות מדויק.
  */
 export default function EntrySheet({
+  mode = 'month',
   initialCategory = 'fixed',
   initialAmount = 0,
   summary,
@@ -48,8 +49,9 @@ export default function EntrySheet({
   onSubmit,
   onClose,
 }) {
+  const trip = mode === 'trip'
   // נקבע בפתיחה ולא משתנה, אחרת החלפת קטגוריה הייתה מחליפה את סוג הפעולה
-  const [incomeMode] = useState(() => initialCategory === 'income')
+  const [incomeMode] = useState(() => !trip && initialCategory === 'income')
   const [category, setCategory] = useState(initialCategory)
   const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : '')
   const [name, setName] = useState('')

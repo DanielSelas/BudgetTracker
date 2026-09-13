@@ -118,7 +118,14 @@ export default function MonthView({ budgetId, budget, uid, nudge }) {
             ))}
 
             {/* בלתם אחרונה: היא רזרבה שנותרה, לא חלק מהתכנון החודשי */}
-            <UnplannedCard summary={summary} />
+            <UnplannedCard
+              summary={summary}
+              entries={byCategory.unplanned}
+              authorOf={shared ? members.get : null}
+              actions={actions}
+              onAdd={(next) => { setPrefill(0); setSheet(next) }}
+              onStopRecurring={setPendingStop}
+            />
           </>
         )}
       </div>
