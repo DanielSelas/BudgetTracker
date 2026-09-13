@@ -1517,3 +1517,23 @@ select.input {
 .cat-card[data-category='income'] .btn-text {
   font-size: 16px;
 }
+
+/* ספארי נותן ל-input מסוג date רוחב מובנה משלו ומתעלם מ-width: 100%.
+   ביטול המראה המובנה הוא מה שמחזיר לו התנהגות של שדה רגיל. */
+input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+input[type='date']::-webkit-date-and-time-value {
+  text-align: center;
+  margin: 0;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  margin-inline-start: 0;
+}
