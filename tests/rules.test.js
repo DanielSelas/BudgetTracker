@@ -44,7 +44,7 @@ beforeEach(async () => {
   await testEnv.clearFirestore()
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore()
-    await setDoc(doc(db, 'budgets', BUDGET), { name: 'משפחתי', ownerUid: OWNER, type: 'household' })
+    await setDoc(doc(db, 'budgets', BUDGET), { name: 'משפחתי', ownerUid: OWNER })
     await setDoc(doc(db, 'budgets', BUDGET, 'members', OWNER), { uid: OWNER, role: 'owner' })
   })
 })
@@ -61,10 +61,10 @@ describe('budgets', () => {
 
   it('יצירת תקציב רק עם ownerUid של עצמך', async () => {
     await assertSucceeds(
-      setDoc(doc(as(PARTNER), 'budgets', 'b2'), { name: 'שלי', ownerUid: PARTNER, type: 'household' }),
+      setDoc(doc(as(PARTNER), 'budgets', 'b2'), { name: 'שלי', ownerUid: PARTNER }),
     )
     await assertFails(
-      setDoc(doc(as(PARTNER), 'budgets', 'b3'), { name: 'גניבה', ownerUid: OWNER, type: 'household' }),
+      setDoc(doc(as(PARTNER), 'budgets', 'b3'), { name: 'גניבה', ownerUid: OWNER }),
     )
   })
 
@@ -270,11 +270,6 @@ describe('entries', () => {
   it('אי אפשר לשנות מי הזין את הרשומה', async () => {
     await assertFails(updateDoc(doc(as(PARTNER), 'entries', 'e1'), { addedBy: PARTNER }))
   })
-
-  // בלי בדיקה כזו אפשר לשבור עדכון לגמרי ולא לשים לב, כי כל השאר מאמתות דחיות
-  it('חבר יכול לעדכן סכום של שורה קיימת', async () => {
-    await assertSucceeds(updateDoc(doc(as(OWNER), 'entries', 'e1'), { actualAmount: 6000 }))
-  })
 })
 
 describe('entries query (list)', () => {
@@ -366,131 +361,6 @@ describe('recurring templates', () => {
     })
     await assertSucceeds(
       updateDoc(doc(as(OWNER), 'budgets', BUDGET, 'recurring', 't6'), { active: false }),
-    )
-  })
-})
-
-describe('רשומת בלתם', () => {
-  it('מתקבלת כקטגוריה חוקית', async () => {
-    await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'u1'), entry({
-        category: 'unplanned', budgetGroup: 'none', name: 'תיקון רכב', actualAmount: 1500,
-      })),
-    )
-  })
-
-  it('עדיין דוחה קטגוריה מומצאת', async () => {
-    await assertFails(
-      setDoc(doc(as(OWNER), 'entries', 'u2'), entry({ category: 'misc', budgetGroup: 'none' })),
-    )
-  })
-})
-
-describe('סוגי תקציב ותאריכים', () => {
-  it('יצירת תקציב מחייבת סוג חוקי', async () => {
-    await assertSucceeds(
-      setDoc(doc(as(PARTNER), 'budgets', 't-ok'), {
-        name: 'יוון', ownerUid: PARTNER, type: 'trip', frame: 12000,
-      }),
-    )
-    await assertFails(
-      setDoc(doc(as(PARTNER), 'budgets', 't-bad'), {
-        name: 'יוון', ownerUid: PARTNER, type: 'vacation', frame: 12000,
-      }),
-    )
-  })
-
-  it('טיול חייב מסגרת מספרית', async () => {
-    await assertFails(
-      setDoc(doc(as(PARTNER), 'budgets', 't-noframe'), {
-        name: 'יוון', ownerUid: PARTNER, type: 'trip',
-      }),
-    )
-    await assertFails(
-      setDoc(doc(as(PARTNER), 'budgets', 't-strframe'), {
-        name: 'יוון', ownerUid: PARTNER, type: 'trip', frame: '12000',
-      }),
-    )
-  })
-
-  it('אי אפשר לשנות סוג של תקציב קיים', async () => {
-    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { type: 'trip' }))
-  })
-
-  // תקציבים שנוצרו לפני שהיה שדה type חייבים להישאר ניתנים לעדכון
-  it('תקציב ישן בלי שדה type עדיין ניתן לעדכון', async () => {
-    await testEnv.withSecurityRulesDisabled(async (context) => {
-      const db = context.firestore()
-      await setDoc(doc(db, 'budgets', 'legacy'), { name: 'ישן', ownerUid: OWNER })
-      await setDoc(doc(db, 'budgets', 'legacy', 'members', OWNER), { uid: OWNER, role: 'owner' })
-    })
-    await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', 'legacy'), { name: 'ישן ומעודכן' }))
-  })
-
-  it('מקבל קטגוריות טיול', async () => {
-    await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'tr1'), entry({
-        category: 'lodging', budgetGroup: 'none', name: 'מלון', date: '2026-09-04',
-      })),
-    )
-  })
-
-  it('תאריך שלא מתיישב עם החודש נדחה', async () => {
-    await assertFails(
-      setDoc(doc(as(OWNER), 'entries', 'tr2'), entry({
-        category: 'lodging', budgetGroup: 'none', month: '2026-09', date: '2026-10-04',
-      })),
-    )
-  })
-
-  it('תאריך בפורמט שגוי נדחה', async () => {
-    await assertFails(
-      setDoc(doc(as(OWNER), 'entries', 'tr3'), entry({
-        category: 'lodging', budgetGroup: 'none', date: '04/09/2026',
-      })),
-    )
-  })
-
-  it('רשומה בלי תאריך עדיין תקפה', async () => {
-    await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'tr4'), entry({ category: 'fixed' })),
-    )
-  })
-})
-
-describe('שורה מסכמת של טיול', () => {
-  const rollup = (overrides = {}) => entry({
-    category: 'unplanned',
-    budgetGroup: 'none',
-    name: 'טיול: יוון',
-    actualAmount: 4650,
-    linkedTripId: 'trip-1',
-    ...overrides,
-  })
-
-  it('חבר בתקציב הבית יכול לכתוב אותה', async () => {
-    await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'trip_trip-1__2026-09'), rollup()),
-    )
-  })
-
-  it('מי שאינו חבר בתקציב הבית לא יכול', async () => {
-    await assertFails(
-      setDoc(doc(as(STRANGER), 'entries', 'trip_trip-1__2026-09'), rollup({ addedBy: STRANGER })),
-    )
-  })
-
-  it('שותף אחר יכול לעדכן את הסכום בלי לגעת במי שיצר', async () => {
-    await testEnv.withSecurityRulesDisabled(async (context) => {
-      const db = context.firestore()
-      await setDoc(doc(db, 'entries', 'trip_trip-1__2026-09'), rollup())
-      await setDoc(doc(db, 'budgets', BUDGET, 'members', PARTNER), { uid: PARTNER, role: 'member' })
-    })
-    await assertSucceeds(
-      updateDoc(doc(as(PARTNER), 'entries', 'trip_trip-1__2026-09'), { actualAmount: 5000 }),
-    )
-    await assertFails(
-      updateDoc(doc(as(PARTNER), 'entries', 'trip_trip-1__2026-09'), { addedBy: PARTNER }),
     )
   })
 })

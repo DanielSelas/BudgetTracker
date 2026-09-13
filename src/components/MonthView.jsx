@@ -98,14 +98,7 @@ export default function MonthView({ budgetId, budget, uid, nudge }) {
               </button>
             )}
 
-            <UnplannedCard
-              summary={summary}
-              entries={byCategory.unplanned}
-              authorOf={shared ? members.get : null}
-              actions={actions}
-              onAdd={(next) => { setPrefill(0); setSheet(next) }}
-              onStopRecurring={setPendingStop}
-            />
+            <UnplannedCard summary={summary} />
 
             {ORDER.map((category) => (
               <CategoryCard
