@@ -81,7 +81,14 @@ service cloud.firestore {
           && (uid == request.auth.uid || isOwner(budgetId))
           && get(/databases/$(database)/documents/budgets/$(budgetId)).data.ownerUid != uid;
 
-        allow update: if false;
+        // עדכון השם שלך בלבד. הזהות והתפקיד נעולים, אחרת אפשר היה
+        // להפוך את עצמך לבעלים או לגנוב מסמך חבר של מישהו אחר.
+        allow update: if signedIn()
+          && uid == request.auth.uid
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.get('role', '') == resource.data.get('role', '')
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() <= 60;
       }
     }
 

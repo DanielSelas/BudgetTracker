@@ -160,3 +160,23 @@ describe('recentMonths', () => {
     }
   })
 })
+
+describe('השלמת שם חסר', () => {
+  it('מזהה שם חסר או שונה', async () => {
+    const { needsDisplayName } = await import('../src/lib/members')
+    expect(needsDisplayName({ uid: 'u1' }, 'דניאל')).toBe(true)
+    expect(needsDisplayName({ uid: 'u1', displayName: '' }, 'דניאל')).toBe(true)
+    expect(needsDisplayName({ uid: 'u1', displayName: 'ישן' }, 'דניאל')).toBe(true)
+  })
+
+  it('לא נוגע כששם כבר נכון, כדי לא לכתוב בכל טעינה', async () => {
+    const { needsDisplayName } = await import('../src/lib/members')
+    expect(needsDisplayName({ uid: 'u1', displayName: 'דניאל' }, 'דניאל')).toBe(false)
+  })
+
+  it('בלי שם להשלים ממנו, לא עושה כלום', async () => {
+    const { needsDisplayName } = await import('../src/lib/members')
+    expect(needsDisplayName({ uid: 'u1' }, '')).toBe(false)
+    expect(needsDisplayName(null, 'דניאל')).toBe(false)
+  })
+})

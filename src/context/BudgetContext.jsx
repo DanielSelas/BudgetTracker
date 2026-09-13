@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { watchBudget, watchMembers, watchMemberships } from '../lib/budgets'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { setMemberName, watchBudget, watchMembers, watchMemberships } from '../lib/budgets'
+import { needsDisplayName } from '../lib/members'
 import { useAuth } from './AuthContext'
 
 const BudgetContext = createContext(null)
@@ -56,6 +57,21 @@ export function BudgetProvider({ children }) {
     )
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe())
   }, [budgetIds])
+
+  // השלמת שם חסר, פעם אחת לכל תקציב במושב
+  const healed = useRef(new Set())
+  useEffect(() => {
+    const myName = user?.displayName || user?.email?.split('@')[0]
+    if (!uid || !myName) return
+
+    for (const [budgetId, members] of Object.entries(membersById)) {
+      if (healed.current.has(budgetId) || !members) continue
+      const mine = members.find((member) => member.uid === uid)
+      if (!mine || !needsDisplayName(mine, myName)) continue
+      healed.current.add(budgetId)
+      setMemberName({ budgetId, uid, displayName: myName }).catch(() => {})
+    }
+  }, [membersById, uid, user])
 
   const budgets = useMemo(
     () => (budgetIds || [])

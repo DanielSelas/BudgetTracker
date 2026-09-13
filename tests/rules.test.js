@@ -391,3 +391,49 @@ describe('רישום מכשירים להתראות', () => {
     await assertSucceeds(deleteDoc(doc(as(OWNER), 'users', OWNER, 'devices', TOKEN)))
   })
 })
+
+describe('עדכון שם החבר', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'budgets', BUDGET, 'members', PARTNER), {
+        uid: PARTNER, role: 'member',
+      })
+    })
+  })
+
+  it('אפשר להשלים את השם של עצמך', async () => {
+    await assertSucceeds(
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'members', PARTNER), { displayName: 'נועה' }),
+    )
+  })
+
+  it('אי אפשר לשנות שם של מישהו אחר', async () => {
+    await assertFails(
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'members', OWNER), { displayName: 'נועה' }),
+    )
+  })
+
+  it('אי אפשר להפוך את עצמך לבעלים דרך העדכון הזה', async () => {
+    await assertFails(
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'members', PARTNER), {
+        displayName: 'נועה', role: 'owner',
+      }),
+    )
+  })
+
+  it('אי אפשר להחליף זהות במסמך החבר', async () => {
+    await assertFails(
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'members', PARTNER), {
+        displayName: 'נועה', uid: OWNER,
+      }),
+    )
+  })
+
+  it('שם ארוך מדי נדחה', async () => {
+    await assertFails(
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'members', PARTNER), {
+        displayName: 'א'.repeat(61),
+      }),
+    )
+  })
+})
