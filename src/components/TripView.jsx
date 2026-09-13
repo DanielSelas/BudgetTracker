@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import EntryRow from './EntryRow'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
+import FrameLink from './FrameLink'
 import { shekels } from '../lib/format'
 import { TRIP_CATEGORIES, TRIP_ORDER, summarizeTrip } from '../lib/model'
 import { memberIndex } from '../lib/members'
@@ -63,6 +64,10 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
   const shared = members.sorted.length > 1
   const over = summary.remaining < 0
   const isOwner = budget?.ownerUid === uid
+  const months = useMemo(
+    () => [...new Set(entries.map((entry) => entry.month).filter(Boolean))],
+    [entries],
+  )
 
   const { error: rollupError, syncedAt } = useTripRollup({
     trip: budget ? { ...budget, id: budgetId } : null,
@@ -131,12 +136,13 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
               </div>
             </section>
 
-            {budget?.linkedBudgetId && (
-              <p className="hint center">
-                ההוצאות כאן מופיעות גם בבלתם של תקציב הבית, כשורה אחת לכל חודש.
-                {syncedAt ? ' מסונכרן ✓' : ''}
-              </p>
-            )}
+            <FrameLink
+              kind="trip"
+              budgetId={budgetId}
+              budget={budget}
+              months={months}
+              synced={Boolean(syncedAt)}
+            />
 
             {TRIP_ORDER.map((category) => (
               <TripCategory

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import EntryRow from './EntryRow'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
+import FrameLink from './FrameLink'
 import { shekels } from '../lib/format'
 import { GOAL_CATEGORIES, GOAL_ORDER, summarizeGoal } from '../lib/model'
 import { memberIndex } from '../lib/members'
@@ -31,6 +32,11 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
   const members = useMemo(() => memberIndex(budget?.members), [budget?.members])
   const shared = members.sorted.length > 1
   const isOwner = budget?.ownerUid === uid
+  // החודשים שיש בהם רשומות, כדי שניתוק קישור ידע אילו שורות למחוק בבית
+  const months = useMemo(
+    () => [...new Set(entries.map((entry) => entry.month).filter(Boolean))],
+    [entries],
+  )
 
   const { error: rollupError, syncedAt } = useTripRollup({
     trip: budget ? { ...budget, id: budgetId } : null,
@@ -95,12 +101,13 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
               </div>
             </section>
 
-            {budget?.linkedBudgetId && (
-              <p className="hint center">
-                ההפקדות כאן מופיעות גם בקרן של תקציב הבית, כשורה אחת לכל חודש.
-                {syncedAt ? ' מסונכרן ✓' : ''}
-              </p>
-            )}
+            <FrameLink
+              kind="goal"
+              budgetId={budgetId}
+              budget={budget}
+              months={months}
+              synced={Boolean(syncedAt)}
+            />
 
             {GOAL_ORDER.map((category) => (
               <section className="cat-card" data-category={category} key={category}>

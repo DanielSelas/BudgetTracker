@@ -28,12 +28,23 @@ const GOAL_PILLS = GOAL_ORDER.map((category) => ({
   label: GOAL_CATEGORIES[category].label,
 }))
 
+// התאריך של שורת מסגרת קובע לאיזה חודש היא נזקפת בתקציב הבית,
+// ולכן שתי המגירות שומרות אותו ולא רק זו של הטיול.
+const FRAME_LABEL = Object.fromEntries(
+  [...TRIP_ORDER, ...GOAL_ORDER].map((category) => [
+    category,
+    (TRIP_CATEGORIES[category] || GOAL_CATEGORIES[category]).label,
+  ]),
+)
+
 const DEFAULT_NAME = {
   income: 'הכנסה',
   fixed: 'הוצאה קבועה',
   leisure: 'הוצאת פנאי',
   fund: 'הפקדה לקרן',
   unplanned: 'הוצאה בלתי צפויה',
+  deposit: 'הפקדה',
+  withdrawal: 'משיכה',
 }
 
 const AMOUNT_LABEL = {
@@ -128,8 +139,8 @@ export default function EntrySheet({
     setError('')
     setBusy(true)
     try {
-      await onSubmit(trip
-        ? { category, name: name.trim() || TRIP_CATEGORIES[category].label, actualAmount: value, date }
+      await onSubmit(frame
+        ? { category, name: name.trim() || FRAME_LABEL[category], actualAmount: value, date }
         : {
             category,
             name: name.trim() || DEFAULT_NAME[category],

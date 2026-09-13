@@ -188,3 +188,17 @@ export function watchBudget(budgetId, onChange, onError) {
     onError,
   )
 }
+
+/**
+ * מקשר תקציב מסגרת לתקציב בית, או מנתק אותו.
+ * השורות המסכמות שכבר נכתבו בבית הקודם נמחקות כאן, אחרת היו נשארות
+ * שם בלי מקור שמעדכן אותן. השורות בבית החדש ייכתבו מעצמן בסנכרון הבא.
+ */
+export async function setFrameLink({ budgetId, previousLinkedId, months = [], linkedBudgetId }) {
+  if (previousLinkedId && previousLinkedId !== linkedBudgetId && months.length > 0) {
+    const batch = writeBatch(db)
+    for (const month of months) batch.delete(doc(db, 'entries', `trip_${budgetId}__${month}`))
+    await batch.commit()
+  }
+  await updateDoc(doc(db, 'budgets', budgetId), { linkedBudgetId: linkedBudgetId || null })
+}

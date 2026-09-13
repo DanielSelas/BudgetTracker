@@ -668,3 +668,45 @@ describe('מטרת חיסכון', () => {
     )
   })
 })
+
+describe('שורה מסכמת של מטרת חיסכון', () => {
+  const rollup = (overrides = {}) => entry({
+    category: 'fund',
+    budgetGroup: 'savings',
+    name: 'חיסכון: רכב חדש',
+    plannedAmount: 0,
+    actualAmount: 1500,
+    linkedTripId: 'goal-1',
+    ...overrides,
+  })
+
+  it('חבר בתקציב הבית יכול לכתוב אותה לקרן', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'entries', 'trip_goal-1__2026-09'), rollup()),
+    )
+  })
+
+  it('עדכון הסכום בלי לגעת במי שיצר', async () => {
+    const ref = doc(as(OWNER), 'entries', 'trip_goal-1__2026-09')
+    await setDoc(ref, rollup())
+    await assertSucceeds(updateDoc(ref, { actualAmount: 2500 }))
+  })
+})
+
+describe('קישור תקציב מסגרת בדיעבד', () => {
+  it('חבר יכול להוסיף קישור לתקציב קיים', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await setDoc(doc(db, 'budgets', 'goal-1'), {
+        name: 'רכב', ownerUid: OWNER, type: 'goal', frame: 20000, linkedBudgetId: null,
+      })
+      await setDoc(doc(db, 'budgets', 'goal-1', 'members', OWNER), { uid: OWNER, role: 'owner' })
+    })
+    await assertSucceeds(
+      updateDoc(doc(as(OWNER), 'budgets', 'goal-1'), { linkedBudgetId: BUDGET }),
+    )
+    await assertFails(
+      updateDoc(doc(as(STRANGER), 'budgets', 'goal-1'), { linkedBudgetId: BUDGET }),
+    )
+  })
+})

@@ -1556,3 +1556,24 @@ input[type='date']::-webkit-calendar-picker-indicator {
   --cat-base: var(--color-neutral-500);
   --cat-ink: var(--color-neutral-800);
 }
+
+/* ========== קישור תקציב מסגרת לבית ========== */
+
+/* בתוך משפט, ולכן בלי היישור וגובה המינימום של כפתור טקסט עצמאי */
+.btn-text.inline {
+  display: inline;
+  align-self: auto;
+  padding: 0;
+  min-height: 0;
+  font-family: inherit;
+  font-size: inherit;
+  text-decoration: underline;
+  color: var(--color-accent-800);
+}
+
+.link-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}

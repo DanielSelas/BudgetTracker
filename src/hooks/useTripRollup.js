@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { syncRollup, totalsByMonth } from '../lib/trips'
+import { goalSign, syncRollup, totalsByMonth } from '../lib/trips'
 
 /**
  * מיישר את השורות המסכמות בתקציב הבית בכל פעם שהטיול משתנה.
@@ -15,7 +15,9 @@ export function useTripRollup({ trip, entries, uid, ready }) {
   useEffect(() => {
     if (!ready || !trip?.linkedBudgetId || !uid) return
 
-    const totals = totalsByMonth(entries)
+    // אותו חישוב כמו בסנכרון עצמו: משיכה שמקזזת הפקדה משנה את הסכום
+    // בבית, ולכן היא חייבת לשנות גם את החתימה שמחליטה אם לסנכרן.
+    const totals = totalsByMonth(entries, trip.type === 'goal' ? goalSign : undefined)
     const signature = [...totals.entries()].sort().map(([m, v]) => `${m}:${v}`).join('|')
     if (signature === lastSignature.current) return
     lastSignature.current = signature
