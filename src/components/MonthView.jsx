@@ -59,7 +59,13 @@ export default function MonthView({ budgetId, budget, uid, nudge }) {
   const partner = members.sorted.find((member) => member.uid !== uid)
   const shared = members.sorted.length > 1
 
-  const failure = error || recurringError
+  // שתי תקלות שונות לגמרי, ולכן שתי הודעות שונות. איחוד שלהן לטקסט
+  // אחד הפך אבחון של permission-denied לניחוש.
+  const failure = error
+    ? { what: 'קריאת הרשומות של החודש', error }
+    : recurringError
+      ? { what: 'סנכרון החיובים הקבועים', error: recurringError }
+      : null
 
   return (
     <>
@@ -74,7 +80,7 @@ export default function MonthView({ budgetId, budget, uid, nudge }) {
       <div className="app-scroll">
         {failure && (
           <p className="notice block" role="alert">
-            שגיאה בטעינת הנתונים: <code>{failure.code || 'unknown'}</code>
+            {failure.what} נכשל: <code>{failure.error.code || 'unknown'}</code>
           </p>
         )}
 
