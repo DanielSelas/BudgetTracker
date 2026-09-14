@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Avatar from './Avatar'
 import Sheet from './Sheet'
 import { shekels } from '../lib/format'
+import { MAX_GROUP_LENGTH, SUGGESTED_GROUPS, normalizeGroup } from '../lib/groups'
 import {
   CATEGORIES, GOAL_CATEGORIES, GOAL_ORDER, TRIP_CATEGORIES, TRIP_ORDER,
   calcBaseAmount, groupTarget, todayDate,
@@ -61,7 +62,9 @@ const AMOUNT_LABEL = {
 export default function EntrySheet({
   mode = 'month',
   initialCategory = 'fixed',
+  initialGroup = '',
   initialAmount = 0,
+  groups = [],
   summary,
   me,
   partner,
@@ -78,6 +81,7 @@ export default function EntrySheet({
   const [name, setName] = useState('')
   const [planned, setPlanned] = useState('')
   const [recurring, setRecurring] = useState(false)
+  const [group, setGroup] = useState(initialGroup)
   const [date, setDate] = useState(todayDate)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -147,6 +151,7 @@ export default function EntrySheet({
             actualAmount: value,
             plannedAmount: Number(planned) || 0,
             recurring,
+            groupKey: normalizeGroup(group),
           })
       onClose()
     } catch {
@@ -156,6 +161,8 @@ export default function EntrySheet({
   }
 
   const isIncome = category === 'income'
+  // ההצעות הקבועות נעלמות ברגע שיש קבוצות אמיתיות, אחרת הן היו רעש
+  const chips = groups.length > 0 ? groups : SUGGESTED_GROUPS
 
   return (
     <Sheet onClose={onClose}>
@@ -210,6 +217,34 @@ export default function EntrySheet({
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
+
+          {!frame && !isIncome && (
+            <div className="group-field">
+              <div className="group-chips">
+                {chips.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    className="cat-pill"
+                    aria-pressed={group === chip}
+                    onClick={() => setGroup((current) => (current === chip ? '' : chip))}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+              <input
+                className="input"
+                maxLength={MAX_GROUP_LENGTH}
+                placeholder="קיבוץ תחת שם (לא חובה)"
+                value={group}
+                onChange={(event) => setGroup(event.target.value)}
+              />
+              <span className="type-hint">
+                שורות עם אותו שם יוצגו מכווצות כשורה אחת עם הסכום המצטבר.
+              </span>
+            </div>
+          )}
 
           {frame ? (
             <label className="field">

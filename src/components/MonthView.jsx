@@ -9,6 +9,7 @@ import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
 import { createTemplate, skipMonth, stopTemplate } from '../lib/recurring'
 import { CATEGORIES, monthKey, summarizeMonth } from '../lib/model'
+import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
 import { deleteBudget } from '../lib/budgets'
 
@@ -26,7 +27,7 @@ function Skeleton() {
 
 export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
   const [month, setMonth] = useState(monthKey)
-  const [sheet, setSheet] = useState(nudge ? nudge.category : null)
+  const [sheet, setSheet] = useState(nudge ? { category: nudge.category, group: '' } : null)
   const [prefill, setPrefill] = useState(nudge?.amount ?? 0)
   const [pendingStop, setPendingStop] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -53,6 +54,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
   }), [base, budgetId, month, uid])
 
   const summary = useMemo(() => summarizeMonth(entries), [entries])
+  // הקבוצות שכבר בשימוש החודש, כדי שהוספה חוזרת תהיה בחירה ולא הקלדה
+  const groups = useMemo(() => usedGroups(entries), [entries])
+  const openSheet = (category, group = '') => { setPrefill(0); setSheet({ category, group }) }
   // בלי הכנסה אין סכום בסיס, ולכן כל היעדים אפס וכל המסך חסר משמעות.
   // זו הפעולה הראשונה שצריך לעשות בחודש חדש, ולכן היא מקבלת הבלטה.
   const needsIncome = !loading && summary.totalIncome === 0
@@ -106,7 +110,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
                 type="button"
                 className="prompt-card"
                 data-category="income"
-                onClick={() => { setPrefill(0); setSheet('income') }}
+                onClick={() => openSheet('income')}
               >
                 <span className="prompt-title">מתחילים מהכנסה</span>
                 <span className="prompt-body">
@@ -125,7 +129,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
                 group={summary.groups[CATEGORIES[category].budgetGroup]}
                 authorOf={shared ? members.get : null}
                 actions={actions}
-                onAdd={(next) => { setPrefill(0); setSheet(next) }}
+                onAdd={openSheet}
                 onStopRecurring={setPendingStop}
               />
             ))}
@@ -136,7 +140,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
               entries={byCategory.unplanned}
               authorOf={shared ? members.get : null}
               actions={actions}
-              onAdd={(next) => { setPrefill(0); setSheet(next) }}
+              onAdd={openSheet}
               onStopRecurring={setPendingStop}
             />
 
@@ -152,14 +156,16 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
       <button
         type="button"
         className="fab"
-        onClick={() => { setPrefill(0); setSheet(needsIncome ? 'income' : 'fixed') }}
+        onClick={() => openSheet(needsIncome ? 'income' : 'fixed')}
       >
         <span className="plus">+</span> {needsIncome ? 'הכנסה' : 'הוצאה'}
       </button>
 
       {sheet && (
         <EntrySheet
-          initialCategory={sheet}
+          initialCategory={sheet.category}
+          initialGroup={sheet.group}
+          groups={groups}
           initialAmount={prefill}
           summary={summary}
           me={me}

@@ -1577,3 +1577,74 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 8px;
   align-items: stretch;
 }
+
+/* ========== שורה מקובצת בתוך כרטיס קטגוריה ========== */
+
+.entry-group {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 4px 8px;
+  margin-inline: -8px;
+  border-radius: 12px;
+  text-align: start;
+  color: inherit;
+}
+
+.group-head:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
+
+.group-head .entry-amount { font-size: 16px; }
+
+.chevron {
+  font-size: 11px;
+  color: var(--color-neutral-600);
+  transition: transform 120ms ease;
+}
+
+.entry-group[data-open] .chevron { transform: rotate(180deg); }
+
+.group-count {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-neutral-200);
+  color: var(--color-neutral-700);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* הזחה פנימה, כדי שיהיה ברור שהשורות שייכות לקבוצה שמעליהן */
+.entry-list.nested {
+  padding-inline-start: 21px;
+  border-inline-start: 2px solid var(--color-neutral-200);
+  margin-inline-start: 4px;
+}
+
+.nested-add {
+  align-self: flex-start;
+  margin-inline-start: 25px;
+  font-size: 14px;
+}
+
+/* ========== שדה הקיבוץ במגירת ההזנה ========== */
+
+.group-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.group-chips .cat-pill { font-size: 13px; }

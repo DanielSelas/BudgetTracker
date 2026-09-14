@@ -710,3 +710,30 @@ describe('קישור תקציב מסגרת בדיעבד', () => {
     )
   })
 })
+
+describe('קיבוץ שורות בתוך קטגוריה', () => {
+  it('שם קיבוץ תקין מתקבל', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'entries', 'g-ok'), entry({ groupKey: 'קניות בסופר' })),
+    )
+  })
+
+  it('רשומה בלי קיבוץ ממשיכה לעבוד', async () => {
+    await assertSucceeds(setDoc(doc(as(OWNER), 'entries', 'g-none'), entry()))
+  })
+
+  it('שם ריק או ארוך מדי נדחה', async () => {
+    await assertFails(
+      setDoc(doc(as(OWNER), 'entries', 'g-empty'), entry({ groupKey: '' })),
+    )
+    await assertFails(
+      setDoc(doc(as(OWNER), 'entries', 'g-long'), entry({ groupKey: 'א'.repeat(41) })),
+    )
+  })
+
+  it('שם שאינו מחרוזת נדחה', async () => {
+    await assertFails(
+      setDoc(doc(as(OWNER), 'entries', 'g-num'), entry({ groupKey: 7 })),
+    )
+  })
+})

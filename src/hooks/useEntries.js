@@ -76,7 +76,7 @@ export function useEntries(budgetId, month) {
 /** פעולות כתיבה על רשומות. budgetGroup נגזר מהקטגוריה ואינו נבחר ידנית. */
 export function entryActions({ budgetId, month, uid }) {
   return {
-    add: ({ category, name, plannedAmount = 0, actualAmount = 0, note = '' }) =>
+    add: ({ category, name, plannedAmount = 0, actualAmount = 0, note = '', groupKey = '' }) =>
       addDoc(collection(db, 'entries'), {
         budgetId,
         month,
@@ -87,6 +87,8 @@ export function entryActions({ budgetId, month, uid }) {
         actualAmount: Number(actualAmount) || 0,
         note,
         addedBy: uid,
+        // שדה ריק לא נכתב בכלל, כדי שרשומה בלי קיבוץ תישאר כפי שהייתה
+        ...(groupKey ? { groupKey } : {}),
       }),
 
     update: (entryId, changes) => updateDoc(doc(db, 'entries', entryId), changes),

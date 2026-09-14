@@ -1,4 +1,4 @@
-import EntryRow from './EntryRow'
+import EntryItems from './EntryItems'
 import { shekels } from '../lib/format'
 
 /**
@@ -42,18 +42,13 @@ export default function UnplannedCard({ summary, entries = [], authorOf, actions
       )}
 
       {entries.length > 0 ? (
-        <ul className="entry-list">
-          {entries.map((entry) => (
-            <EntryRow
-              key={entry.id}
-              entry={entry}
-              author={authorOf?.(entry.addedBy)}
-              onUpdate={actions.update}
-              onRemove={actions.remove}
-              onStopRecurring={onStopRecurring}
-            />
-          ))}
-        </ul>
+        <EntryItems
+          entries={entries}
+          authorOf={authorOf}
+          actions={actions}
+          onStopRecurring={onStopRecurring}
+          onAddToGroup={(groupKey) => onAdd('unplanned', groupKey)}
+        />
       ) : (
         reserve > 0 && <p className="empty">רזרבה להוצאות בלתי צפויות, כמו תיקון רכב</p>
       )}

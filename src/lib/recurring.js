@@ -28,7 +28,9 @@ export function watchTemplates(budgetId, onChange, onError) {
   )
 }
 
-export function createTemplate({ budgetId, uid, month, category, name, plannedAmount, actualAmount }) {
+export function createTemplate({
+  budgetId, uid, month, category, name, plannedAmount, actualAmount, groupKey = '',
+}) {
   const ref = doc(templatesRef(budgetId))
   return setDoc(ref, {
     category,
@@ -40,6 +42,7 @@ export function createTemplate({ budgetId, uid, month, category, name, plannedAm
     active: true,
     skipMonths: [],
     createdBy: uid,
+    ...(groupKey ? { groupKey } : {}),
     createdAt: serverTimestamp(),
   }).then(() => ref.id)
 }
@@ -83,6 +86,9 @@ export function entryFromTemplate(template, { budgetId, month, uid }) {
     note: '',
     addedBy: uid,
     recurringId: template.id,
+    // הקיבוץ נשמר על התבנית, אחרת חיוב קבוע מקובץ היה יוצא מהקבוצה
+    // שלו בכל חודש חדש
+    ...(template.groupKey ? { groupKey: template.groupKey } : {}),
   }
 }
 

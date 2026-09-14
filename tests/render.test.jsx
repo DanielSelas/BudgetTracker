@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, fireEvent, render } from '@testing-library/react'
 
 /**
  * בדיקות רינדור. הבדיקות האחרות מכסות לוגיקה וכללי אבטחה, ולכן משתנה
@@ -181,5 +181,80 @@ describe('רינדור ראשוני', () => {
     const { default: Login } = await import('../src/components/Login')
     const { container } = await renderWithContexts(<Login />)
     expect(container.textContent).toContain('הרשמה')
+  })
+})
+
+describe('קיבוץ שורות במסך החודש', () => {
+  const groceries = (id, name, actualAmount) => ({
+    id, name, actualAmount, category: 'fixed', budgetGroup: 'fixed',
+    plannedAmount: 0, addedBy: 'u1', month: '2026-09', groupKey: 'קניות בסופר',
+  })
+
+  it('כרטיס הקטגוריה מציג שורה אחת מכווצת, ופותח את הפירוט בלחיצה', async () => {
+    const { default: CategoryCard } = await import('../src/components/CategoryCard')
+    const entries = [
+      groceries('a', 'קנייה גדולה', 1240),
+      groceries('b', 'חלב ולחם', 38),
+      { id: 'c', name: 'שכר דירה', actualAmount: 5200, category: 'fixed',
+        budgetGroup: 'fixed', plannedAmount: 5200, addedBy: 'u1', month: '2026-09' },
+    ]
+    const { container, getByText, queryByText } = await renderWithContexts(
+      <CategoryCard
+        category="fixed"
+        entries={entries}
+        group={{ target: 10000, actual: 6478, remaining: 3522 }}
+        actions={{ update: vi.fn(), remove: vi.fn() }}
+        onAdd={vi.fn()}
+      />,
+    )
+
+    expect(getByText('2 קניות')).toBeTruthy()
+    expect(getByText('שכר דירה')).toBeTruthy()
+    // הפירוט סגור עד שנפתח, אחרת אין טעם בקיבוץ
+    expect(queryByText('חלב ולחם')).toBeNull()
+
+    fireEvent.click(container.querySelector('.group-head'))
+    expect(getByText('חלב ולחם')).toBeTruthy()
+    expect(getByText('קנייה גדולה')).toBeTruthy()
+  })
+
+  it('מגירת ההזנה שולחת את שם הקבוצה', async () => {
+    const { default: EntrySheet } = await import('../src/components/EntrySheet')
+    const onSubmit = vi.fn(async () => {})
+    const { container, getByText } = await renderWithContexts(
+      <EntrySheet
+        initialCategory="fixed"
+        groups={['קניות בסופר']}
+        summary={{ baseAmount: 20000, groups: { fixed: { actual: 0 } } }}
+        onSubmit={onSubmit}
+        onClose={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(getByText('קניות בסופר'))
+    fireEvent.change(container.querySelector('.amount-input'), { target: { value: '38' } })
+    fireEvent.submit(container.querySelector('.sheet-form'))
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ groupKey: 'קניות בסופר', actualAmount: 38 }),
+    )
+  })
+
+  it('בלי בחירת קבוצה נשלח שדה ריק ולא נכתב כלום', async () => {
+    const { default: EntrySheet } = await import('../src/components/EntrySheet')
+    const onSubmit = vi.fn(async () => {})
+    const { container } = await renderWithContexts(
+      <EntrySheet
+        initialCategory="fixed"
+        summary={{ baseAmount: 20000, groups: { fixed: { actual: 0 } } }}
+        onSubmit={onSubmit}
+        onClose={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(container.querySelector('.amount-input'), { target: { value: '100' } })
+    fireEvent.submit(container.querySelector('.sheet-form'))
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ groupKey: '' }))
   })
 })

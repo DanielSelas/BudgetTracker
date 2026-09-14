@@ -1,4 +1,4 @@
-import EntryRow from './EntryRow'
+import EntryItems from './EntryItems'
 import { shekels } from '../lib/format'
 import { BUDGET_GROUP_RATIOS, CATEGORIES, isOverageGood } from '../lib/model'
 
@@ -50,18 +50,13 @@ export default function CategoryCard({ category, entries, group, authorOf, actio
       )}
 
       {entries.length > 0 ? (
-        <ul className="entry-list">
-          {entries.map((entry) => (
-            <EntryRow
-              key={entry.id}
-              entry={entry}
-              author={authorOf?.(entry.addedBy)}
-              onUpdate={actions.update}
-              onRemove={actions.remove}
-              onStopRecurring={onStopRecurring}
-            />
-          ))}
-        </ul>
+        <EntryItems
+          entries={entries}
+          authorOf={authorOf}
+          actions={actions}
+          onStopRecurring={onStopRecurring}
+          onAddToGroup={(groupKey) => onAdd(category, groupKey)}
+        />
       ) : (
         <p className="empty">אין עדיין שורות</p>
       )}
