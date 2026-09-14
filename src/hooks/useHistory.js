@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { collection, onSnapshot, query, where } from 'firebase/firestore'
-import { db } from '../lib/firebase'
+import { onSnapshot, query, where } from 'firebase/firestore'
+import { entriesRef } from '../lib/paths'
 import { useRetry } from './useRetry'
 import { monthKey, shiftMonth, summarizeMonth } from '../lib/model'
 
@@ -29,11 +29,7 @@ export function useHistory(budgetId, monthCount = 6, fixedBase = 0) {
     }
 
     setLoading(true)
-    const historyQuery = query(
-      collection(db, 'entries'),
-      where('budgetId', '==', budgetId),
-      where('month', '>=', months[0]),
-    )
+    const historyQuery = query(entriesRef(budgetId), where('month', '>=', months[0]))
 
     return onSnapshot(
       historyQuery,

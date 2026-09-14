@@ -1,8 +1,9 @@
 import {
-  collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp,
-  setDoc, updateDoc, where, writeBatch,
+  deleteDoc, doc, getDoc, getDocs, serverTimestamp,
+  setDoc, updateDoc, writeBatch,
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { entriesRef, entryRef } from './paths'
 
 /**
  * קישור תקציב מסגרת לתקציב בית: הוא מחזיק את כל הפירוט, והבית מקבל
@@ -40,7 +41,6 @@ export const rollupName = (trip) => `${targetFor(trip).prefix}: ${trip.name}`
 function rollupPayload({ trip, month, amount, uid }) {
   const target = targetFor(trip)
   return {
-    budgetId: trip.linkedBudgetId,
     month,
     category: target.category,
     budgetGroup: target.budgetGroup,
@@ -66,7 +66,7 @@ export async function syncRollup({ trip, entries, uid, knownMonths = [] }) {
   let synced = 0
 
   for (const month of months) {
-    const ref = doc(db, 'entries', rollupEntryId(trip.id, month))
+    const ref = entryRef(trip.linkedBudgetId, rollupEntryId(trip.id, month))
     const amount = totals.get(month) || 0
     const existing = await getDoc(ref)
 
@@ -90,9 +90,7 @@ export async function syncRollup({ trip, entries, uid, knownMonths = [] }) {
 
 /** מוחק טיול על כל רשומותיו, החברים בו, והשורות המסכמות שהוא יצר. */
 export async function deleteTrip({ trip, memberUids }) {
-  const entries = await getDocs(
-    query(collection(db, 'entries'), where('budgetId', '==', trip.id)),
-  )
+  const entries = await getDocs(entriesRef(trip.id))
 
   const months = new Set(entries.docs.map((item) => item.data().month).filter(Boolean))
   const batch = writeBatch(db)
@@ -102,7 +100,7 @@ export async function deleteTrip({ trip, memberUids }) {
   // השורות המסכמות חיות בתקציב אחר, ולכן הן לא נמחקות עם הטיול מעצמו
   if (trip.linkedBudgetId) {
     for (const month of months) {
-      batch.delete(doc(db, 'entries', rollupEntryId(trip.id, month)))
+      batch.delete(entryRef(trip.linkedBudgetId, rollupEntryId(trip.id, month)))
     }
   }
 

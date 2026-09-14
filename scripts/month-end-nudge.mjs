@@ -120,8 +120,7 @@ async function main() {
       continue
     }
 
-    const entries = await db.collection('entries')
-      .where('budgetId', '==', budget.id)
+    const entries = await db.collection('budgets').doc(budget.id).collection('entries')
       .where('month', '==', month)
       .get()
 

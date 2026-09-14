@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { collection, onSnapshot, query, where } from 'firebase/firestore'
-import { db } from '../lib/firebase'
+import { onSnapshot, query, where } from 'firebase/firestore'
+import { entriesRef } from '../lib/paths'
 import { monthKey, summarizeMonth } from '../lib/model'
 import { useRetry } from './useRetry'
 
@@ -17,11 +17,7 @@ export function useMonthBalance(budgetId, fixedBase) {
       setBalance(null)
       return
     }
-    const monthQuery = query(
-      collection(db, 'entries'),
-      where('budgetId', '==', budgetId),
-      where('month', '==', monthKey()),
-    )
+    const monthQuery = query(entriesRef(budgetId), where('month', '==', monthKey()))
     return onSnapshot(
       monthQuery,
       (snapshot) => setBalance(summarizeMonth(snapshot.docs.map((item) => item.data()), { fixedBase }).balance),
@@ -45,9 +41,8 @@ export function useFrameTotal(budgetId, isGoal = false) {
       setTotal(null)
       return
     }
-    const frameQuery = query(collection(db, 'entries'), where('budgetId', '==', budgetId))
     return onSnapshot(
-      frameQuery,
+      entriesRef(budgetId),
       (snapshot) => setTotal(snapshot.docs.reduce((sum, item) => {
         const data = item.data()
         const sign = isGoal && data.category === 'withdrawal' ? -1 : 1

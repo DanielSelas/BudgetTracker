@@ -1,15 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  query,
-  updateDoc,
-  where,
-} from 'firebase/firestore'
-import { db } from '../lib/firebase'
+import { deleteDoc, onSnapshot, query, setDoc, updateDoc, where } from 'firebase/firestore'
+import { entriesRef, entryId, entryRef } from '../lib/paths'
 import { CATEGORIES } from '../lib/model'
 import { useRetry } from './useRetry'
 
@@ -31,11 +22,8 @@ export function useEntries(budgetId, month) {
     }
 
     setLoading(true)
-    const entriesQuery = query(
-      collection(db, 'entries'),
-      where('budgetId', '==', budgetId),
-      where('month', '==', month),
-    )
+    // התקציב נמצא בנתיב, ולכן נשאר רק לסנן לפי חודש
+    const entriesQuery = query(entriesRef(budgetId), where('month', '==', month))
 
     return onSnapshot(
       entriesQuery,
@@ -70,8 +58,7 @@ export function entryActions({ budgetId, month, uid }) {
       category, name, plannedAmount = 0, actualAmount = 0, note = '',
       groupKey = '', fromRemainder = false,
     }) =>
-      addDoc(collection(db, 'entries'), {
-        budgetId,
+      setDoc(entryRef(budgetId, entryId({ month, category, name })), {
         month,
         category,
         budgetGroup: CATEGORIES[category].budgetGroup,
@@ -88,11 +75,11 @@ export function entryActions({ budgetId, month, uid }) {
 
     // קבוצת התקציב נגזרת מהקטגוריה ולא נבחרת, ולכן שינוי קטגוריה
     // חייב לגרור אותה. אחרת השורה הייתה נספרת ביעד של הקטגוריה הישנה
-    update: (entryId, changes) => updateDoc(doc(db, 'entries', entryId), {
+    update: (id, changes) => updateDoc(entryRef(budgetId, id), {
       ...changes,
       ...(changes.category ? { budgetGroup: CATEGORIES[changes.category].budgetGroup } : {}),
     }),
 
-    remove: (entryId) => deleteDoc(doc(db, 'entries', entryId)),
+    remove: (id) => deleteDoc(entryRef(budgetId, id)),
   }
 }
