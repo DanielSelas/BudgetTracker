@@ -294,3 +294,81 @@ describe('הסבר לכניסה ראשונה', () => {
     expect(seenIntro()).toBe(true)
   })
 })
+
+describe('עריכת שורה במקום', () => {
+  const row = (extra = {}) => ({
+    id: 'e1', name: 'קניות סופר', actualAmount: 300, category: 'fixed',
+    budgetGroup: 'fixed', plannedAmount: 0, addedBy: 'u1', month: '2026-09', ...extra,
+  })
+
+  async function openEditor(entry, onUpdate = vi.fn()) {
+    const { default: CategoryCard } = await import('../src/components/CategoryCard')
+    const view = await renderWithContexts(
+      <CategoryCard
+        category="fixed"
+        entries={[entry]}
+        group={{ target: 10000, actual: 300, remaining: 9700 }}
+        actions={{ update: onUpdate, remove: vi.fn() }}
+        onAdd={vi.fn()}
+      />,
+    )
+    fireEvent.click(view.getByText(entry.name))
+    return view
+  }
+
+  it('לחיצה על השם פותחת עריכה עם שם, קטגוריה וסכום', async () => {
+    const { container, getByText } = await openEditor(row())
+    expect(container.querySelector('.row-edit')).toBeTruthy()
+    expect(container.querySelector('.row-edit .input').value).toBe('קניות סופר')
+    expect(getByText('פנאי')).toBeTruthy()
+    expect(getByText('בלתם')).toBeTruthy()
+  })
+
+  it('שולח רק את מה שבאמת השתנה', async () => {
+    const onUpdate = vi.fn(async () => {})
+    const { container, getByText } = await openEditor(row(), onUpdate)
+
+    fireEvent.change(container.querySelector('.row-edit .input'), { target: { value: 'קניות בסופר' } })
+    fireEvent.click(getByText('פנאי'))
+    fireEvent.submit(container.querySelector('.row-edit'))
+
+    expect(onUpdate).toHaveBeenCalledWith('e1', {
+      actualAmount: 300, name: 'קניות בסופר', category: 'leisure',
+    })
+  })
+
+  it('שורה של חיוב קבוע מסבירה שהשינוי הוא לחודש הזה בלבד', async () => {
+    const { container } = await openEditor(row({ recurringId: 'r1' }))
+    expect(container.textContent).toContain('בחודש הבא השורה תיווצר שוב מהתבנית')
+  })
+
+  it('שורה מסכמת מקושרת אינה ניתנת לעריכה', async () => {
+    const { container, getByText } = await renderWithContexts(
+      (await import('../src/components/CategoryCard')).default({
+        category: 'fund',
+        entries: [row({ category: 'fund', budgetGroup: 'savings', name: 'חיסכון: רכב', linkedTripId: 'g1' })],
+        group: { target: 4000, actual: 300, remaining: 3700 },
+        actions: { update: vi.fn(), remove: vi.fn() },
+        onAdd: vi.fn(),
+      }),
+    )
+    fireEvent.click(getByText('חיסכון: רכב'))
+    expect(container.querySelector('.row-edit')).toBeNull()
+  })
+
+  it('הכנסה לא מציעה החלפת קטגוריה', async () => {
+    const { default: CategoryCard } = await import('../src/components/CategoryCard')
+    const { container, getByText } = await renderWithContexts(
+      <CategoryCard
+        category="income"
+        entries={[row({ category: 'income', budgetGroup: 'none', name: 'משכורת' })]}
+        group={null}
+        actions={{ update: vi.fn(), remove: vi.fn() }}
+        onAdd={vi.fn()}
+      />,
+    )
+    fireEvent.click(getByText('משכורת'))
+    expect(container.querySelector('.row-edit')).toBeTruthy()
+    expect(container.querySelector('.row-edit .cat-pills')).toBeNull()
+  })
+})

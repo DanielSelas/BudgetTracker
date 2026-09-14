@@ -1807,3 +1807,52 @@ input[type='date']::-webkit-calendar-picker-indicator {
 @media (prefers-reduced-motion: reduce) {
   .intro-dot { transition: none; }
 }
+
+/* ========== עריכת שורה במקום ========== */
+
+.entry-row.editing { display: block; }
+
+.row-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  margin-inline: -4px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+}
+
+.row-edit-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* הסכום מקבל את המקום שנשאר, והכפתורים את מה שהם צריכים */
+.row-edit-foot .input { flex: 1; min-width: 0; }
+
+.cat-pills.tight { gap: 5px; }
+.cat-pills.tight .cat-pill { font-size: 13px; padding: 4px 11px; min-height: 30px; }
+
+/* שם השורה הוא כפתור, אבל צריך להיראות כמו טקסט עד שנוגעים בו */
+.entry-name.as-button {
+  text-align: start;
+  padding: 2px 4px;
+  margin-inline-start: -4px;
+  border-radius: 8px;
+  color: inherit;
+  font-size: 15px;
+  min-height: 0;
+}
+
+.entry-name.as-button:hover {
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+/* שתי פעולות של בעלים בשורה אחת, המסוכנת שבהן אחרונה */
+.owner-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 4px;
+}

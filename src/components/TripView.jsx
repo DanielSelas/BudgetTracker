@@ -2,9 +2,12 @@ import { useMemo, useState } from 'react'
 import EntryRow from './EntryRow'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
+import RenameDialog from './RenameDialog'
+import { renameBudget } from '../lib/budgets'
 import FrameLink from './FrameLink'
 import { shekels } from '../lib/format'
 import { TRIP_CATEGORIES, TRIP_ORDER, summarizeTrip } from '../lib/model'
+import { TRIP_PILLS } from '../lib/pills'
 import { memberIndex } from '../lib/members'
 import { useFrameEntries, frameActions } from '../hooks/useFrameEntries'
 import { useTripRollup } from '../hooks/useTripRollup'
@@ -37,6 +40,7 @@ function TripCategory({ category, entries, total, authorOf, actions, onAdd }) {
               key={entry.id}
               entry={entry}
               author={authorOf?.(entry.addedBy)}
+              categories={TRIP_PILLS}
               onUpdate={actions.update}
               onRemove={actions.remove}
             />
@@ -56,6 +60,7 @@ function TripCategory({ category, entries, total, authorOf, actions, onAdd }) {
 export default function TripView({ budgetId, budget, uid, onDeleted }) {
   const [sheet, setSheet] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [renaming, setRenaming] = useState(false)
   const { entries, loading, error } = useFrameEntries(budgetId)
 
   const actions = useMemo(() => frameActions({ budgetId, uid }), [budgetId, uid])
@@ -156,9 +161,14 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
               />
             ))}
             {isOwner && (
-              <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
-                מחיקת הטיול
-              </button>
+              <div className="owner-actions">
+                <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
+                  שינוי שם הטיול
+                </button>
+                <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
+                  מחיקת הטיול
+                </button>
+              </div>
             )}
           </>
         )}
@@ -176,6 +186,19 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
           me={members.get(uid)}
           onSubmit={actions.add}
           onClose={() => setSheet(null)}
+        />
+      )}
+
+      {renaming && (
+        <RenameDialog
+          title="שינוי שם הטיול"
+          label="שם הטיול"
+          value={budget?.name}
+          onSave={async (name) => {
+            await renameBudget({ budgetId, name })
+            setRenaming(false)
+          }}
+          onCancel={() => setRenaming(false)}
         />
       )}
 

@@ -4,6 +4,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { monthOfDate, todayDate } from '../lib/model'
+import { useRetry } from './useRetry'
 
 /**
  * רשומות של תקציב מבוסס מסגרת, טיול או מטרה. בניגוד למשק בית אין כאן
@@ -13,6 +14,7 @@ export function useFrameEntries(budgetId) {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { attempt, retryIfTransient } = useRetry()
 
   useEffect(() => {
     if (!budgetId) {
@@ -32,9 +34,10 @@ export function useFrameEntries(budgetId) {
       (err) => {
         setError(err)
         setLoading(false)
+        retryIfTransient(err)
       },
     )
-  }, [budgetId])
+  }, [budgetId, attempt, retryIfTransient])
 
   return { entries, loading, error }
 }

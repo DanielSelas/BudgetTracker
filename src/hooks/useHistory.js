@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
+import { useRetry } from './useRetry'
 import { monthKey, shiftMonth, summarizeMonth } from '../lib/model'
 
 /** רשימת מפתחות החודשים מהישן לחדש, מסתיימת בחודש הנוכחי. */
@@ -18,6 +19,7 @@ export function useHistory(budgetId, monthCount = 6) {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { attempt, retryIfTransient } = useRetry()
 
   useEffect(() => {
     if (!budgetId) {
@@ -43,9 +45,10 @@ export function useHistory(budgetId, monthCount = 6) {
       (err) => {
         setError(err)
         setLoading(false)
+        retryIfTransient(err)
       },
     )
-  }, [budgetId, months])
+  }, [budgetId, months, attempt, retryIfTransient])
 
   const series = useMemo(() => {
     const byMonth = new Map(months.map((month) => [month, []]))

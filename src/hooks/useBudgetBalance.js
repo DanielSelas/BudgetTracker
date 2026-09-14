@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { monthKey, summarizeMonth } from '../lib/model'
+import { useRetry } from './useRetry'
 
 /**
  * היתרה של החודש הנוכחי בתקציב משק בית, לתצוגה בכרטיס בדף הבית.
@@ -9,6 +10,7 @@ import { monthKey, summarizeMonth } from '../lib/model'
  */
 export function useMonthBalance(budgetId) {
   const [balance, setBalance] = useState(null)
+  const { attempt, retryIfTransient } = useRetry()
 
   useEffect(() => {
     if (!budgetId) {
@@ -23,9 +25,9 @@ export function useMonthBalance(budgetId) {
     return onSnapshot(
       monthQuery,
       (snapshot) => setBalance(summarizeMonth(snapshot.docs.map((item) => item.data())).balance),
-      () => setBalance(null),
+      (err) => { setBalance(null); retryIfTransient(err) },
     )
-  }, [budgetId])
+  }, [budgetId, attempt, retryIfTransient])
 
   return balance
 }
@@ -36,6 +38,7 @@ export function useMonthBalance(budgetId) {
  */
 export function useFrameTotal(budgetId, isGoal = false) {
   const [total, setTotal] = useState(null)
+  const { attempt, retryIfTransient } = useRetry()
 
   useEffect(() => {
     if (!budgetId) {
@@ -50,9 +53,9 @@ export function useFrameTotal(budgetId, isGoal = false) {
         const sign = isGoal && data.category === 'withdrawal' ? -1 : 1
         return sum + (data.actualAmount || 0) * sign
       }, 0)),
-      () => setTotal(null),
+      (err) => { setTotal(null); retryIfTransient(err) },
     )
-  }, [budgetId, isGoal])
+  }, [budgetId, isGoal, attempt, retryIfTransient])
 
   return total
 }

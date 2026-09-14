@@ -5,13 +5,14 @@ import UnplannedCard from './UnplannedCard'
 import MonthPicker from './MonthPicker'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
+import RenameDialog from './RenameDialog'
 import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
 import { createTemplate, skipMonth, stopTemplate } from '../lib/recurring'
 import { CATEGORIES, monthKey, summarizeMonth } from '../lib/model'
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
-import { deleteBudget } from '../lib/budgets'
+import { deleteBudget, renameBudget } from '../lib/budgets'
 
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
 
@@ -31,6 +32,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
   const [prefill, setPrefill] = useState(nudge?.amount ?? 0)
   const [pendingStop, setPendingStop] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [renaming, setRenaming] = useState(false)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
 
   const base = useMemo(() => entryActions({ budgetId, month, uid }), [budgetId, month, uid])
@@ -145,9 +147,14 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
             />
 
             {isOwner && (
-              <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
-                מחיקת התקציב
-              </button>
+              <div className="owner-actions">
+                <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
+                  שינוי שם התקציב
+                </button>
+                <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
+                  מחיקת התקציב
+                </button>
+              </div>
             )}
           </>
         )}
@@ -172,6 +179,19 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
           partner={partner ? displayName(partner) : ''}
           onSubmit={actions.add}
           onClose={() => { setSheet(null); setPrefill(0) }}
+        />
+      )}
+
+      {renaming && (
+        <RenameDialog
+          title="שינוי שם התקציב"
+          label="שם התקציב"
+          value={budget?.name}
+          onSave={async (name) => {
+            await renameBudget({ budgetId, name })
+            setRenaming(false)
+          }}
+          onCancel={() => setRenaming(false)}
         />
       )}
 

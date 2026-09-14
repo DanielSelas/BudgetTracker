@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { CATEGORIES } from '../lib/model'
+import { useRetry } from './useRetry'
 
 /**
  * מאזין לרשומות של תקציב וחודש מסוימים.
@@ -20,7 +21,7 @@ export function useEntries(budgetId, month) {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [attempt, setAttempt] = useState(0)
+  const { attempt, retryIfTransient } = useRetry()
 
   useEffect(() => {
     if (!budgetId || !month) {
@@ -36,8 +37,7 @@ export function useEntries(budgetId, month) {
       where('month', '==', month),
     )
 
-    let retryTimer
-    const unsubscribe = onSnapshot(
+    return onSnapshot(
       entriesQuery,
       (snapshot) => {
         setEntries(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })))
@@ -47,20 +47,10 @@ export function useEntries(budgetId, month) {
       (err) => {
         setError(err)
         setLoading(false)
-        // onSnapshot לא מתאושש מעצמו משגיאת הרשאה, וכזו יכולה להיות זמנית 
-        // למשל בדקות הראשונות אחרי פרסום כללים, או מיד אחרי הצטרפות לתקציב.
-        // בלי ניסיון חוזר השגיאה נתקעת על המסך עד רענון ידני.
-        if (err.code === 'permission-denied' || err.code === 'unavailable') {
-          retryTimer = setTimeout(() => setAttempt((count) => count + 1), 3000)
-        }
+        retryIfTransient(err)
       },
     )
-
-    return () => {
-      clearTimeout(retryTimer)
-      unsubscribe()
-    }
-  }, [budgetId, month, attempt])
+  }, [budgetId, month, attempt, retryIfTransient])
 
   const byCategory = useMemo(() => {
     const grouped = { income: [], fixed: [], leisure: [], fund: [], unplanned: [] }
@@ -91,7 +81,12 @@ export function entryActions({ budgetId, month, uid }) {
         ...(groupKey ? { groupKey } : {}),
       }),
 
-    update: (entryId, changes) => updateDoc(doc(db, 'entries', entryId), changes),
+    // קבוצת התקציב נגזרת מהקטגוריה ולא נבחרת, ולכן שינוי קטגוריה
+    // חייב לגרור אותה. אחרת השורה הייתה נספרת ביעד של הקטגוריה הישנה
+    update: (entryId, changes) => updateDoc(doc(db, 'entries', entryId), {
+      ...changes,
+      ...(changes.category ? { budgetGroup: CATEGORIES[changes.category].budgetGroup } : {}),
+    }),
 
     remove: (entryId) => deleteDoc(doc(db, 'entries', entryId)),
   }

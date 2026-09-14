@@ -3,39 +3,13 @@ import Avatar from './Avatar'
 import Sheet from './Sheet'
 import { shekels } from '../lib/format'
 import { MAX_GROUP_LENGTH, SUGGESTED_GROUPS, normalizeGroup } from '../lib/groups'
-import {
-  CATEGORIES, GOAL_CATEGORIES, GOAL_ORDER, TRIP_CATEGORIES, TRIP_ORDER,
-  calcBaseAmount, groupTarget, todayDate,
-} from '../lib/model'
-
-/**
- * הכנסה והוצאה הן שתי פעולות שונות, ולכן המגירה לא מערבבת ביניהן.
- * מי שפתח "הוצאה" לא יכול לגלוש להכנסה בטעות, ולהפך.
- */
-const EXPENSE_PILLS = [
-  { category: 'fixed', label: 'קבועה' },
-  { category: 'leisure', label: 'פנאי' },
-  { category: 'fund', label: 'קרן' },
-  { category: 'unplanned', label: 'בלתם' },
-]
-
-const TRIP_PILLS = TRIP_ORDER.map((category) => ({
-  category,
-  label: TRIP_CATEGORIES[category].label,
-}))
-
-const GOAL_PILLS = GOAL_ORDER.map((category) => ({
-  category,
-  label: GOAL_CATEGORIES[category].label,
-}))
+import { EXPENSE_PILLS, GOAL_PILLS, TRIP_PILLS } from '../lib/pills'
+import { CATEGORIES, calcBaseAmount, groupTarget, todayDate } from '../lib/model'
 
 // התאריך של שורת מסגרת קובע לאיזה חודש היא נזקפת בתקציב הבית,
 // ולכן שתי המגירות שומרות אותו ולא רק זו של הטיול.
 const FRAME_LABEL = Object.fromEntries(
-  [...TRIP_ORDER, ...GOAL_ORDER].map((category) => [
-    category,
-    (TRIP_CATEGORIES[category] || GOAL_CATEGORIES[category]).label,
-  ]),
+  [...TRIP_PILLS, ...GOAL_PILLS].map((pill) => [pill.category, pill.label]),
 )
 
 const DEFAULT_NAME = {

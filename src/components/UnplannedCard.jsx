@@ -1,5 +1,6 @@
 import EntryItems from './EntryItems'
 import { shekels } from '../lib/format'
+import { EXPENSE_PILLS } from '../lib/pills'
 
 /**
  * בלתם: המרווח הנזיל שלא חולק לקטגוריות, ומשמש רזרבה להוצאות
@@ -46,6 +47,7 @@ export default function UnplannedCard({ summary, entries = [], authorOf, actions
           entries={entries}
           authorOf={authorOf}
           actions={actions}
+          categories={EXPENSE_PILLS}
           onStopRecurring={onStopRecurring}
           onAddToGroup={(groupKey) => onAdd('unplanned', groupKey)}
         />

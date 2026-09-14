@@ -202,3 +202,11 @@ export async function setFrameLink({ budgetId, previousLinkedId, months = [], li
   }
   await updateDoc(doc(db, 'budgets', budgetId), { linkedBudgetId: linkedBudgetId || null })
 }
+
+/**
+ * שינוי שם התקציב. הכללים כבר מתירים לכל חבר לעדכן את המסמך כל עוד
+ * הבעלים והסוג לא משתנים, ולכן אין כאן יותר מזה.
+ */
+export function renameBudget({ budgetId, name }) {
+  return updateDoc(doc(db, 'budgets', budgetId), { name: name.trim().slice(0, 60) })
+}

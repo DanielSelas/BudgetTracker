@@ -6,7 +6,9 @@ import { shekels } from '../lib/format'
  * שורה מקובצת בתוך כרטיס קטגוריה: סכום אחד שמייצג כמה קניות.
  * סגורה כברירת מחדל, כי הערך שלה הוא בדיוק זה, לא לראות את הפירוט.
  */
-export default function EntryGroup({ group, authorOf, actions, onStopRecurring, onAdd }) {
+export default function EntryGroup({
+  group, authorOf, actions, categories, onStopRecurring, onAdd,
+}) {
   const [open, setOpen] = useState(false)
   const count = group.entries.length
 
@@ -32,6 +34,7 @@ export default function EntryGroup({ group, authorOf, actions, onStopRecurring, 
                 key={entry.id}
                 entry={entry}
                 author={authorOf?.(entry.addedBy)}
+                categories={categories}
                 onUpdate={actions.update}
                 onRemove={actions.remove}
                 onStopRecurring={onStopRecurring}

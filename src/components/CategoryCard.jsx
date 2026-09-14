@@ -1,6 +1,7 @@
 import EntryItems from './EntryItems'
 import { shekels } from '../lib/format'
 import { BUDGET_GROUP_RATIOS, CATEGORIES, isOverageGood } from '../lib/model'
+import { EXPENSE_PILLS } from '../lib/pills'
 
 const ADD_LABEL = {
   income: '+ הוספת הכנסה',
@@ -14,6 +15,8 @@ export default function CategoryCard({ category, entries, group, authorOf, actio
   const ratio = BUDGET_GROUP_RATIOS[budgetGroup]
 
   const total = entries.reduce((sum, entry) => sum + (entry.actualAmount || 0), 0)
+  // הכנסה אינה קטגוריה של הוצאה, ולכן אין לאן להחליף ממנה
+  const editable = category === 'income' ? [] : EXPENSE_PILLS
   const hasTarget = Boolean(group) && group.target > 0
   const exceeded = hasTarget && group.remaining < 0
   const goodToExceed = isOverageGood(budgetGroup)
@@ -54,6 +57,7 @@ export default function CategoryCard({ category, entries, group, authorOf, actio
           entries={entries}
           authorOf={authorOf}
           actions={actions}
+          categories={editable}
           onStopRecurring={onStopRecurring}
           onAddToGroup={(groupKey) => onAdd(category, groupKey)}
         />

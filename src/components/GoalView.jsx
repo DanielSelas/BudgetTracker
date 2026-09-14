@@ -2,9 +2,12 @@ import { useMemo, useState } from 'react'
 import EntryRow from './EntryRow'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
+import RenameDialog from './RenameDialog'
+import { renameBudget } from '../lib/budgets'
 import FrameLink from './FrameLink'
 import { shekels } from '../lib/format'
 import { GOAL_CATEGORIES, GOAL_ORDER, summarizeGoal } from '../lib/model'
+import { GOAL_PILLS } from '../lib/pills'
 import { memberIndex } from '../lib/members'
 import { useFrameEntries, frameActions } from '../hooks/useFrameEntries'
 import { useTripRollup } from '../hooks/useTripRollup'
@@ -22,6 +25,7 @@ function Skeleton() {
 export default function GoalView({ budgetId, budget, uid, onDeleted }) {
   const [sheet, setSheet] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [renaming, setRenaming] = useState(false)
   const { entries, loading, error } = useFrameEntries(budgetId)
 
   const actions = useMemo(() => frameActions({ budgetId, uid }), [budgetId, uid])
@@ -126,6 +130,7 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
                         key={entry.id}
                         entry={entry}
                         author={shared ? members.get(entry.addedBy) : null}
+                        categories={GOAL_PILLS}
                         onUpdate={actions.update}
                         onRemove={actions.remove}
                       />
@@ -142,9 +147,14 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
             ))}
 
             {isOwner && (
-              <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
-                מחיקת המטרה
-              </button>
+              <div className="owner-actions">
+                <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
+                  שינוי שם המטרה
+                </button>
+                <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
+                  מחיקת המטרה
+                </button>
+              </div>
             )}
           </>
         )}
@@ -162,6 +172,19 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
           me={members.get(uid)}
           onSubmit={actions.add}
           onClose={() => setSheet(null)}
+        />
+      )}
+
+      {renaming && (
+        <RenameDialog
+          title="שינוי שם המטרה"
+          label="שם המטרה"
+          value={budget?.name}
+          onSave={async (name) => {
+            await renameBudget({ budgetId, name })
+            setRenaming(false)
+          }}
+          onCancel={() => setRenaming(false)}
         />
       )}
 

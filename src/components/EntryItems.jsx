@@ -3,7 +3,9 @@ import EntryGroup from './EntryGroup'
 import { groupEntries } from '../lib/groups'
 
 /** רשימת השורות של קטגוריה, כשרשומות מקובצות מוצגות כשורה אחת מכווצת. */
-export default function EntryItems({ entries, authorOf, actions, onStopRecurring, onAddToGroup }) {
+export default function EntryItems({
+  entries, authorOf, actions, categories, onStopRecurring, onAddToGroup,
+}) {
   const items = groupEntries(entries)
 
   return (
@@ -15,6 +17,7 @@ export default function EntryItems({ entries, authorOf, actions, onStopRecurring
             group={item}
             authorOf={authorOf}
             actions={actions}
+            categories={categories}
             onStopRecurring={onStopRecurring}
             onAdd={onAddToGroup}
           />
@@ -23,6 +26,7 @@ export default function EntryItems({ entries, authorOf, actions, onStopRecurring
             key={item.id}
             entry={item.entry}
             author={authorOf?.(item.entry.addedBy)}
+            categories={categories}
             onUpdate={actions.update}
             onRemove={actions.remove}
             onStopRecurring={onStopRecurring}
