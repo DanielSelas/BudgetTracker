@@ -3,7 +3,8 @@ import Sheet from './Sheet'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
 import { createBudget, joinBudgetWithInvite } from '../lib/budgets'
-import { BUDGET_TYPES, isFrameBudget } from '../lib/model'
+import { BUDGET_TYPES, DEFAULT_BILLING_DAY, isFrameBudget } from '../lib/model'
+import BillingDayField from './BillingDayField'
 
 const JOIN_MESSAGES = {
   invalid: 'הקוד חייב להכיל 8 תווים',
@@ -20,6 +21,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
   const [name, setName] = useState('')
   const [frame, setFrame] = useState('')
   const [linkedBudgetId, setLinkedBudgetId] = useState('')
+  const [billingDay, setBillingDay] = useState(DEFAULT_BILLING_DAY)
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -47,6 +49,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
         type,
         frame: frameBudget ? Number(frame) || 0 : 0,
         linkedBudgetId: frameBudget && linkedBudgetId ? linkedBudgetId : null,
+        billingDay,
       })
       onDone?.(budgetId)
     } catch {
@@ -111,6 +114,10 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
               onChange={(event) => setName(event.target.value)}
             />
           </label>
+
+          {!frameBudget && (
+            <BillingDayField value={billingDay} onChange={setBillingDay} />
+          )}
 
           {frameBudget && (
             <>

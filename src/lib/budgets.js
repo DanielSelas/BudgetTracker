@@ -13,6 +13,7 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { DEFAULT_BILLING_DAY } from './model'
 
 const INVITE_TTL_DAYS = 7
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // בלי תווים שמתבלבלים: I,O,0,1
@@ -37,6 +38,7 @@ export async function createBudget({
   type = 'household',
   frame = 0,
   linkedBudgetId = null,
+  billingDay = DEFAULT_BILLING_DAY,
 }) {
   const budgetRef = doc(collection(db, 'budgets'))
 
@@ -47,8 +49,10 @@ export async function createBudget({
     name: name.trim(),
     ownerUid: uid,
     type,
-    // טיול ומטרה מחזיקים סכום שנקבע מראש; למשק בית אין
-    ...(type === 'household' ? {} : { frame: Number(frame) || 0, linkedBudgetId }),
+    // מועד החיוב שייך למשק בית בלבד. לטיול ולמטרה אין כרטיס משלהם
+    ...(type === 'household'
+      ? { billingDay: Number(billingDay) || DEFAULT_BILLING_DAY }
+      : { frame: Number(frame) || 0, linkedBudgetId }),
     createdAt: serverTimestamp(),
   })
 
@@ -209,4 +213,9 @@ export async function setFrameLink({ budgetId, previousLinkedId, months = [], li
  */
 export function renameBudget({ budgetId, name }) {
   return updateDoc(doc(db, 'budgets', budgetId), { name: name.trim().slice(0, 60) })
+}
+
+/** שינוי מועד החיוב. אנשים מחליפים תאריך מול חברת האשראי, ואז גם כאן. */
+export function setBillingDay({ budgetId, billingDay }) {
+  return updateDoc(doc(db, 'budgets', budgetId), { billingDay: Number(billingDay) })
 }

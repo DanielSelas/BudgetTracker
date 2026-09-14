@@ -308,3 +308,23 @@ describe('זיהוי סוג התקציב', () => {
     expect(budgetType(undefined)).toBe('household')
   })
 })
+
+describe('מועד חיוב', () => {
+  it('שלושת התאריכים שחברות האשראי מציעות', async () => {
+    const { BILLING_DAYS, DEFAULT_BILLING_DAY } = await import('../src/lib/model')
+    expect(BILLING_DAYS).toEqual([2, 10, 15])
+    expect(BILLING_DAYS).toContain(DEFAULT_BILLING_DAY)
+  })
+
+  it('כל יום שקיים בכל חודש תקין, ומעבר לכך לא', async () => {
+    const { isBillingDay } = await import('../src/lib/model')
+    expect(isBillingDay(2)).toBe(true)
+    expect(isBillingDay(28)).toBe(true)
+    expect(isBillingDay(20)).toBe(true)
+    // 29 עד 31 לא קיימים בכל חודש, וחיוב שנופל עליהם היה נודד
+    expect(isBillingDay(29)).toBe(false)
+    expect(isBillingDay(0)).toBe(false)
+    expect(isBillingDay(10.5)).toBe(false)
+    expect(isBillingDay('10')).toBe(false)
+  })
+})

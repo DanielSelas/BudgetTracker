@@ -17,6 +17,15 @@ export const BUDGET_GROUP_RATIOS = {
 export const BASE_STEP = 5000
 
 /**
+ * מועד החיוב של כרטיסי האשראי. חברות האשראי מציעות את שלושת אלה,
+ * ולכן הם הקיצורים, אבל אפשר לבחור כל יום: לפעמים אנשים משנים.
+ */
+export const BILLING_DAYS = [2, 10, 15]
+export const DEFAULT_BILLING_DAY = 10
+
+export const isBillingDay = (day) => Number.isInteger(day) && day >= 1 && day <= 28
+
+/**
  * הכפולה הקרובה של 5,000 שקטנה ממש מההכנסה בפועל.
  * הכנסה של 25,000 בדיוק נותנת בסיס 20,000 (ולא 25,000).
  */

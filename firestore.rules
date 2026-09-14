@@ -16,6 +16,13 @@ service cloud.firestore {
             && data.groupKey.size() <= 40);
     }
 
+    // מועד חיוב אופציונלי: לתקציבים שנוצרו לפניו אין אותו כלל,
+    // ולכן היעדרו תקין. כשהוא קיים הוא יום בחודש שקיים בכל חודש.
+    function validBillingDay(data) {
+      return !('billingDay' in data)
+        || (data.billingDay is int && data.billingDay >= 1 && data.billingDay <= 28);
+    }
+
     function memberExists(budgetId, uid) {
       return exists(/databases/$(database)/documents/budgets/$(budgetId)/members/$(uid));
     }
@@ -46,6 +53,7 @@ service cloud.firestore {
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 60
         && request.resource.data.type in ['household', 'trip', 'goal']
+        && validBillingDay(request.resource.data)
         // לטיול ולמטרה יש סכום שנקבע מראש; למשק בית אין
         && (request.resource.data.type == 'household'
             || (request.resource.data.frame is number
@@ -56,6 +64,7 @@ service cloud.firestore {
       // get עם ברירת מחדל ולא גישה ישירה: לתקציבים שנוצרו לפני שהיה
       // שדה type אין אותו כלל, וקריאה ישירה הייתה זורקת ושוברת כל עדכון.
       allow update: if isMember(budgetId)
+        && validBillingDay(request.resource.data)
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.get('type', 'household')
            == resource.data.get('type', 'household');

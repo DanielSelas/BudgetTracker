@@ -838,3 +838,25 @@ describe('מיגרציה: אצווה גדולה', () => {
     )
   })
 })
+
+describe('מועד חיוב', () => {
+  const household = (overrides = {}) => ({
+    name: 'הבית', ownerUid: PARTNER, type: 'household', ...overrides,
+  })
+
+  it('יום תקין מתקבל, וגם היעדר השדה', async () => {
+    await assertSucceeds(setDoc(doc(as(PARTNER), 'budgets', 'b-10'), household({ billingDay: 10 })))
+    await assertSucceeds(setDoc(doc(as(PARTNER), 'budgets', 'b-none'), household()))
+  })
+
+  it('יום שאינו קיים בכל חודש נדחה', async () => {
+    await assertFails(setDoc(doc(as(PARTNER), 'budgets', 'b-31'), household({ billingDay: 31 })))
+    await assertFails(setDoc(doc(as(PARTNER), 'budgets', 'b-0'), household({ billingDay: 0 })))
+    await assertFails(setDoc(doc(as(PARTNER), 'budgets', 'b-str'), household({ billingDay: '10' })))
+  })
+
+  it('חבר יכול לשנות אותו אחר כך', async () => {
+    await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { billingDay: 15 }))
+    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { billingDay: 31 }))
+  })
+})

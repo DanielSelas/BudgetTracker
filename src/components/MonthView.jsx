@@ -6,6 +6,7 @@ import MonthPicker from './MonthPicker'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
 import RenameDialog from './RenameDialog'
+import BillingDayDialog from './BillingDayDialog'
 import Sheet from './Sheet'
 import InvitePanel from './InvitePanel'
 import { useEntries, entryActions } from '../hooks/useEntries'
@@ -14,7 +15,7 @@ import { createTemplate, skipMonth, stopTemplate } from '../lib/recurring'
 import { CATEGORIES, monthKey, summarizeMonth } from '../lib/model'
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
-import { deleteBudget, renameBudget } from '../lib/budgets'
+import { deleteBudget, renameBudget, setBillingDay } from '../lib/budgets'
 
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
 
@@ -36,6 +37,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [sharing, setSharing] = useState(false)
+  const [editingBilling, setEditingBilling] = useState(false)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
 
   const base = useMemo(() => entryActions({ budgetId, month, uid }), [budgetId, month, uid])
@@ -155,6 +157,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
               </button>
               {isOwner && (
                 <>
+                  <button type="button" className="btn-text" onClick={() => setEditingBilling(true)}>
+                    מועד חיוב
+                  </button>
                   <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
                     שינוי שם התקציב
                   </button>
@@ -194,6 +199,17 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
         <Sheet onClose={() => setSharing(false)}>
           <InvitePanel budgetId={budgetId} budgetName={budget?.name} heading="הזמנה לתקציב" />
         </Sheet>
+      )}
+
+      {editingBilling && (
+        <BillingDayDialog
+          value={budget?.billingDay}
+          onSave={async (day) => {
+            await setBillingDay({ budgetId, billingDay: day })
+            setEditingBilling(false)
+          }}
+          onCancel={() => setEditingBilling(false)}
+        />
       )}
 
       {renaming && (
