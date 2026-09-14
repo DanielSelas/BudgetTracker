@@ -2,7 +2,12 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { createInvite } from '../lib/budgets'
 
-export default function InvitePanel({ budgetId, budgetName, showName }) {
+/**
+ * הפאנל חי בתוך התקציב שאותו הוא משתף, ולכן השם תמיד מוצג.
+ * קודם הוא ישב בתחתית דף התקציבים והזמין לתקציב הראשון ברשימה
+ * כברירת מחדל, בלי לומר לאיזה. מכאן הבלבול.
+ */
+export default function InvitePanel({ budgetId, budgetName, heading = 'הזמנת שותף' }) {
   const { user } = useAuth()
   const [invite, setInvite] = useState(null)
   const [copied, setCopied] = useState(false)
@@ -33,12 +38,12 @@ export default function InvitePanel({ budgetId, budgetName, showName }) {
 
   return (
     <section className="invite-panel">
-      <h2>להזמין את בן/בת הזוג</h2>
+      <h2>{heading}</h2>
       <p className="sub">
         {invite
           ? `קוד חד פעמי, תקף עד ${invite.expiresAt.toLocaleDateString('he-IL')}.`
           : 'קוד חד פעמי לשבוע, נשלח בוואטסאפ.'}
-        {showName && budgetName ? ` לתקציב "${budgetName}".` : ''}
+        {budgetName ? ` הצטרפות ל"${budgetName}" בלבד.` : ''}
       </p>
 
       {invite ? (

@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import Avatar from './Avatar'
 import BudgetSetup from './BudgetSetup'
-import InvitePanel from './InvitePanel'
 import NotificationCard from './NotificationCard'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
@@ -60,16 +59,6 @@ export default function BudgetHome() {
   const { user, signOut } = useAuth()
   const { budgets, selectBudget } = useBudget()
   const [adding, setAdding] = useState(false)
-  const [inviteFor, setInviteFor] = useState(null)
-
-  const target = useMemo(
-    () => budgets.find((budget) => budget.id === inviteFor) ?? budgets[0] ?? null,
-    [budgets, inviteFor],
-  )
-
-  useEffect(() => {
-    if (!inviteFor && budgets.length === 1) setInviteFor(budgets[0].id)
-  }, [budgets, inviteFor])
 
   return (
     <>
@@ -110,18 +99,6 @@ export default function BudgetHome() {
                   <MemberRow budget={budget} isOwner={isOwner} />
                   <Remaining budget={budget} />
                 </button>
-
-                {budgets.length > 1 && (
-                  <div className="invite-actions">
-                    <button
-                      type="button"
-                      className="chip-button"
-                      onClick={() => setInviteFor(budget.id)}
-                    >
-                      הזמנה לתקציב הזה
-                    </button>
-                  </div>
-                )}
               </li>
             )
           })}
@@ -142,14 +119,6 @@ export default function BudgetHome() {
         >
           העברת מבנה הנתונים
         </button>
-
-        {target && (
-          <InvitePanel
-            budgetId={target.id}
-            budgetName={target.name}
-            showName={budgets.length > 1}
-          />
-        )}
       </div>
 
       {adding && (

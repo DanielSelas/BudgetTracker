@@ -6,6 +6,8 @@ import MonthPicker from './MonthPicker'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
 import RenameDialog from './RenameDialog'
+import Sheet from './Sheet'
+import InvitePanel from './InvitePanel'
 import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
 import { createTemplate, skipMonth, stopTemplate } from '../lib/recurring'
@@ -33,6 +35,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
   const [pendingStop, setPendingStop] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [renaming, setRenaming] = useState(false)
+  const [sharing, setSharing] = useState(false)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
 
   const base = useMemo(() => entryActions({ budgetId, month, uid }), [budgetId, month, uid])
@@ -146,16 +149,21 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
               onStopRecurring={setPendingStop}
             />
 
-            {isOwner && (
-              <div className="owner-actions">
-                <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
-                  שינוי שם התקציב
-                </button>
-                <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
-                  מחיקת התקציב
-                </button>
-              </div>
-            )}
+            <div className="owner-actions">
+              <button type="button" className="btn-text" onClick={() => setSharing(true)}>
+                הזמנת שותף
+              </button>
+              {isOwner && (
+                <>
+                  <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
+                    שינוי שם התקציב
+                  </button>
+                  <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
+                    מחיקת התקציב
+                  </button>
+                </>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -180,6 +188,12 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
           onSubmit={actions.add}
           onClose={() => { setSheet(null); setPrefill(0) }}
         />
+      )}
+
+      {sharing && (
+        <Sheet onClose={() => setSharing(false)}>
+          <InvitePanel budgetId={budgetId} budgetName={budget?.name} heading="הזמנה לתקציב" />
+        </Sheet>
       )}
 
       {renaming && (

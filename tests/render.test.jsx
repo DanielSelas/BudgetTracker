@@ -372,3 +372,61 @@ describe('עריכת שורה במקום', () => {
     expect(container.querySelector('.row-edit .cat-pills')).toBeNull()
   })
 })
+
+describe('הסבר לפי סוג תקציב', () => {
+  const KEYS = [
+    'budgettracker:seen-intro',
+    'budgettracker:seen-intro-trip',
+    'budgettracker:seen-intro-goal',
+  ]
+  const clear = () => KEYS.forEach((key) => localStorage.removeItem(key))
+
+  it('לטיול יש הסבר משלו, עם הקטגוריות של טיול', async () => {
+    clear()
+    const { default: Welcome } = await import('../src/components/Welcome')
+    const { getByText } = await renderWithContexts(<Welcome kind="trip" onClose={vi.fn()} />)
+    expect(getByText('מסגרת אחת לכל הטיול')).toBeTruthy()
+    fireEvent.click(getByText('הבא'))
+    expect(getByText('לינה')).toBeTruthy()
+    expect(getByText('התניידות')).toBeTruthy()
+  })
+
+  it('למטרה יש הסבר משלה, עם הפקדה ומשיכה', async () => {
+    clear()
+    const { default: Welcome } = await import('../src/components/Welcome')
+    const { getByText } = await renderWithContexts(<Welcome kind="goal" onClose={vi.fn()} />)
+    expect(getByText('יעד אחד, ואתם מטפסים אליו')).toBeTruthy()
+    fireEvent.click(getByText('הבא'))
+    expect(getByText('הפקדה')).toBeTruthy()
+    expect(getByText('משיכה')).toBeTruthy()
+  })
+
+  it('כל סוג נספר בנפרד, כך שהסבר אחד לא מבטל את האחרים', async () => {
+    clear()
+    const { default: Welcome, seenIntro } = await import('../src/components/Welcome')
+    const { getByText } = await renderWithContexts(<Welcome kind="trip" onClose={vi.fn()} />)
+    fireEvent.click(getByText('דילוג'))
+
+    expect(seenIntro('trip')).toBe(true)
+    expect(seenIntro('household')).toBe(false)
+    expect(seenIntro('goal')).toBe(false)
+  })
+})
+
+describe('הזמנה שייכת לתקציב שממנו נפתחה', () => {
+  it('הפאנל אומר במפורש לאיזה תקציב ההצטרפות', async () => {
+    const { default: InvitePanel } = await import('../src/components/InvitePanel')
+    const { container } = await renderWithContexts(
+      <InvitePanel budgetId="t1" budgetName="יוון" heading="הזמנה לטיול" />,
+    )
+    expect(container.textContent).toContain('הזמנה לטיול')
+    expect(container.textContent).toContain('הצטרפות ל"יוון" בלבד')
+  })
+
+  it('דף התקציבים כבר לא מזמין לתקציב שלא נבחר', async () => {
+    const { default: BudgetHome } = await import('../src/components/BudgetHome')
+    const { container } = await renderWithContexts(<BudgetHome />)
+    expect(container.querySelector('.invite-panel')).toBeNull()
+    expect(container.textContent).not.toContain('קוד הזמנה')
+  })
+})

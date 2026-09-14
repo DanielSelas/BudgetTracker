@@ -3,6 +3,8 @@ import EntryRow from './EntryRow'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
 import RenameDialog from './RenameDialog'
+import Sheet from './Sheet'
+import InvitePanel from './InvitePanel'
 import { renameBudget } from '../lib/budgets'
 import FrameLink from './FrameLink'
 import { shekels } from '../lib/format'
@@ -26,6 +28,7 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
   const [sheet, setSheet] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [renaming, setRenaming] = useState(false)
+  const [sharing, setSharing] = useState(false)
   const { entries, loading, error } = useFrameEntries(budgetId)
 
   const actions = useMemo(() => frameActions({ budgetId, uid }), [budgetId, uid])
@@ -146,16 +149,21 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
               </section>
             ))}
 
-            {isOwner && (
-              <div className="owner-actions">
-                <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
-                  שינוי שם המטרה
-                </button>
-                <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
-                  מחיקת המטרה
-                </button>
-              </div>
-            )}
+            <div className="owner-actions">
+              <button type="button" className="btn-text" onClick={() => setSharing(true)}>
+                הזמנת שותף
+              </button>
+              {isOwner && (
+                <>
+                  <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
+                    שינוי שם המטרה
+                  </button>
+                  <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
+                    מחיקת המטרה
+                  </button>
+                </>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -173,6 +181,12 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
           onSubmit={actions.add}
           onClose={() => setSheet(null)}
         />
+      )}
+
+      {sharing && (
+        <Sheet onClose={() => setSharing(false)}>
+          <InvitePanel budgetId={budgetId} budgetName={budget?.name} heading="הזמנה למטרה" />
+        </Sheet>
       )}
 
       {renaming && (

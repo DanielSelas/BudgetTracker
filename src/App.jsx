@@ -66,9 +66,9 @@ function Workspace({ nudge }) {
   const [tab, setTab] = useState('month')
   const trip = isTrip(budget)
   const goal = isGoal(budget)
-  // ההסבר מדבר על 50/30/20 ועל בלת״ם, ולכן אין לו מה לומר
-  // במסך של טיול או מטרה
-  const [intro, setIntro] = useState(() => !seenIntro())
+  // לכל סוג תקציב הסבר משלו, ולכן גם סימון נפרד של מי שכבר נראה
+  const kind = budgetType(budget)
+  const [intro, setIntro] = useState(() => !seenIntro(kind))
 
   function handleNav(next) {
     if (next === 'budgets') goHome()
@@ -85,7 +85,7 @@ function Workspace({ nudge }) {
           ? <MonthView budgetId={budgetId} budget={budget} uid={user.uid} nudge={nudge} onDeleted={goHome} />
           : <HistoryView budgetId={budgetId} />}
       <BottomNav active={tab} onChange={handleNav} type={budgetType(budget)} />
-      {intro && !trip && !goal && <Welcome onClose={() => setIntro(false)} />}
+      {intro && <Welcome kind={kind} onClose={() => setIntro(false)} />}
     </main>
   )
 }
