@@ -1,8 +1,9 @@
 import { monthLabel } from '../lib/format'
-import { monthKey, shiftMonth } from '../lib/model'
+import { billingWindow, monthKey, shiftMonth } from '../lib/model'
 
-export default function MonthPicker({ month, onChange, subtitle }) {
+export default function MonthPicker({ month, onChange, subtitle, billingDay }) {
   const isCurrent = month === monthKey()
+  const window = billingWindow(month, billingDay)
 
   return (
     <div className="month-picker">
@@ -25,6 +26,7 @@ export default function MonthPicker({ month, onChange, subtitle }) {
         title={isCurrent ? '' : 'חזרה לחודש הנוכחי'}
       >
         <span className="m">{monthLabel(month)}</span>
+        {window && <span className="cycle num">{window}</span>}
         {subtitle && <span className="sub">{subtitle}</span>}
       </button>
 

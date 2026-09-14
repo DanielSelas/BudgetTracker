@@ -26,6 +26,21 @@ export const DEFAULT_BILLING_DAY = 10
 export const isBillingDay = (day) => Number.isInteger(day) && day >= 1 && day <= 28
 
 /**
+ * חלון החיוב של החודש: מיום החיוב בחודש הזה ועד אותו יום בחודש הבא.
+ * זה מה שהחיוב הקרוב באמת מכסה, ולכן הוא מוצג מתחת לשם החודש.
+ *
+ * מילה במקום מקף: מקף בין שני מספרים בתוך טקסט עברי הוא תו ניטרלי
+ * ועלול להתהפך בתצוגה. כאן זו כבר הפעם השלישית בפרויקט.
+ */
+export function billingWindow(month, day) {
+  const billingDay = Number(day)
+  if (!month || !isBillingDay(billingDay)) return ''
+  const [, rawMonth] = month.split('-').map(Number)
+  const nextMonth = rawMonth === 12 ? 1 : rawMonth + 1
+  return `${billingDay}.${rawMonth} עד ${billingDay}.${nextMonth}`
+}
+
+/**
  * הכפולה הקרובה של 5,000 שקטנה ממש מההכנסה בפועל.
  * הכנסה של 25,000 בדיוק נותנת בסיס 20,000 (ולא 25,000).
  */

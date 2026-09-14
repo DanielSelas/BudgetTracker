@@ -58,7 +58,7 @@ function Month() {
   return (
     <main className="app">
       <div className="sticky-head">
-        <MonthPicker month="2026-09" onChange={noop} subtitle="משק הבית · משותף" />
+        <MonthPicker month="2026-09" onChange={noop} subtitle="משק הבית · משותף" billingDay={10} />
       </div>
       <div className="app-scroll">
         <SummaryCard summary={summary} />

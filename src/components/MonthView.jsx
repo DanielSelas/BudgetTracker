@@ -98,6 +98,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
           month={month}
           onChange={setMonth}
           subtitle={budget ? `${budget.name} · ${shared ? 'משותף' : 'אישי'}` : ''}
+          billingDay={budget?.billingDay}
         />
       </div>
 

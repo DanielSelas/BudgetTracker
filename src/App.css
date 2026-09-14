@@ -486,6 +486,15 @@ button:disabled {
   color: var(--color-neutral-600);
 }
 
+/* חלון החיוב: שייך לחודש שמעליו, ולכן צמוד אליו ובולט מעט מהשורה
+   שמתחתיו, שמדברת על התקציב ולא על הזמן */
+.month-label .cycle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-accent-700);
+  letter-spacing: 0.02em;
+}
+
 /* ========== כרטיס סיכום ========== */
 
 .summary {

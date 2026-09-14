@@ -328,3 +328,24 @@ describe('מועד חיוב', () => {
     expect(isBillingDay('10')).toBe(false)
   })
 })
+
+describe('חלון החיוב', () => {
+  it('מיום החיוב בחודש ועד אותו יום בחודש הבא', async () => {
+    const { billingWindow } = await import('../src/lib/model')
+    expect(billingWindow('2026-09', 10)).toBe('10.9 עד 10.10')
+    expect(billingWindow('2026-09', 2)).toBe('2.9 עד 2.10')
+    expect(billingWindow('2026-09', 15)).toBe('15.9 עד 15.10')
+  })
+
+  it('דצמבר ממשיך לינואר', async () => {
+    const { billingWindow } = await import('../src/lib/model')
+    expect(billingWindow('2026-12', 10)).toBe('10.12 עד 10.1')
+  })
+
+  it('בלי יום חיוב אין חלון, וגם לא נופל', async () => {
+    const { billingWindow } = await import('../src/lib/model')
+    expect(billingWindow('2026-09', undefined)).toBe('')
+    expect(billingWindow('2026-09', 31)).toBe('')
+    expect(billingWindow('', 10)).toBe('')
+  })
+})
