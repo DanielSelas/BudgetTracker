@@ -84,6 +84,40 @@ service cloud.firestore {
           && request.resource.data.startMonth == resource.data.startMonth;
       }
 
+      // רשומות התקציב. התקציב נמצא בנתיב ולכן אינו שדה במסמך:
+      // אי אפשר לכתוב רשומה שמצהירה על תקציב אחד ויושבת בתוך אחר.
+      match /entries/{entryId} {
+        function validEntry(data) {
+          return data.category in [
+              'income', 'fixed', 'leisure', 'fund', 'unplanned',
+              'lodging', 'transport', 'attractions', 'dining', 'shopping', 'other',
+              'deposit', 'withdrawal'
+            ]
+            && data.budgetGroup in ['fixed', 'leisure', 'savings', 'none']
+            && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+            && data.plannedAmount is number && data.plannedAmount >= 0
+            && data.actualAmount is number && data.actualAmount >= 0
+            && data.month is string && data.month.matches('^[0-9]{4}-[0-9]{2}$')
+            && (!('date' in data)
+                || (data.date is string
+                    && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+                    && data.date[0:7] == data.month))
+            && data.addedBy is string
+            && validGroupKey(data);
+        }
+
+        allow read, delete: if isMember(budgetId);
+
+        allow create: if isMember(budgetId)
+          && validEntry(request.resource.data)
+          && request.resource.data.addedBy == request.auth.uid;
+
+        // מי שהזין נשאר מי שהזין, גם כששותף מעדכן סכום
+        allow update: if isMember(budgetId)
+          && validEntry(request.resource.data)
+          && request.resource.data.addedBy == resource.data.addedBy;
+      }
+
       match /members/{uid} {
         allow read: if isMember(budgetId);
 
@@ -151,6 +185,8 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.createdBy == request.auth.uid;
     }
 
+    // האוסף הישן, ברמה העליונה. נשאר פתוח רק לאורך המיגרציה
+    // אל budgets/{budgetId}/entries, ונמחק מכאן בסיומה.
     match /entries/{entryId} {
       function validEntry(data) {
         return data.budgetId is string

@@ -737,3 +737,59 @@ describe('קיבוץ שורות בתוך קטגוריה', () => {
     )
   })
 })
+
+describe('רשומות כתת אוסף של התקציב', () => {
+  const nested = (id) => doc(as(OWNER), 'budgets', BUDGET, 'entries', id)
+  // התקציב בנתיב, ולכן אינו שדה במסמך
+  const item = (overrides = {}) => {
+    const base = entry(overrides)
+    delete base.budgetId
+    return base
+  }
+
+  it('חבר בתקציב כותב וקורא', async () => {
+    await assertSucceeds(setDoc(nested('n1'), item()))
+    await assertSucceeds(getDoc(nested('n1')))
+  })
+
+  it('מי שאינו חבר נחסם בשני הכיוונים', async () => {
+    const his = doc(as(STRANGER), 'budgets', BUDGET, 'entries', 'n2')
+    await assertFails(setDoc(his, item({ addedBy: STRANGER })))
+    await assertFails(getDoc(his))
+  })
+
+  it('הולידציה נשמרה', async () => {
+    await assertFails(setDoc(nested('n3'), item({ category: 'crypto' })))
+    await assertFails(setDoc(nested('n4'), item({ actualAmount: -1 })))
+    await assertFails(setDoc(nested('n5'), item({ month: 'ספטמבר' })))
+    await assertFails(setDoc(nested('n6'), item({ date: '2026-08-02' })))
+    await assertFails(setDoc(nested('n7'), item({ groupKey: '' })))
+  })
+
+  it('תאריך שמתיישב עם החודש מתקבל', async () => {
+    await assertSucceeds(setDoc(nested('n8'), item({ date: '2026-09-02' })))
+  })
+
+  it('אי אפשר לזייף מי הזין, לא ביצירה ולא בעדכון', async () => {
+    await assertFails(setDoc(nested('n9'), item({ addedBy: PARTNER })))
+    await setDoc(nested('n10'), item())
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'budgets', BUDGET, 'members', PARTNER), {
+        uid: PARTNER, role: 'member',
+      })
+    })
+    const asPartner = doc(as(PARTNER), 'budgets', BUDGET, 'entries', 'n10')
+    await assertSucceeds(updateDoc(asPartner, { actualAmount: 6000 }))
+    await assertFails(updateDoc(asPartner, { addedBy: PARTNER }))
+  })
+
+  it('קריאה של מסמך שאינו קיים אינה נכשלת', async () => {
+    await assertSucceeds(getDoc(nested('אין-כזה')))
+  })
+
+  it('שורה מסכמת של טיול נכתבת לתת האוסף של תקציב הבית', async () => {
+    await assertSucceeds(setDoc(nested('trip_t1__2026-09'), item({
+      category: 'unplanned', budgetGroup: 'none', name: 'טיול: יוון', linkedTripId: 't1',
+    })))
+  })
+})

@@ -12,6 +12,7 @@ import BottomNav from './components/BottomNav'
 import UpdatePrompt from './components/UpdatePrompt'
 import OfflineBanner from './components/OfflineBanner'
 import ErrorBoundary from './components/ErrorBoundary'
+import Migration from './components/Migration'
 import { isFirebaseConfigured, missingFirebaseKeys } from './lib/firebase'
 import { clearNudge, readNudge } from './lib/deepLink'
 import { budgetType, isGoal, isTrip } from './lib/model'
@@ -123,7 +124,9 @@ function AuthGate() {
   if (!user) return <Login />
   return (
     <BudgetProvider>
-      <BudgetGate />
+      {/* כלי חד פעמי, מאחורי כתובת ולא מאחורי כפתור: אין סיבה
+          שהוא יופיע במסלול של מישהו שרק רוצה להזין הוצאה */}
+      {window.location.hash === '#migrate' ? <Migration /> : <BudgetGate />}
     </BudgetProvider>
   )
 }
