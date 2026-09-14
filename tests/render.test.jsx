@@ -258,3 +258,39 @@ describe('קיבוץ שורות במסך החודש', () => {
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ groupKey: '' }))
   })
 })
+
+describe('הסבר לכניסה ראשונה', () => {
+  it('עובר בין השלבים ומסתיים בסימון שנראה', async () => {
+    localStorage.removeItem('budgettracker:seen-intro')
+    const { default: Welcome, seenIntro } = await import('../src/components/Welcome')
+    const onClose = vi.fn()
+    const { getByText, queryByText } = await renderWithContexts(<Welcome onClose={onClose} />)
+
+    expect(getByText('תמונה אחת, לשניכם')).toBeTruthy()
+    // הדוגמה חייבת להישאר עקבית לאורך השלבים, אחרת ההסבר לא מתחבר
+    fireEvent.click(getByText('הבא'))
+    expect(getByText('הכל מתחיל מהכנסה')).toBeTruthy()
+    fireEvent.click(getByText('הבא'))
+    expect(getByText('קבועות')).toBeTruthy()
+    expect(getByText('פנאי')).toBeTruthy()
+    expect(getByText('קרן')).toBeTruthy()
+    fireEvent.click(getByText('הבא'))
+
+    // בשלב האחרון אין דילוג, יש סיום
+    expect(queryByText('דילוג')).toBeNull()
+    fireEvent.click(getByText('מתחילים'))
+    expect(onClose).toHaveBeenCalled()
+    expect(seenIntro()).toBe(true)
+  })
+
+  it('דילוג מסמן שנראה, כדי שלא יחזור בכל כניסה', async () => {
+    localStorage.removeItem('budgettracker:seen-intro')
+    const { default: Welcome, seenIntro } = await import('../src/components/Welcome')
+    const onClose = vi.fn()
+    const { getByText } = await renderWithContexts(<Welcome onClose={onClose} />)
+
+    fireEvent.click(getByText('דילוג'))
+    expect(onClose).toHaveBeenCalled()
+    expect(seenIntro()).toBe(true)
+  })
+})

@@ -13,6 +13,7 @@ import UpdatePrompt from './components/UpdatePrompt'
 import OfflineBanner from './components/OfflineBanner'
 import ErrorBoundary from './components/ErrorBoundary'
 import Migration from './components/Migration'
+import Welcome, { seenIntro } from './components/Welcome'
 import { isFirebaseConfigured, missingFirebaseKeys } from './lib/firebase'
 import { clearNudge, readNudge } from './lib/deepLink'
 import { budgetType, isGoal, isTrip } from './lib/model'
@@ -65,6 +66,9 @@ function Workspace({ nudge }) {
   const [tab, setTab] = useState('month')
   const trip = isTrip(budget)
   const goal = isGoal(budget)
+  // ההסבר מדבר על 50/30/20 ועל בלת״ם, ולכן אין לו מה לומר
+  // במסך של טיול או מטרה
+  const [intro, setIntro] = useState(() => !seenIntro())
 
   function handleNav(next) {
     if (next === 'budgets') goHome()
@@ -81,6 +85,7 @@ function Workspace({ nudge }) {
           ? <MonthView budgetId={budgetId} budget={budget} uid={user.uid} nudge={nudge} onDeleted={goHome} />
           : <HistoryView budgetId={budgetId} />}
       <BottomNav active={tab} onChange={handleNav} type={budgetType(budget)} />
+      {intro && !trip && !goal && <Welcome onClose={() => setIntro(false)} />}
     </main>
   )
 }

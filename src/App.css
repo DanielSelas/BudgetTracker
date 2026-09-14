@@ -1648,3 +1648,162 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .group-chips .cat-pill { font-size: 13px; }
+
+/* ========== הסבר לכניסה ראשונה ========== */
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+
+.intro h2 { margin: 0; }
+
+.intro-body {
+  margin: 0;
+  color: var(--color-neutral-700);
+  line-height: 1.6;
+  min-height: 3.2em;
+}
+
+/* גובה קבוע, אחרת המגירה קופצת בכל מעבר שלב */
+.intro-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 168px;
+  padding: 8px 0;
+}
+
+.intro-pair { display: flex; }
+
+.intro-face {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-heading);
+  font-size: 30px;
+  background: var(--cat-base);
+  color: var(--color-neutral-100);
+  border: 3px solid var(--color-bg);
+}
+
+.intro-face + .intro-face { margin-inline-start: -22px; }
+
+.intro-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.intro-chip {
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--cat-tint, var(--color-neutral-200));
+  color: var(--cat-ink, var(--color-neutral-800));
+  font-weight: 700;
+}
+
+.intro-chip.big { font-size: 22px; }
+
+.intro-arrow {
+  color: var(--color-neutral-500);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.intro-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.intro-bar { display: flex; flex-direction: column; gap: 4px; }
+
+.intro-bar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 14px;
+}
+
+.intro-bar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--cat-ink);
+}
+
+.intro-bar-hint {
+  font-size: 12px;
+  color: var(--color-neutral-600);
+  text-align: start;
+}
+
+.intro-track {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-neutral-200);
+  overflow: hidden;
+}
+
+.intro-track.tall { height: 16px; }
+
+.intro-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--cat-base, var(--color-accent));
+}
+
+/* הבסיס הוא מה שמתוכנן, והשארית הגלויה מאחוריו היא הרזרבה */
+.intro-fill.base { background: var(--color-neutral-400); }
+
+.intro-reserve {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.intro-reserve .intro-track { width: 100%; background: var(--cat-base); }
+
+.intro-reserve-tag {
+  align-self: flex-start;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--cat-tint);
+  color: var(--cat-ink);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.intro-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+}
+
+.intro-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-neutral-300);
+  transition: background 160ms ease, width 160ms ease;
+}
+
+.intro-dot[data-on] {
+  width: 20px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-dot { transition: none; }
+}

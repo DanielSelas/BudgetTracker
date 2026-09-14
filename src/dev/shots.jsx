@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import Avatar from '../components/Avatar'
+import Welcome from '../components/Welcome'
 import BottomNav from '../components/BottomNav'
 import CategoryCard from '../components/CategoryCard'
 import UnplannedCard from '../components/UnplannedCard'
@@ -309,6 +310,8 @@ function Goal() {
 const SCREENS = {
   month: <Month />, reserve: <Reserve />, home: <Home />,
   types: <Types />, trip: <Trip />, goal: <Goal />, sheet: <SheetShot />, login: <LoginShot />,
+  // ההסבר מוצג מעל מסך החודש, כי זה ההקשר שבו הוא מופיע באמת
+  intro: <><Month /><Welcome onClose={noop} /></>,
 }
 const which = new URLSearchParams(location.search).get('s') || 'month'
 createRoot(document.getElementById('root')).render(<StrictMode>{SCREENS[which]}</StrictMode>)
