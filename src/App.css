@@ -1856,3 +1856,19 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 16px;
   padding-top: 4px;
 }
+
+/* גיבוי להעתקה ידנית, כשהורדת קובץ לא עובדת במכשיר */
+.backup-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.backup-copy textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  direction: ltr;
+  text-align: start;
+  resize: vertical;
+}

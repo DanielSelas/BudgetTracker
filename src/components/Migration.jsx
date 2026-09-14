@@ -13,6 +13,8 @@ export default function Migration() {
   const { budgets, loading } = useBudget()
   const [busy, setBusy] = useState('')
   const [backedUp, setBackedUp] = useState(false)
+  const [dump, setDump] = useState('')
+  const [copiedDump, setCopiedDump] = useState(false)
   const [copied, setCopied] = useState(null)
   const [checks, setChecks] = useState(null)
   const [dropped, setDropped] = useState(null)
@@ -32,17 +34,49 @@ export default function Migration() {
     setBusy('')
   }
 
+  /**
+   * שלוש דרכים להוציא את הגיבוי, לפי מה שהמכשיר תומך בו.
+   * הורדת קובץ שבירה באייפון ובאפליקציה מותקנת היא לא עובדת בכלל,
+   * ולכן שיתוף קודם, ואם הכל נכשל הטקסט מוצג להעתקה ידנית.
+   */
   const backup = () => guard('backup', async () => {
     const data = await snapshotForBackup(ids)
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `budgettracker-backup-${new Date().toISOString().slice(0, 10)}.json`
-    link.click()
-    URL.revokeObjectURL(url)
+    const text = JSON.stringify(data, null, 2)
+    const name = `budgettracker-backup-${new Date().toISOString().slice(0, 10)}.json`
+    setDump(text)
+
+    const file = new File([text], name, { type: 'application/json' })
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'גיבוי BudgetTracker' })
+        setBackedUp(true)
+        return
+      } catch {
+        // ביטול של המשתמש או חוסר תמיכה. ממשיכים לדרך הבאה
+      }
+    }
+
+    try {
+      const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = name
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      // נשארת ההעתקה הידנית, שמוצגת ממילא
+    }
     setBackedUp(true)
   })
+
+  const copyDump = async () => {
+    try {
+      await navigator.clipboard.writeText(dump)
+      setCopiedDump(true)
+    } catch {
+      setCopiedDump(false)
+    }
+  }
 
   const copy = () => guard('copy', async () => {
     const results = []
@@ -75,6 +109,13 @@ export default function Migration() {
               רשומות עוברות מאוסף אחד משותף אל תת אוסף של כל תקציב.
             </p>
           </div>
+          <button
+            type="button"
+            className="btn-text"
+            onClick={() => { window.location.hash = ''; window.location.reload() }}
+          >
+            חזרה
+          </button>
         </header>
 
         {!user && <p className="notice block">צריך להתחבר קודם.</p>}
@@ -102,13 +143,26 @@ export default function Migration() {
                 <span className="cat-title"><h2>1. גיבוי</h2></span>
               </div>
               <p className="hint">
-                מוריד קובץ JSON עם כל הרשומות כפי שהן עכשיו. זה מה שיציל
-                אתכם אם משהו ישתבש, אז אל תדלגו.
+                כל הרשומות כפי שהן עכשיו. בטלפון זה ייפתח בחלון שיתוף,
+                ובמחשב ירד כקובץ. זה מה שיציל אתכם אם משהו ישתבש, אל תדלגו.
               </p>
               <button type="button" className="btn-primary" disabled={busy === 'backup'} onClick={backup}>
-                {busy === 'backup' ? 'מגבה...' : backedUp ? 'הורד שוב' : 'הורדת גיבוי'}
+                {busy === 'backup' ? 'מגבה...' : backedUp ? 'גיבוי נוסף' : 'גיבוי'}
               </button>
-              {backedUp && <p className="hint">הגיבוי ירד ✓</p>}
+              {backedUp && <p className="hint">הגיבוי הופק ✓</p>}
+
+              {dump && (
+                <div className="backup-copy">
+                  <p className="hint">
+                    אם השיתוף או ההורדה לא עבדו, אפשר להעתיק את הגיבוי מכאן
+                    ולשלוח לעצמכם. {Math.round(dump.length / 1024)} ק״ב.
+                  </p>
+                  <textarea className="input" readOnly rows={4} value={dump} />
+                  <button type="button" className="btn-text" onClick={copyDump}>
+                    {copiedDump ? 'הועתק ✓' : 'העתקת הגיבוי'}
+                  </button>
+                </div>
+              )}
             </section>
 
             <section className="cat-card">
