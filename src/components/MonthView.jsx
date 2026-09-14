@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import CategoryCard from './CategoryCard'
 import SummaryCard from './SummaryCard'
+import MonthVerdict from './MonthVerdict'
 import UnplannedCard from './UnplannedCard'
 import MonthPicker from './MonthPicker'
 import EntrySheet from './EntrySheet'
@@ -32,6 +33,8 @@ function Skeleton() {
 
 export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
   const [month, setMonth] = useState(monthKey)
+  // חודש שעבר הוא חודש שנסגר, ורק עליו אפשר לומר איך הוא נגמר
+  const isPast = month < monthKey()
   const [sheet, setSheet] = useState(nudge ? { category: nudge.category, group: '' } : null)
   const [prefill, setPrefill] = useState(nudge?.amount ?? 0)
   const [pendingStop, setPendingStop] = useState(null)
@@ -121,6 +124,8 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
         {loading ? <Skeleton /> : (
           <>
             <SummaryCard summary={summary} />
+
+            {isPast && <MonthVerdict summary={summary} />}
 
             {needsIncome && (
               <button

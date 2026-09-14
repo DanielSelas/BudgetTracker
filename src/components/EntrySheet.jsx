@@ -4,7 +4,7 @@ import Sheet from './Sheet'
 import { shekels } from '../lib/format'
 import { MAX_GROUP_LENGTH, SUGGESTED_GROUPS, normalizeGroup } from '../lib/groups'
 import { EXPENSE_PILLS, GOAL_PILLS, TRIP_PILLS } from '../lib/pills'
-import { CATEGORIES, calcBaseAmount, groupTarget, todayDate } from '../lib/model'
+import { CATEGORIES, calcBaseAmount, groupTarget, incomeOverage, todayDate } from '../lib/model'
 
 // התאריך של שורת מסגרת קובע לאיזה חודש היא נזקפת בתקציב הבית,
 // ולכן שתי המגירות שומרות אותו ולא רק זו של הטיול.
@@ -63,6 +63,7 @@ export default function EntrySheet({
   useEffect(() => setCategory(initialCategory), [initialCategory])
 
   const value = Number(amount) || 0
+  const isIncome = category === 'income'
 
   // התצוגה המקדימה היא מה שהופך את הטופס לשימושי: רואים את ההשפעה לפני השמירה
   const impact = useMemo(() => {
@@ -108,6 +109,13 @@ export default function EntrySheet({
       : `אחרי זה תהיה חריגה של ${shekels(-left)} מעבר ליעד ${shekels(target)}.`
   }, [summary, category, value, trip, goal])
 
+  // אזהרה ולא חסימה: הוצאה שכבר קרתה חייבת להירשם, ואפליקציה
+  // שמסרבת לקבל מציאות גורמת לאנשים להפסיק להזין
+  const overage = useMemo(
+    () => (frame || isIncome ? null : incomeOverage(summary, value)),
+    [summary, value, frame, isIncome],
+  )
+
   async function handleSubmit(event) {
     event.preventDefault()
     if (value <= 0) {
@@ -134,7 +142,6 @@ export default function EntrySheet({
     }
   }
 
-  const isIncome = category === 'income'
   // ההצעות הקבועות נעלמות ברגע שיש קבוצות אמיתיות, אחרת הן היו רעש
   const chips = groups.length > 0 ? groups : SUGGESTED_GROUPS
 
@@ -266,6 +273,14 @@ export default function EntrySheet({
           <div className="attribution">
             <Avatar member={me.member} index={me.index} size="md" />
             נרשם על שמך{partner ? ` · ${partner} יראה את זה מיד` : ''}
+          </div>
+        )}
+
+        {overage && (
+          <div className="impact warn" role="status">
+            {overage.crossing
+              ? `ההוצאה הזו מוציאה אתכם מעבר להכנסות החודש, בחריגה של ${shekels(overage.gap)}.`
+              : `אתם כבר מעבר להכנסות החודש. אחרי זה החריגה תהיה ${shekels(overage.gap)}.`}
           </div>
         )}
 

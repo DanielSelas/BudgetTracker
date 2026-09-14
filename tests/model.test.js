@@ -393,3 +393,58 @@ describe('סכום בסיס שנקבע מראש', () => {
     expect(s.usesFixedBase).toBe(false)
   })
 })
+
+describe('חריגה מההכנסות', () => {
+  const summary = (totalIncome, totalExpenses) => ({ totalIncome, totalExpenses })
+
+  it('בתוך ההכנסות אין התראה', async () => {
+    const { incomeOverage } = await import('../src/lib/model')
+    expect(incomeOverage(summary(20000, 15000), 1000)).toBeNull()
+  })
+
+  it('מזהה את ההוצאה שחוצה את הקו', async () => {
+    const { incomeOverage } = await import('../src/lib/model')
+    const result = incomeOverage(summary(20000, 19500), 1000)
+    expect(result.gap).toBe(500)
+    expect(result.crossing).toBe(true)
+  })
+
+  it('מבדיל בין חציית הקו לבין מצב שכבר חורג', async () => {
+    const { incomeOverage } = await import('../src/lib/model')
+    const result = incomeOverage(summary(20000, 21000), 500)
+    expect(result.gap).toBe(1500)
+    expect(result.crossing).toBe(false)
+  })
+
+  it('לפני שהוזנה הכנסה אין התראה, אחרת כל תחילת חודש הייתה רועשת', async () => {
+    const { incomeOverage } = await import('../src/lib/model')
+    expect(incomeOverage(summary(0, 3000), 500)).toBeNull()
+  })
+})
+
+describe('היכן חרגנו', () => {
+  const withGroups = (groups) => ({ groups })
+
+  it('מחזיר רק קבוצות שחרגו, מהגדולה לקטנה', async () => {
+    const { overspentGroups } = await import('../src/lib/model')
+    const result = overspentGroups(withGroups({
+      fixed: { target: 10000, deviation: 500 },
+      leisure: { target: 6000, deviation: 1800 },
+      savings: { target: 4000, deviation: -200 },
+    }))
+    expect(result.map((item) => item.group)).toEqual(['leisure', 'fixed'])
+    expect(result[0].over).toBe(1800)
+  })
+
+  it('חריגה בקרן היא דבר טוב ולכן אינה נספרת כחריגה', async () => {
+    const { overspentGroups } = await import('../src/lib/model')
+    expect(overspentGroups(withGroups({
+      savings: { target: 4000, deviation: 1000 },
+    }))).toEqual([])
+  })
+
+  it('קבוצה בלי יעד לא נספרת', async () => {
+    const { overspentGroups } = await import('../src/lib/model')
+    expect(overspentGroups(withGroups({ fixed: { target: 0, deviation: 900 } }))).toEqual([])
+  })
+})

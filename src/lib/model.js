@@ -289,3 +289,31 @@ export const monthOfDate = (date) => String(date || '').slice(0, 7)
 export function todayDate(now = new Date()) {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 }
+
+/**
+ * חריגה מסך ההכנסות של החודש. זה סף אחר ממה שקורה ביעד קטגוריה:
+ * כאן זה לא "שברת את התוכנית" אלא "החודש הזה אוכל מהחיסכון".
+ *
+ * מחזיר null כשעוד לא הוזנה הכנסה, כי בימים שלפני המשכורת כל הוצאה
+ * הייתה נראית כמו חריגה וההתראה הייתה הופכת לרעש.
+ */
+export function incomeOverage(summary, addedAmount = 0) {
+  if (!summary || summary.totalIncome <= 0) return null
+  const after = summary.totalExpenses + Math.max(0, addedAmount)
+  const gap = after - summary.totalIncome
+  if (gap <= 0) return null
+  return {
+    gap,
+    // האם ההוצאה הזו היא שחוצה את הקו, או שכבר היינו מעבר לו
+    crossing: summary.totalExpenses <= summary.totalIncome,
+  }
+}
+
+/** באילו קבוצות חרגתם מהיעד, מהגדולה לקטנה. */
+export function overspentGroups(summary) {
+  if (!summary?.groups) return []
+  return Object.entries(summary.groups)
+    .filter(([group, data]) => data.target > 0 && data.deviation > 0 && !isOverageGood(group))
+    .map(([group, data]) => ({ group, over: data.deviation, target: data.target }))
+    .sort((a, b) => b.over - a.over)
+}

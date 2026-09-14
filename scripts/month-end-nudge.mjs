@@ -10,7 +10,7 @@
 import { cert, initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getMessaging } from 'firebase-admin/messaging'
-import { summarizeMonth } from '../src/lib/model.js'
+import { overspentGroups, summarizeMonth } from '../src/lib/model.js'
 
 const TIME_ZONE = 'Asia/Jerusalem'
 const dateIn = (date) =>
@@ -29,9 +29,38 @@ export function monthContext(now = new Date()) {
   return { month: today.slice(0, 7), isLastDay: today.slice(0, 7) !== tomorrow.slice(0, 7) }
 }
 
+const GROUP_LABEL = { fixed: 'קבועות', leisure: 'פנאי', savings: 'קרן' }
+
+/**
+ * שתי בשורות שונות, ולכן שתי הודעות שונות.
+ * עודף הוא הזדמנות להפקיד, וחריגה היא מידע שצריך לדעת ושווה שיגיע
+ * גם כשהוא לא נעים. הודעה אחת מנוסחת בעדינות לשניהם לא הייתה עושה
+ * טוב לאף אחד מהם.
+ */
 export function nudgeFor({ member, budget, summary }) {
   const name = member.displayName?.trim()
   const greeting = name ? `היי ${name}, ` : ''
+
+  if (summary.balance < 0) {
+    const worst = overspentGroups(summary)[0]
+    const where = worst ? ` הכי הרבה ב${GROUP_LABEL[worst.group] || worst.group}.` : ''
+    return {
+      title: `חריגה של ${shekels(-summary.balance)}`,
+      body: `${greeting}ב"${budget.name}" יצא החודש יותר ממה שנכנס.${where}`,
+      link: `/?nudge=review&budget=${budget.id}`,
+    }
+  }
+
+  const over = overspentGroups(summary)
+  if (over.length > 0) {
+    const worst = over[0]
+    return {
+      title: `חריגה ב${GROUP_LABEL[worst.group] || worst.group}`,
+      body: `${greeting}נשארתם בתוך ההכנסות ב"${budget.name}", אבל חרגתם מהיעד ב-${shekels(worst.over)}.`,
+      link: `/?nudge=review&budget=${budget.id}`,
+    }
+  }
+
   return {
     title: `נשאר לכם ${shekels(summary.balance)}`,
     body: `${greeting}זה מה שלא הוצא ב"${budget.name}" החודש. להעביר לקרן?`,
@@ -70,8 +99,11 @@ async function main() {
       fixedBase: budget.baseAmount,
     })
 
-    // בלי הכנסה אין מה לסכם, ויתרה אפס או שלילית היא לא בשורה לחגוג עליה
-    if (summary.totalIncome <= 0 || summary.balance <= 0) {
+    // בלי הכנסה אין מה לסכם בכלל. יתרה שלילית או חריגה מיעד דווקא
+    // כן נשלחות: זה בדיוק המידע ששווה לדעת בסוף החודש.
+    const worthSending = summary.totalIncome > 0
+      && (summary.balance !== 0 || overspentGroups(summary).length > 0)
+    if (!worthSending) {
       skipped += 1
       continue
     }

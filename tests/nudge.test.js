@@ -87,3 +87,45 @@ describe('קריאת הקישור מההתראה', () => {
     expect((await readFrom('?nudge=fund&budget=b1&amount=-5')).amount).toBe(0)
   })
 })
+
+describe('הודעה על חריגה', () => {
+  const member = { displayName: 'דניאל' }
+  const budget = { id: 'b1', name: 'משק הבית' }
+
+  it('יתרה שלילית מדווחת כחריגה, ואומרת איפה', async () => {
+    const { nudgeFor } = await import('../scripts/month-end-nudge.mjs')
+    const payload = nudgeFor({
+      member,
+      budget,
+      summary: {
+        balance: -1200,
+        groups: { leisure: { target: 6000, deviation: 900 }, fixed: { target: 10000, deviation: 200 } },
+      },
+    })
+    expect(payload.title).toContain('חריגה')
+    expect(payload.body).toContain('פנאי')
+    expect(payload.link).toContain('nudge=review')
+  })
+
+  it('בתוך ההכנסות אבל מעל היעד, ההודעה מבחינה בין השניים', async () => {
+    const { nudgeFor } = await import('../scripts/month-end-nudge.mjs')
+    const payload = nudgeFor({
+      member,
+      budget,
+      summary: { balance: 800, groups: { fixed: { target: 10000, deviation: 1500 } } },
+    })
+    expect(payload.title).toContain('קבועות')
+    expect(payload.body).toContain('נשארתם בתוך ההכנסות')
+  })
+
+  it('חודש נקי ממשיך להציע הפקדה לקרן', async () => {
+    const { nudgeFor } = await import('../scripts/month-end-nudge.mjs')
+    const payload = nudgeFor({
+      member,
+      budget,
+      summary: { balance: 3200, groups: { fixed: { target: 10000, deviation: -500 } } },
+    })
+    expect(payload.title).toContain('נשאר לכם')
+    expect(payload.link).toContain('nudge=fund')
+  })
+})
