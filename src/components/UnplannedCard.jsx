@@ -4,11 +4,14 @@ import { CATEGORIES } from '../lib/model'
 import { EXPENSE_PILLS } from '../lib/pills'
 
 /**
- * השארית: מה שנכנס מעבר לסכום הבסיס.
+ * היתרה: מה שנכנס מעבר לסכום הבסיס.
  *
- * כשהבסיס נגזר אוטומטית מההכנסה היא רזרבה קטנה להוצאות בלתי צפויות.
- * כשקובעים בסיס קבוע היא יכולה להיות גדולה, וזה בדיוק העניין: היא
- * כסף שלא תוכנן להוצאה, ולכן ההמלצה עליו היא להפקיד ולא לבזבז.
+ * כשהבסיס נגזר אוטומטית מההכנסה היא קטנה. כשקובעים בסיס קבוע היא
+ * יכולה להיות גדולה, וזה בדיוק העניין: היא כסף שלא תוכנן להוצאה,
+ * ולכן ההמלצה עליו היא להפקיד ולא לבזבז.
+ *
+ * הבלת״ם הוא מה שכן יוצא ממנה, ולכן הוא כותרת משנה בתוך הכרטיס ולא
+ * כרטיס נפרד: זה אותו כסף, רק בכיוון ההפוך.
  */
 export default function UnplannedCard({
   summary, entries = [], authorOf, actions, onAdd, onDeposit, onStopRecurring,
@@ -56,31 +59,33 @@ export default function UnplannedCard({
           <span className="prompt-title">נשארו {shekels(remaining)} מעבר לתוכנית</span>
           <span className="prompt-body">
             זה כסף שלא תוכנן להוצאה החודש. אפשר להשאיר אותו כאן לכל מקרה,
-            אבל אם אין לו ייעוד עדיף שילך לקרן.
+            אבל אם אין לו ייעוד עדיף להפקיד אותו.
           </span>
-          <span className="prompt-cta">+ הפקדה לקרן</span>
+          <span className="prompt-cta">+ הפקדה</span>
         </button>
-      )}
-
-      {entries.length > 0 ? (
-        <EntryItems
-          entries={entries}
-          authorOf={authorOf}
-          actions={actions}
-          categories={EXPENSE_PILLS}
-          onStopRecurring={onStopRecurring}
-          onAddToGroup={(groupKey) => onAdd('unplanned', groupKey)}
-        />
-      ) : (
-        reserve > 0 && !worthDepositing && (
-          <p className="empty">לדברים שלא תוכננו, כמו תיקון רכב</p>
-        )
       )}
 
       {reserve > 0 && (
-        <button type="button" className="btn-text" onClick={() => onAdd('unplanned')}>
-          + הוצאה מהשארית
-        </button>
+        <div className="subsection">
+          <h3>בלת״ם</h3>
+
+          {entries.length > 0 ? (
+            <EntryItems
+              entries={entries}
+              authorOf={authorOf}
+              actions={actions}
+              categories={EXPENSE_PILLS}
+              onStopRecurring={onStopRecurring}
+              onAddToGroup={(groupKey) => onAdd('unplanned', groupKey)}
+            />
+          ) : (
+            <p className="empty">מה שלא תוכנן, כמו תיקון קורקינט</p>
+          )}
+
+          <button type="button" className="btn-text" onClick={() => onAdd('unplanned')}>
+            + הוצאה בלתי צפויה
+          </button>
+        </div>
       )}
     </section>
   )

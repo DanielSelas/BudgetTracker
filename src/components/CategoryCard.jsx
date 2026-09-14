@@ -6,8 +6,8 @@ import { EXPENSE_PILLS } from '../lib/pills'
 const ADD_LABEL = {
   income: '+ הוספת הכנסה',
   fixed: '+ הוספת הוצאה קבועה',
-  leisure: '+ הוספת הוצאת פנאי',
-  fund: '+ הפקדה לקרן',
+  leisure: '+ הוספת הוצאה משתנה',
+  fund: '+ הפקדה',
 }
 
 export default function CategoryCard({ category, entries, group, authorOf, actions, onAdd, onStopRecurring }) {

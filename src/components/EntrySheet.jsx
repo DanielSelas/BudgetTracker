@@ -15,8 +15,8 @@ const FRAME_LABEL = Object.fromEntries(
 const DEFAULT_NAME = {
   income: 'הכנסה',
   fixed: 'הוצאה קבועה',
-  leisure: 'הוצאת פנאי',
-  fund: 'הפקדה לקרן',
+  leisure: 'הוצאה משתנה',
+  fund: 'הפקדה',
   unplanned: 'הוצאה בלתי צפויה',
   deposit: 'הפקדה',
   withdrawal: 'משיכה',

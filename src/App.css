@@ -1950,3 +1950,19 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .verdict[data-over] .verdict-lead { color: var(--color-neutral-800); }
 
 .entry-amount.danger { color: var(--color-danger); }
+
+/* כותרת משנה בתוך כרטיס, למשל הבלת״ם בתוך היתרה */
+.subsection {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--cat-ink, var(--color-text)) 14%, transparent);
+}
+
+.subsection h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  color: var(--cat-ink, var(--color-neutral-700));
+}

@@ -103,7 +103,7 @@ describe('הודעה על חריגה', () => {
       },
     })
     expect(payload.title).toContain('חריגה')
-    expect(payload.body).toContain('פנאי')
+    expect(payload.body).toContain('הוצאות משתנות')
     expect(payload.link).toContain('nudge=review')
   })
 

@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { useHistory } from '../hooks/useHistory'
-import { monthKey } from '../lib/model'
+import { CATEGORIES, monthKey } from '../lib/model'
 
 const GROUPS = [
-  { group: 'fixed', label: 'קבועות', category: 'fixed', target: 50 },
-  { group: 'leisure', label: 'פנאי', category: 'leisure', target: 30 },
-  { group: 'savings', label: 'קרן', category: 'fund', target: 20 },
+  { group: 'fixed', label: CATEGORIES.fixed.label, category: 'fixed', target: 50 },
+  { group: 'leisure', label: CATEGORIES.leisure.label, category: 'leisure', target: 30 },
+  { group: 'savings', label: CATEGORIES.fund.label, category: 'fund', target: 20 },
 ]
 
 const SHORT = ['ינו׳', 'פבר׳', 'מרץ', 'אפר׳', 'מאי', 'יוני', 'יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳']

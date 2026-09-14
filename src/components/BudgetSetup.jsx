@@ -129,7 +129,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
                 />
                 <span className="type-hint">
                   הסכום שאתם מתכננים לחלק כל חודש, והיעדים נגזרים ממנו.
-                  מה שייכנס מעבר לו יופיע כשארית. אפשר להשאיר ריק, ואז
+                  מה שייכנס מעבר לו יופיע כיתרה. אפשר להשאיר ריק, ואז
                   הוא ייגזר מההכנסה של כל חודש.
                 </span>
               </label>
@@ -152,7 +152,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
 
               {linkTargets.length > 0 && (
                 <label className="field">
-                  {goal ? 'לזקוף לקרן של' : 'לחייב את השארית של'}
+                  {goal ? 'לזקוף להפקדות של' : 'לחייב את היתרה של'}
                   <select
                     className="input rtl"
                     value={linkedBudgetId}

@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { shekels } from '../lib/format'
-import { BUDGET_GROUP_RATIOS, groupTarget } from '../lib/model'
+import { BUDGET_GROUP_RATIOS, CATEGORIES, groupTarget } from '../lib/model'
 
 const PREVIEW = [
-  { group: 'fixed', label: 'קבועות' },
-  { group: 'leisure', label: 'פנאי' },
-  { group: 'savings', label: 'קרן' },
+  { group: 'fixed', label: CATEGORIES.fixed.label },
+  { group: 'leisure', label: CATEGORIES.leisure.label },
+  { group: 'savings', label: CATEGORIES.fund.label },
 ]
 
 /**
@@ -37,7 +37,7 @@ export default function BaseAmountDialog({ value, onSave, onCancel }) {
       <form className="dialog" role="dialog" aria-modal="true" onSubmit={submit}>
         <h2>סכום הבסיס</h2>
         <p>
-          הסכום שאתם מתכננים לחלק כל חודש. מה שייכנס מעבר לו יופיע כשארית,
+          הסכום שאתם מתכננים לחלק כל חודש. מה שייכנס מעבר לו יופיע כיתרה,
           עם הצעה להפקיד אותו.
         </p>
 

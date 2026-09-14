@@ -101,7 +101,7 @@ describe('רינדור ראשוני', () => {
     const { container } = await renderWithContexts(
       <MonthView budgetId="b1" budget={household} uid="u1" />,
     )
-    expect(container.textContent).toContain('שארית')
+    expect(container.textContent).toContain('יתרה')
   })
 
   it('מסך הטיול נטען', async () => {
@@ -272,8 +272,8 @@ describe('הסבר לכניסה ראשונה', () => {
     expect(getByText('הכל מתחיל מהכנסה')).toBeTruthy()
     fireEvent.click(getByText('הבא'))
     expect(getByText('קבועות')).toBeTruthy()
-    expect(getByText('פנאי')).toBeTruthy()
-    expect(getByText('קרן')).toBeTruthy()
+    expect(getByText('הוצאות משתנות')).toBeTruthy()
+    expect(getByText('הפקדות')).toBeTruthy()
     fireEvent.click(getByText('הבא'))
 
     // בשלב האחרון אין דילוג, יש סיום
@@ -320,8 +320,8 @@ describe('עריכת שורה במקום', () => {
     const { container, getByText } = await openEditor(row())
     expect(container.querySelector('.row-edit')).toBeTruthy()
     expect(container.querySelector('.row-edit .input').value).toBe('קניות סופר')
-    expect(getByText('פנאי')).toBeTruthy()
-    expect(getByText('שארית')).toBeTruthy()
+    expect(getByText('משתנות')).toBeTruthy()
+    expect(getByText('בלת״ם')).toBeTruthy()
   })
 
   it('שולח רק את מה שבאמת השתנה', async () => {
@@ -329,7 +329,7 @@ describe('עריכת שורה במקום', () => {
     const { container, getByText } = await openEditor(row(), onUpdate)
 
     fireEvent.change(container.querySelector('.row-edit .input'), { target: { value: 'קניות בסופר' } })
-    fireEvent.click(getByText('פנאי'))
+    fireEvent.click(getByText('משתנות'))
     fireEvent.submit(container.querySelector('.row-edit'))
 
     expect(onUpdate).toHaveBeenCalledWith('e1', {

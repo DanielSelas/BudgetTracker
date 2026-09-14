@@ -1,11 +1,14 @@
 export const CATEGORIES = {
   income: { label: 'הכנסות', budgetGroup: 'none' },
   fixed: { label: 'קבועות', budgetGroup: 'fixed' },
-  leisure: { label: 'פנאי', budgetGroup: 'leisure' },
-  fund: { label: 'קרן', budgetGroup: 'savings' },
+  // לא רק בילויים: כל מה שמשתנה מחודש לחודש, כולל שופינג ומסעדות
+  leisure: { label: 'הוצאות משתנות', short: 'משתנות', budgetGroup: 'leisure' },
+  fund: { label: 'הפקדות', budgetGroup: 'savings' },
   // מה שנכנס מעבר לסכום הבסיס. אפשר להוציא ממנו, אבל ההמלצה היא
   // להפקיד אותו: זה לא כסף שתוכנן, אלא כסף שנשאר.
-  unplanned: { label: 'שארית מהכנסה', short: 'שארית', budgetGroup: 'none' },
+  // היתרה היא הסכום שנשאר מעבר לתוכנית, והבלת״ם הוא מה שיוצא ממנה.
+  // לכן הכרטיס נקרא יתרה והשורות שבתוכו הן בלת״ם.
+  unplanned: { label: 'יתרה', short: 'בלת״ם', budgetGroup: 'none' },
 }
 
 export const BUDGET_GROUP_RATIOS = {

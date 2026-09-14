@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Sheet from './Sheet'
 import { shekels } from '../lib/format'
-import { BUDGET_GROUP_RATIOS, calcBaseAmount } from '../lib/model'
+import { BUDGET_GROUP_RATIOS, CATEGORIES, calcBaseAmount } from '../lib/model'
 import { GOAL_PILLS, TRIP_PILLS } from '../lib/pills'
 
 // המפתח של משק הבית נשאר כפי שהיה, כדי שמי שכבר ראה לא יראה שוב
@@ -43,9 +43,12 @@ const GOAL_TARGET = 40000
 const GOAL_SAVED = 16000
 
 const GROUPS = [
-  { group: 'fixed', category: 'fixed', label: 'קבועות', hint: 'שכר דירה, חשבונות, ביטוח' },
-  { group: 'leisure', category: 'leisure', label: 'פנאי', hint: 'מסעדות, בילויים, קניות' },
-  { group: 'savings', category: 'fund', label: 'קרן', hint: 'חיסכון, ומה שנשמר לימים אחרים' },
+  { group: 'fixed', category: 'fixed', label: CATEGORIES.fixed.label,
+    hint: 'שכר דירה, חשבונות, ביטוח' },
+  { group: 'leisure', category: 'leisure', label: CATEGORIES.leisure.label,
+    hint: 'מסעדות, שופינג, בילויים, כל מה שמשתנה' },
+  { group: 'savings', category: 'fund', label: CATEGORIES.fund.label,
+    hint: 'חיסכון, ומה שנשמר לימים אחרים' },
 ]
 
 function Bars() {
@@ -121,7 +124,7 @@ const HOUSEHOLD = [
     art: <Bars />,
   },
   {
-    title: 'ומה שנשאר הוא הבלת״ם',
+    title: 'ומה שנשאר הוא היתרה',
     body: `ההפרש בין ההכנסה לסכום הבסיס, ${shekels(RESERVE)}, נשמר בצד לדברים שלא מתוכננים. תקר, מתנה, רופא שיניים.`,
     art: (
       <div className="intro-reserve" aria-hidden="true" data-category="unplanned">
@@ -151,7 +154,7 @@ const TRIP = [
   },
   {
     title: 'קטגוריות של טיול',
-    body: 'לא קבועות ופנאי. בטיול מעניין משהו אחר לגמרי, ולכן יש לו קטגוריות משלו.',
+    body: 'לא קבועות ומשתנות. בטיול מעניין משהו אחר לגמרי, ולכן יש לו קטגוריות משלו.',
     art: <Pills items={TRIP_PILLS} category="leisure" />,
   },
   {
@@ -209,8 +212,8 @@ const GOAL = [
     ),
   },
   {
-    title: 'ומתחבר לקרן',
-    body: 'אם קישרתם לתקציב בית, ההפקדות מופיעות שם בקרן כשורה אחת לכל חודש. משיכה מקטינה אותה.',
+    title: 'ומתחבר להפקדות',
+    body: 'אם קישרתם לתקציב בית, ההפקדות מופיעות שם כשורה אחת לכל חודש. משיכה מקטינה אותה.',
     art: (
       <Rollup
         category="fund"

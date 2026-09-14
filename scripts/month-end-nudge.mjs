@@ -54,7 +54,7 @@ export function dueToday({ billingDay, month, day, isLastDay }) {
   return `${previous.year}-${String(previous.month).padStart(2, '0')}`
 }
 
-const GROUP_LABEL = { fixed: 'קבועות', leisure: 'פנאי', savings: 'קרן' }
+const GROUP_LABEL = { fixed: 'קבועות', leisure: 'הוצאות משתנות', savings: 'הפקדות' }
 
 /**
  * שתי בשורות שונות, ולכן שתי הודעות שונות.
@@ -88,7 +88,7 @@ export function nudgeFor({ member, budget, summary }) {
 
   return {
     title: `נשאר לכם ${shekels(summary.balance)}`,
-    body: `${greeting}זה מה שלא הוצא ב"${budget.name}" החודש. להעביר לקרן?`,
+    body: `${greeting}זה מה שלא הוצא ב"${budget.name}" החודש. להפקיד אותו?`,
     link: `/?nudge=fund&budget=${budget.id}&amount=${Math.round(summary.balance)}`,
   }
 }
