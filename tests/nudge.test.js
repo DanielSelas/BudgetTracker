@@ -6,17 +6,17 @@ const at = (iso) => new Date(iso)
 
 describe('monthContext', () => {
   it('מזהה את היום האחרון בחודש לפי שעון ישראל', () => {
-    expect(monthContext(at('2026-01-31T21:00:00Z'))).toEqual({ month: '2026-01', isLastDay: true })
+    expect(monthContext(at('2026-01-31T21:00:00Z'))).toMatchObject({ month: '2026-01', isLastDay: true })
   })
 
   it('לא מזהה יום רגיל כאחרון', () => {
-    expect(monthContext(at('2026-01-15T12:00:00Z'))).toEqual({ month: '2026-01', isLastDay: false })
-    expect(monthContext(at('2026-01-30T12:00:00Z'))).toEqual({ month: '2026-01', isLastDay: false })
+    expect(monthContext(at('2026-01-15T12:00:00Z'))).toMatchObject({ month: '2026-01', isLastDay: false })
+    expect(monthContext(at('2026-01-30T12:00:00Z'))).toMatchObject({ month: '2026-01', isLastDay: false })
   })
 
   it('חוצה את קו אזור הזמן נכון', () => {
     // 22:30 UTC ב-31 בינואר הוא כבר 00:30 ב-1 בפברואר בישראל
-    expect(monthContext(at('2026-01-31T22:30:00Z'))).toEqual({ month: '2026-02', isLastDay: false })
+    expect(monthContext(at('2026-01-31T22:30:00Z'))).toMatchObject({ month: '2026-02', isLastDay: false })
   })
 
   it('עובד בחודש קצר ובשנה מעוברת', () => {
@@ -26,13 +26,13 @@ describe('monthContext', () => {
   })
 
   it('עובד במעבר שנה', () => {
-    expect(monthContext(at('2026-12-31T12:00:00Z'))).toEqual({ month: '2026-12', isLastDay: true })
-    expect(monthContext(at('2027-01-01T12:00:00Z'))).toEqual({ month: '2027-01', isLastDay: false })
+    expect(monthContext(at('2026-12-31T12:00:00Z'))).toMatchObject({ month: '2026-12', isLastDay: true })
+    expect(monthContext(at('2027-01-01T12:00:00Z'))).toMatchObject({ month: '2027-01', isLastDay: false })
   })
 
   it('עובד גם בשעון קיץ', () => {
     expect(monthContext(at('2026-07-31T20:00:00Z')).isLastDay).toBe(true)
-    expect(monthContext(at('2026-07-31T21:30:00Z'))).toEqual({ month: '2026-08', isLastDay: false })
+    expect(monthContext(at('2026-07-31T21:30:00Z'))).toMatchObject({ month: '2026-08', isLastDay: false })
   })
 })
 
@@ -127,5 +127,32 @@ describe('הודעה על חריגה', () => {
     })
     expect(payload.title).toContain('נשאר לכם')
     expect(payload.link).toContain('nudge=fund')
+  })
+})
+
+describe('מתי מסכמים, לפי מועד החיוב', () => {
+  const ctx = { month: '2026-10', day: 10, isLastDay: false }
+
+  it('ביום החיוב מסכמים את המחזור שנסגר, כלומר החודש הקודם', async () => {
+    const { dueToday } = await import('../scripts/month-end-nudge.mjs')
+    expect(dueToday({ billingDay: 10, ...ctx })).toBe('2026-09')
+  })
+
+  it('בכל יום אחר לא שולחים כלום', async () => {
+    const { dueToday } = await import('../scripts/month-end-nudge.mjs')
+    expect(dueToday({ billingDay: 10, ...ctx, day: 9 })).toBeNull()
+    expect(dueToday({ billingDay: 10, ...ctx, day: 11 })).toBeNull()
+    expect(dueToday({ billingDay: 15, ...ctx })).toBeNull()
+  })
+
+  it('בינואר חוזרים לדצמבר של השנה שעברה', async () => {
+    const { dueToday } = await import('../scripts/month-end-nudge.mjs')
+    expect(dueToday({ billingDay: 2, month: '2027-01', day: 2, isLastDay: false })).toBe('2026-12')
+  })
+
+  it('תקציב בלי מועד חיוב מסוכם ביום האחרון בחודש, כפי שהיה', async () => {
+    const { dueToday } = await import('../scripts/month-end-nudge.mjs')
+    expect(dueToday({ month: '2026-09', day: 30, isLastDay: true })).toBe('2026-09')
+    expect(dueToday({ month: '2026-09', day: 20, isLastDay: false })).toBeNull()
   })
 })

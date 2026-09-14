@@ -448,3 +448,25 @@ describe('היכן חרגנו', () => {
     expect(overspentGroups(withGroups({ fixed: { target: 0, deviation: 900 } }))).toEqual([])
   })
 })
+
+describe('המחזור שרץ עכשיו', () => {
+  const at = (iso) => new Date(iso)
+
+  it('לפני מועד החיוב עדיין מסיימים את החודש הקודם', async () => {
+    const { activeMonth } = await import('../src/lib/model')
+    expect(activeMonth(10, at('2026-10-05T09:00:00'))).toBe('2026-09')
+    expect(activeMonth(10, at('2026-10-12T09:00:00'))).toBe('2026-10')
+    expect(activeMonth(10, at('2026-10-10T09:00:00'))).toBe('2026-10')
+  })
+
+  it('בלי מועד חיוב מתנהג לפי הלוח', async () => {
+    const { activeMonth } = await import('../src/lib/model')
+    expect(activeMonth(undefined, at('2026-10-05T09:00:00'))).toBe('2026-10')
+  })
+
+  it('מחזור נסגר במועד החיוב של החודש שאחריו', async () => {
+    const { isMonthClosed } = await import('../src/lib/model')
+    expect(isMonthClosed('2026-09', 10, at('2026-10-05T09:00:00'))).toBe(false)
+    expect(isMonthClosed('2026-09', 10, at('2026-10-10T09:00:00'))).toBe(true)
+  })
+})

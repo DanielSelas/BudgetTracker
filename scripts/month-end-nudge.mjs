@@ -26,7 +26,32 @@ const shekels = (value) =>
 export function monthContext(now = new Date()) {
   const today = dateIn(now)
   const tomorrow = dateIn(new Date(now.getTime() + 24 * 60 * 60 * 1000))
-  return { month: today.slice(0, 7), isLastDay: today.slice(0, 7) !== tomorrow.slice(0, 7) }
+  return {
+    month: today.slice(0, 7),
+    day: Number(today.slice(8, 10)),
+    isLastDay: today.slice(0, 7) !== tomorrow.slice(0, 7),
+  }
+}
+
+/**
+ * מתי לסכם תקציב, ואיזה חודש.
+ *
+ * מחזור ספטמבר עם חיוב ב-10 נסגר ב-10 באוקטובר, ולכן זה היום שבו
+ * המספר של ספטמבר סופי. סיכום ב-30 בספטמבר היה מדבר על חודש שעוד
+ * לא נגמר, ובדיוק החלק הגדול שלו, חיובי האשראי, עוד לא ירד.
+ *
+ * תקציב בלי מועד חיוב מסוכם ביום האחרון בחודש, כפי שהיה.
+ */
+export function dueToday({ billingDay, month, day, isLastDay }) {
+  const configured = Number(billingDay)
+  if (!Number.isInteger(configured) || configured < 1 || configured > 28) {
+    return isLastDay ? month : null
+  }
+  if (day !== configured) return null
+  // ביום החיוב מסכמים את המחזור שנסגר עכשיו, כלומר החודש שקדם
+  const [year, raw] = month.split('-').map(Number)
+  const previous = raw === 1 ? { year: year - 1, month: 12 } : { year, month: raw - 1 }
+  return `${previous.year}-${String(previous.month).padStart(2, '0')}`
 }
 
 const GROUP_LABEL = { fixed: 'קבועות', leisure: 'פנאי', savings: 'קרן' }
@@ -72,12 +97,10 @@ async function main() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT
   if (!raw) throw new Error('חסר FIREBASE_SERVICE_ACCOUNT')
 
-  const { month, isLastDay } = monthContext()
+  // הריצה יומית, וכל תקציב נסגר במועד החיוב שלו, ולכן ההחלטה
+  // אם לשלוח נעשית לכל תקציב בנפרד ולא פעם אחת לכולם
+  const context = monthContext()
   const force = process.env.FORCE_SEND === 'true'
-  if (!isLastDay && !force) {
-    console.log(`לא היום האחרון של ${month}. לא נשלח דבר.`)
-    return
-  }
 
   initializeApp({ credential: cert(JSON.parse(raw)) })
   const db = getFirestore()
@@ -89,6 +112,13 @@ async function main() {
 
   for (const budgetDoc of budgets.docs) {
     const budget = { id: budgetDoc.id, ...budgetDoc.data() }
+
+    const month = dueToday({ billingDay: budget.billingDay, ...context })
+      ?? (force ? context.month : null)
+    if (!month) {
+      skipped += 1
+      continue
+    }
 
     const entries = await db.collection('entries')
       .where('budgetId', '==', budget.id)
@@ -139,7 +169,7 @@ async function main() {
     }
   }
 
-  console.log(`חודש ${month}: נשלחו ${sent} התראות, ${skipped} תקציבים דולגו.`)
+  console.log(`${context.month}, יום ${context.day}: נשלחו ${sent} התראות, ${skipped} תקציבים דולגו.`)
 }
 
 // מיובא גם מהבדיקות, ולכן רץ רק כשמפעילים את הקובץ ישירות

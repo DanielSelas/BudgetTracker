@@ -317,3 +317,31 @@ export function overspentGroups(summary) {
     .map(([group, data]) => ({ group, over: data.deviation, target: data.target }))
     .sort((a, b) => b.over - a.over)
 }
+
+/**
+ * החודש שהאפליקציה צריכה לפתוח בו, לפי מועד החיוב.
+ *
+ * מחזור ספטמבר עם חיוב ב-10 רץ מ-10.9 עד 10.10, ולכן ב-5 באוקטובר
+ * עדיין מסיימים את ספטמבר ולא מתחילים את אוקטובר. בלי זה האפליקציה
+ * הייתה קופצת לחודש חדש בזמן שהחודש הקודם עוד פתוח לגמרי.
+ *
+ * בלי מועד חיוב מתנהגת בדיוק כמו קודם, לפי הלוח.
+ */
+export function activeMonth(billingDay, now = new Date()) {
+  const day = Number(billingDay)
+  const current = monthKey(now)
+  if (!isBillingDay(day)) return current
+  return now.getDate() < day ? shiftMonth(current, -1) : current
+}
+
+/**
+ * האם המחזור של החודש הזה כבר הסתיים.
+ * מחזור ספטמבר נסגר במועד החיוב של אוקטובר, ולכן רק מאותו יום אפשר
+ * לומר משהו על איך החודש נגמר.
+ */
+export function isMonthClosed(month, billingDay, now = new Date()) {
+  if (!month) return false
+  const day = Number(billingDay)
+  if (!isBillingDay(day)) return month < monthKey(now)
+  return month < activeMonth(day, now)
+}

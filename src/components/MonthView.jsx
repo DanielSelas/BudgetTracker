@@ -14,7 +14,7 @@ import InvitePanel from './InvitePanel'
 import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
 import { createTemplate, skipMonth, stopTemplate } from '../lib/recurring'
-import { CATEGORIES, monthKey, summarizeMonth } from '../lib/model'
+import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth } from '../lib/model'
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
 import { deleteBudget, renameBudget, setBaseAmount, setBillingDay } from '../lib/budgets'
@@ -32,9 +32,11 @@ function Skeleton() {
 }
 
 export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
-  const [month, setMonth] = useState(monthKey)
-  // חודש שעבר הוא חודש שנסגר, ורק עליו אפשר לומר איך הוא נגמר
-  const isPast = month < monthKey()
+  const billingDay = budget?.billingDay
+  // נפתח על המחזור שרץ עכשיו, שאינו בהכרח החודש שבלוח
+  const [month, setMonth] = useState(() => activeMonth(billingDay))
+  // רק מחזור שנסגר אפשר לסכם, ולכן הוא נסגר במועד החיוב ולא ב-30 בחודש
+  const isPast = isMonthClosed(month, billingDay)
   const [sheet, setSheet] = useState(nudge ? { category: nudge.category, group: '' } : null)
   const [prefill, setPrefill] = useState(nudge?.amount ?? 0)
   const [pendingStop, setPendingStop] = useState(null)
@@ -109,8 +111,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
         <MonthPicker
           month={month}
           onChange={setMonth}
+          current={activeMonth(billingDay)}
           subtitle={budget ? `${budget.name} · ${shared ? 'משותף' : 'אישי'}` : ''}
-          billingDay={budget?.billingDay}
+          billingDay={billingDay}
         />
       </div>
 

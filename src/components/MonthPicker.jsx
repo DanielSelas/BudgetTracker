@@ -1,8 +1,10 @@
 import { monthLabel } from '../lib/format'
 import { billingWindow, monthKey, shiftMonth } from '../lib/model'
 
-export default function MonthPicker({ month, onChange, subtitle, billingDay }) {
-  const isCurrent = month === monthKey()
+export default function MonthPicker({ month, onChange, subtitle, billingDay, current }) {
+  // "החודש הנוכחי" הוא המחזור שרץ עכשיו, שאינו בהכרח החודש שבלוח
+  const now = current || monthKey()
+  const isCurrent = month === now
   const window = billingWindow(month, billingDay)
 
   return (
@@ -21,7 +23,7 @@ export default function MonthPicker({ month, onChange, subtitle, billingDay }) {
       <button
         type="button"
         className="month-label"
-        onClick={() => onChange(monthKey())}
+        onClick={() => onChange(now)}
         disabled={isCurrent}
         title={isCurrent ? '' : 'חזרה לחודש הנוכחי'}
       >
