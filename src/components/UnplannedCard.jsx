@@ -80,21 +80,32 @@ export default function UnplannedCard({
         </div>
       )}
 
-      {worthDepositing && (
-        <button type="button" className="prompt-card" data-category="fund" onClick={() => onDeposit?.(remaining)}>
-          <span className="prompt-title">נשארו {shekels(remaining)} מעבר לתוכנית</span>
-          <span className="prompt-body">
-            זה כסף שלא תוכנן להוצאה החודש. אפשר להשאיר אותו כאן לכל מקרה,
-            אבל אם אין לו ייעוד עדיף להפקיד אותו.
-          </span>
-          <span className="prompt-cta">+ הפקדה</span>
-        </button>
-      )}
+      {(worthDepositing || deposited > 0) && (
+        <div className="subsection">
+          <h3>להפקדה</h3>
 
-      {deposited > 0 && (
-        <p className="hint">
-          מתוך היתרה כבר הופקדו <strong className="num">{shekels(deposited)}</strong>.
-        </p>
+          {worthDepositing && (
+            <button
+              type="button"
+              className="prompt-card"
+              data-category="fund"
+              onClick={() => onDeposit?.(remaining)}
+            >
+              <span className="prompt-title">נשארו {shekels(remaining)} מעבר לתוכנית</span>
+              <span className="prompt-body">
+                זה כסף שלא תוכנן להוצאה החודש. אפשר להשאיר אותו כאן לכל מקרה,
+                אבל אם אין לו ייעוד עדיף להפקיד אותו.
+              </span>
+              <span className="prompt-cta">+ הפקדה</span>
+            </button>
+          )}
+
+          {deposited > 0 && (
+            <p className="hint">
+              מתוך היתרה כבר הופקדו <strong className="num">{shekels(deposited)}</strong>.
+            </p>
+          )}
+        </div>
       )}
 
     </section>
