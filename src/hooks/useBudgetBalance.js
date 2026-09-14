@@ -8,7 +8,7 @@ import { useRetry } from './useRetry'
  * היתרה של החודש הנוכחי בתקציב משק בית, לתצוגה בכרטיס בדף הבית.
  * מקבל null כשאין מה לחשב, כדי שאפשר יהיה לקרוא לו בלי תנאי.
  */
-export function useMonthBalance(budgetId) {
+export function useMonthBalance(budgetId, fixedBase) {
   const [balance, setBalance] = useState(null)
   const { attempt, retryIfTransient } = useRetry()
 
@@ -24,10 +24,10 @@ export function useMonthBalance(budgetId) {
     )
     return onSnapshot(
       monthQuery,
-      (snapshot) => setBalance(summarizeMonth(snapshot.docs.map((item) => item.data())).balance),
+      (snapshot) => setBalance(summarizeMonth(snapshot.docs.map((item) => item.data()), { fixedBase }).balance),
       (err) => { setBalance(null); retryIfTransient(err) },
     )
-  }, [budgetId, attempt, retryIfTransient])
+  }, [budgetId, fixedBase, attempt, retryIfTransient])
 
   return balance
 }

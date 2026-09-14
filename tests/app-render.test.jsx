@@ -163,7 +163,7 @@ describe('סנכרון שורה מסכמת', () => {
 })
 
 describe('שורה מסכמת של מטרה', () => {
-  it('נזקפת לקרן ולא לבלתם', async () => {
+  it('נזקפת לקרן ולא לשארית', async () => {
     const firestore = await import('firebase/firestore')
     firestore.setDoc.mockClear()
     const { syncRollup } = await import('../src/lib/trips')

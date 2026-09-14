@@ -13,8 +13,8 @@ const shortMonth = (key) => SHORT[Number(key.split('-')[1]) - 1]
 
 const BAR_HEIGHT = 160
 
-export default function HistoryView({ budgetId }) {
-  const { series, loading, error, hasData } = useHistory(budgetId, 6)
+export default function HistoryView({ budgetId, fixedBase = 0 }) {
+  const { series, loading, error, hasData } = useHistory(budgetId, 6, fixedBase)
   const current = monthKey()
 
   // הגבהים יחסיים לסכום הגדול ביותר שהופיע בטווח, כך שההשוואה בין חודשים נכונה

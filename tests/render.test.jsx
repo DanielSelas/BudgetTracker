@@ -101,7 +101,7 @@ describe('רינדור ראשוני', () => {
     const { container } = await renderWithContexts(
       <MonthView budgetId="b1" budget={household} uid="u1" />,
     )
-    expect(container.textContent).toContain('בלתם')
+    expect(container.textContent).toContain('שארית')
   })
 
   it('מסך הטיול נטען', async () => {
@@ -321,7 +321,7 @@ describe('עריכת שורה במקום', () => {
     expect(container.querySelector('.row-edit')).toBeTruthy()
     expect(container.querySelector('.row-edit .input').value).toBe('קניות סופר')
     expect(getByText('פנאי')).toBeTruthy()
-    expect(getByText('בלתם')).toBeTruthy()
+    expect(getByText('שארית')).toBeTruthy()
   })
 
   it('שולח רק את מה שבאמת השתנה', async () => {

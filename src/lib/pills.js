@@ -8,7 +8,8 @@ import { CATEGORIES, GOAL_CATEGORIES, GOAL_ORDER, TRIP_CATEGORIES, TRIP_ORDER } 
  */
 export const EXPENSE_PILLS = ['fixed', 'leisure', 'fund', 'unplanned'].map((category) => ({
   category,
-  label: CATEGORIES[category].label,
+  // תווית קצרה כשיש, כי צ׳יפ צר מכותרת של כרטיס
+  label: CATEGORIES[category].short || CATEGORIES[category].label,
 }))
 
 export const TRIP_PILLS = TRIP_ORDER.map((category) => ({

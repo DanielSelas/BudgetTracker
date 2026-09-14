@@ -28,7 +28,7 @@ const withdrawal = (month, actualAmount) => ({ category: 'withdrawal', month, ac
 describe('שורה מסכמת של מטרת חיסכון', () => {
   beforeEach(() => store.clear())
 
-  it('נכנסת לקרן ולא לבלתם', async () => {
+  it('נכנסת לקרן ולא לשארית', async () => {
     await syncRollup({ trip: goal, entries: [deposit('2026-09', 2000)], uid: 'u1' })
     const row = store.get('trip_g1__2026-09')
     expect(row.category).toBe('fund')
@@ -58,7 +58,7 @@ describe('שורה מסכמת של מטרת חיסכון', () => {
     expect(store.has('trip_g1__2026-09')).toBe(false)
   })
 
-  it('טיול ממשיך להיזקף לבלתם', async () => {
+  it('טיול ממשיך להיזקף לשארית', async () => {
     await syncRollup({ trip, entries: [{ month: '2026-09', actualAmount: 4650 }], uid: 'u1' })
     const row = store.get('trip_t1__2026-09')
     expect(row.category).toBe('unplanned')

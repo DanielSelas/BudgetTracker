@@ -39,7 +39,7 @@ const entries = [
   { id: '11', category: 'unplanned', budgetGroup: 'none', name: 'תיקון רכב', plannedAmount: 0, actualAmount: 1800, addedBy: 'u1' },
   { id: '12', category: 'unplanned', budgetGroup: 'none', name: 'טיול: איטליה', plannedAmount: 0, actualAmount: 1200, addedBy: 'u1', linkedTripId: 't1' },
 ]
-const summary = summarizeMonth(entries)
+const summary = summarizeMonth(entries, { fixedBase: 20000 })
 const byCategory = { income: [], fixed: [], leisure: [], fund: [], unplanned: [] }
 entries.forEach((e) => byCategory[e.category].push(e))
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
@@ -164,7 +164,7 @@ function Types() {
           <label className="field">מסגרת לטיול
             <input className="input num" defaultValue="12000" />
           </label>
-          <label className="field">לחייב את הבלתם של
+          <label className="field">לחייב את השארית של
             <select className="input rtl" defaultValue="b1">
               <option value="b1">משק הבית</option>
             </select>
@@ -197,7 +197,7 @@ function Trip() {
           </div>
           <div className="bar"><div className="bar-fill" style={{ width: `${trip.progress}%` }} /></div>
         </section>
-        <p className="hint center">ההוצאות כאן מופיעות גם בבלתם של תקציב הבית, כשורה אחת לכל חודש. מסונכרן ✓</p>
+        <p className="hint center">ההוצאות כאן מופיעות גם בשארית של תקציב הבית, כשורה אחת לכל חודש. מסונכרן ✓</p>
         {TRIP_ORDER.map((category) => (
           <section className="cat-card" data-category={category} key={category}>
             <div className="cat-head">

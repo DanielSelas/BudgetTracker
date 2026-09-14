@@ -66,7 +66,9 @@ async function main() {
       .where('month', '==', month)
       .get()
 
-    const summary = summarizeMonth(entries.docs.map((doc) => doc.data()))
+    const summary = summarizeMonth(entries.docs.map((doc) => doc.data()), {
+      fixedBase: budget.baseAmount,
+    })
 
     // בלי הכנסה אין מה לסכם, ויתרה אפס או שלילית היא לא בשורה לחגוג עליה
     if (summary.totalIncome <= 0 || summary.balance <= 0) {

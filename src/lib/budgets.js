@@ -39,6 +39,7 @@ export async function createBudget({
   frame = 0,
   linkedBudgetId = null,
   billingDay = DEFAULT_BILLING_DAY,
+  baseAmount = 0,
 }) {
   const budgetRef = doc(collection(db, 'budgets'))
 
@@ -51,7 +52,11 @@ export async function createBudget({
     type,
     // מועד החיוב שייך למשק בית בלבד. לטיול ולמטרה אין כרטיס משלהם
     ...(type === 'household'
-      ? { billingDay: Number(billingDay) || DEFAULT_BILLING_DAY }
+      ? {
+          billingDay: Number(billingDay) || DEFAULT_BILLING_DAY,
+          // אפס פירושו גזירה אוטומטית מההכנסה, כפי שהיה תמיד
+          baseAmount: Math.max(0, Number(baseAmount) || 0),
+        }
       : { frame: Number(frame) || 0, linkedBudgetId }),
     createdAt: serverTimestamp(),
   })
@@ -218,4 +223,11 @@ export function renameBudget({ budgetId, name }) {
 /** שינוי מועד החיוב. אנשים מחליפים תאריך מול חברת האשראי, ואז גם כאן. */
 export function setBillingDay({ budgetId, billingDay }) {
   return updateDoc(doc(db, 'budgets', budgetId), { billingDay: Number(billingDay) })
+}
+
+/** סכום הבסיס שהמשתמש מתכנן. אפס מחזיר לגזירה אוטומטית מההכנסה. */
+export function setBaseAmount({ budgetId, baseAmount }) {
+  return updateDoc(doc(db, 'budgets', budgetId), {
+    baseAmount: Math.max(0, Number(baseAmount) || 0),
+  })
 }

@@ -161,7 +161,7 @@ describe('recentMonths', () => {
   })
 })
 
-describe('בלתם כקטגוריה אמיתית', () => {
+describe('שארית כקטגוריה אמיתית', () => {
   const withIncome = (extra = []) => summarizeMonth([
     entry({ category: 'income', budgetGroup: 'none', actualAmount: 24000 }),
     ...extra,
@@ -347,5 +347,49 @@ describe('חלון החיוב', () => {
     expect(billingWindow('2026-09', undefined)).toBe('')
     expect(billingWindow('2026-09', 31)).toBe('')
     expect(billingWindow('', 10)).toBe('')
+  })
+})
+
+describe('סכום בסיס שנקבע מראש', () => {
+  const income = (actualAmount) => ({
+    category: 'income', budgetGroup: 'none', actualAmount, plannedAmount: 0,
+  })
+
+  it('בלי בסיס קבוע ממשיכים לגזור מההכנסה', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    const s = summarizeMonth([income(31000)])
+    expect(s.baseAmount).toBe(30000)
+    expect(s.usesFixedBase).toBe(false)
+  })
+
+  it('בסיס קבוע לא זז כשחודש טוב במיוחד', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    const s = summarizeMonth([income(31000)], { fixedBase: 20000 })
+    expect(s.baseAmount).toBe(20000)
+    expect(s.usesFixedBase).toBe(true)
+    // וזו כל הנקודה: היעדים נגזרים מהתוכנית ולא מהחודש
+    expect(s.groups.fixed.target).toBe(10000)
+    expect(s.groups.leisure.target).toBe(6000)
+    expect(s.groups.savings.target).toBe(4000)
+  })
+
+  it('מה שמעבר לבסיס הוא השארית', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    expect(summarizeMonth([income(31000)], { fixedBase: 20000 }).unplanned.reserve).toBe(11000)
+  })
+
+  it('חודש רזה לא ממציא כסף שלא נכנס', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    const s = summarizeMonth([income(14000)], { fixedBase: 20000 })
+    expect(s.baseAmount).toBe(14000)
+    expect(s.unplanned.reserve).toBe(0)
+    expect(s.baseShortfall).toBe(6000)
+  })
+
+  it('אפס מחזיר לגזירה אוטומטית', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    const s = summarizeMonth([income(31000)], { fixedBase: 0 })
+    expect(s.baseAmount).toBe(30000)
+    expect(s.usesFixedBase).toBe(false)
   })
 })

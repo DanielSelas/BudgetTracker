@@ -14,7 +14,7 @@ export function recentMonths(count) {
  * מאזין לכל הרשומות של התקציב מחודש מסוים ואילך, ומסכם כל חודש בנפרד.
  * הסינון הוא טווח על מחרוזת החודש, שמסודרת לקסיקוגרפית בדיוק כמו כרונולוגית.
  */
-export function useHistory(budgetId, monthCount = 6) {
+export function useHistory(budgetId, monthCount = 6, fixedBase = 0) {
   const months = useMemo(() => recentMonths(monthCount), [monthCount])
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
@@ -55,8 +55,8 @@ export function useHistory(budgetId, monthCount = 6) {
     for (const entry of entries) {
       if (byMonth.has(entry.month)) byMonth.get(entry.month).push(entry)
     }
-    return months.map((month) => ({ month, ...summarizeMonth(byMonth.get(month)) }))
-  }, [entries, months])
+    return months.map((month) => ({ month, ...summarizeMonth(byMonth.get(month), { fixedBase }) }))
+  }, [entries, months, fixedBase])
 
   const hasData = useMemo(
     () => series.some((point) => point.totalIncome > 0 || point.totalExpenses > 0),

@@ -3,9 +3,9 @@ export const CATEGORIES = {
   fixed: { label: 'קבועות', budgetGroup: 'fixed' },
   leisure: { label: 'פנאי', budgetGroup: 'leisure' },
   fund: { label: 'קרן', budgetGroup: 'savings' },
-  // בלתם היא רזרבה אמיתית שאפשר להוציא ממנה, ולא רק מספר מחושב.
-  // היא מחוץ ל-50/30/20 בכוונה: היא הכסף שלא חולק לקטגוריות.
-  unplanned: { label: 'בלתם', budgetGroup: 'none' },
+  // מה שנכנס מעבר לסכום הבסיס. אפשר להוציא ממנו, אבל ההמלצה היא
+  // להפקיד אותו: זה לא כסף שתוכנן, אלא כסף שנשאר.
+  unplanned: { label: 'שארית מהכנסה', short: 'שארית', budgetGroup: 'none' },
 }
 
 export const BUDGET_GROUP_RATIOS = {
@@ -44,12 +44,18 @@ export function billingWindow(month, day) {
  * הכפולה הקרובה של 5,000 שקטנה ממש מההכנסה בפועל.
  * הכנסה של 25,000 בדיוק נותנת בסיס 20,000 (ולא 25,000).
  */
+/**
+ * סכום הבסיס האוטומטי, כשהמשתמש לא קבע אחד בעצמו.
+ * הגזירה מההכנסה נותנת מספר סביר בהתחלה, אבל היא גם אומרת שחודש טוב
+ * מרשה לבזבז יותר, וזה הפוך מהרעיון של תקציב. לכן אפשר לקבוע בסיס
+ * קבוע, ואז התוכנית היא שקובעת ולא מה שקרה החודש.
+ */
 export function calcBaseAmount(totalIncome) {
   if (!Number.isFinite(totalIncome) || totalIncome <= 0) return 0
   return Math.max(0, Math.floor((totalIncome - 1) / BASE_STEP) * BASE_STEP)
 }
 
-/** המרווח הנזיל ("בלתם"), מה שנשאר בעו"ש ולא חולק לקטגוריות. */
+/** השארית: מה שנכנס מעבר לסכום הבסיס ולא חולק לקטגוריות. */
 export function calcUnplanned(totalIncome, baseAmount) {
   return Math.max(0, totalIncome - baseAmount)
 }
@@ -68,7 +74,7 @@ export function monthKey(date = new Date()) {
  * כל החישובים של מסך החודש במקום אחד, כפונקציה טהורה.
  * baseAmount נגזר מההכנסה בפועל ולעולם אינו נתון לעריכה ידנית.
  */
-export function summarizeMonth(entries) {
+export function summarizeMonth(entries, { fixedBase } = {}) {
   const sumActual = (list) => list.reduce((total, entry) => total + (entry.actualAmount || 0), 0)
   const sumPlanned = (list) => list.reduce((total, entry) => total + (entry.plannedAmount || 0), 0)
 
@@ -78,7 +84,13 @@ export function summarizeMonth(entries) {
 
   const totalIncome = sumActual(income)
   const totalExpenses = sumActual(expenses)
-  const baseAmount = calcBaseAmount(totalIncome)
+  // בסיס שנקבע ידנית גובר, אבל רק עד גובה ההכנסה: אי אפשר לתכנן
+  // לחלק כסף שלא נכנס, ואחרת היעדים היו מראים מספרים שאינם קיימים
+  const planned = Number(fixedBase) || 0
+  const usesFixedBase = planned > 0
+  const baseAmount = usesFixedBase
+    ? Math.min(planned, totalIncome)
+    : calcBaseAmount(totalIncome)
 
   // הרזרבה היא המרווח הנזיל; מה שהוצא ממנה מקטין אותה בזמן אמת
   const reserve = calcUnplanned(totalIncome, baseAmount)
@@ -104,6 +116,9 @@ export function summarizeMonth(entries) {
     totalExpenses,
     balance: totalIncome - totalExpenses,
     baseAmount,
+    usesFixedBase,
+    // כמה מהבסיס שתוכנן לא נכנס בפועל, כדי שאפשר יהיה לומר זאת
+    baseShortfall: usesFixedBase ? Math.max(0, planned - totalIncome) : 0,
     unplanned: {
       reserve,
       spent: unplannedSpent,

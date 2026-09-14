@@ -61,7 +61,7 @@ export default function FrameLink({ budgetId, budget, months, synced, kind = 'tr
   }
 
   const what = kind === 'goal' ? 'ההפקדות' : 'ההוצאות'
-  const where = kind === 'goal' ? 'בקרן' : 'בבלתם'
+  const where = kind === 'goal' ? 'בקרן' : 'בשארית'
 
   return (
     <p className="hint center">

@@ -22,6 +22,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
   const [frame, setFrame] = useState('')
   const [linkedBudgetId, setLinkedBudgetId] = useState('')
   const [billingDay, setBillingDay] = useState(DEFAULT_BILLING_DAY)
+  const [baseAmount, setBaseAmount] = useState('')
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -50,6 +51,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
         frame: frameBudget ? Number(frame) || 0 : 0,
         linkedBudgetId: frameBudget && linkedBudgetId ? linkedBudgetId : null,
         billingDay,
+        baseAmount: Number(baseAmount) || 0,
       })
       onDone?.(budgetId)
     } catch {
@@ -116,7 +118,24 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
           </label>
 
           {!frameBudget && (
-            <BillingDayField value={billingDay} onChange={setBillingDay} />
+            <>
+              <label className="field">
+                סכום הבסיס לחודש
+                <input
+                  className="input num" type="number" inputMode="decimal" min="0" step="500"
+                  placeholder="אוטומטי לפי ההכנסה"
+                  value={baseAmount}
+                  onChange={(event) => setBaseAmount(event.target.value)}
+                />
+                <span className="type-hint">
+                  הסכום שאתם מתכננים לחלק כל חודש, והיעדים נגזרים ממנו.
+                  מה שייכנס מעבר לו יופיע כשארית. אפשר להשאיר ריק, ואז
+                  הוא ייגזר מההכנסה של כל חודש.
+                </span>
+              </label>
+
+              <BillingDayField value={billingDay} onChange={setBillingDay} />
+            </>
           )}
 
           {frameBudget && (
@@ -133,7 +152,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
 
               {linkTargets.length > 0 && (
                 <label className="field">
-                  {goal ? 'לזקוף לקרן של' : 'לחייב את הבלתם של'}
+                  {goal ? 'לזקוף לקרן של' : 'לחייב את השארית של'}
                   <select
                     className="input rtl"
                     value={linkedBudgetId}

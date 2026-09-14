@@ -371,7 +371,7 @@ describe('recurring templates', () => {
   })
 })
 
-describe('רשומת בלתם', () => {
+describe('רשומת שארית', () => {
   it('מתקבלת כקטגוריה חוקית', async () => {
     await assertSucceeds(
       setDoc(doc(as(OWNER), 'entries', 'u1'), entry({
@@ -858,5 +858,19 @@ describe('מועד חיוב', () => {
   it('חבר יכול לשנות אותו אחר כך', async () => {
     await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { billingDay: 15 }))
     await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { billingDay: 31 }))
+  })
+})
+
+describe('סכום בסיס מתוכנן', () => {
+  it('מספר אי שלילי מתקבל, וגם היעדר השדה', async () => {
+    await assertSucceeds(setDoc(doc(as(PARTNER), 'budgets', 'b-base'), {
+      name: 'הבית', ownerUid: PARTNER, type: 'household', baseAmount: 20000,
+    }))
+    await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { baseAmount: 0 }))
+  })
+
+  it('סכום שלילי או טקסט נדחים', async () => {
+    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { baseAmount: -1 }))
+    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { baseAmount: '20000' }))
   })
 })

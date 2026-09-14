@@ -23,6 +23,13 @@ service cloud.firestore {
         || (data.billingDay is int && data.billingDay >= 1 && data.billingDay <= 28);
     }
 
+    // סכום הבסיס שהמשתמש מתכנן. אופציונלי, ואפס פירושו גזירה
+    // אוטומטית מההכנסה, כפי שהיה לפני שהשדה היה קיים.
+    function validBaseAmount(data) {
+      return !('baseAmount' in data)
+        || (data.baseAmount is number && data.baseAmount >= 0);
+    }
+
     function memberExists(budgetId, uid) {
       return exists(/databases/$(database)/documents/budgets/$(budgetId)/members/$(uid));
     }
@@ -65,6 +72,7 @@ service cloud.firestore {
       // שדה type אין אותו כלל, וקריאה ישירה הייתה זורקת ושוברת כל עדכון.
       allow update: if isMember(budgetId)
         && validBillingDay(request.resource.data)
+        && validBaseAmount(request.resource.data)
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.get('type', 'household')
            == resource.data.get('type', 'household');

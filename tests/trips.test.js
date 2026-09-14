@@ -84,7 +84,7 @@ describe('summarizeGoal', () => {
 })
 
 describe('שורה מסכמת לפי סוג', () => {
-  it('טיול נכנס לבלתם ומטרה לקרן', async () => {
+  it('טיול נכנס לשארית ומטרה לקרן', async () => {
     const { rollupName } = await import('../src/lib/trips')
     expect(rollupName({ type: 'trip', name: 'יוון' })).toBe('טיול: יוון')
     expect(rollupName({ type: 'goal', name: 'רכב' })).toBe('חיסכון: רכב')

@@ -7,6 +7,7 @@ import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
 import RenameDialog from './RenameDialog'
 import BillingDayDialog from './BillingDayDialog'
+import BaseAmountDialog from './BaseAmountDialog'
 import Sheet from './Sheet'
 import InvitePanel from './InvitePanel'
 import { useEntries, entryActions } from '../hooks/useEntries'
@@ -15,7 +16,7 @@ import { createTemplate, skipMonth, stopTemplate } from '../lib/recurring'
 import { CATEGORIES, monthKey, summarizeMonth } from '../lib/model'
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
-import { deleteBudget, renameBudget, setBillingDay } from '../lib/budgets'
+import { deleteBudget, renameBudget, setBaseAmount, setBillingDay } from '../lib/budgets'
 
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
 
@@ -38,6 +39,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
   const [renaming, setRenaming] = useState(false)
   const [sharing, setSharing] = useState(false)
   const [editingBilling, setEditingBilling] = useState(false)
+  const [editingBase, setEditingBase] = useState(false)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
 
   const base = useMemo(() => entryActions({ budgetId, month, uid }), [budgetId, month, uid])
@@ -60,10 +62,17 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
     },
   }), [base, budgetId, month, uid])
 
-  const summary = useMemo(() => summarizeMonth(entries), [entries])
+  const fixedBase = budget?.baseAmount
+  const summary = useMemo(
+    () => summarizeMonth(entries, { fixedBase }),
+    [entries, fixedBase],
+  )
   // הקבוצות שכבר בשימוש החודש, כדי שהוספה חוזרת תהיה בחירה ולא הקלדה
   const groups = useMemo(() => usedGroups(entries), [entries])
-  const openSheet = (category, group = '') => { setPrefill(0); setSheet({ category, group }) }
+  const openSheet = (category, group = '', amount = 0) => {
+    setPrefill(amount)
+    setSheet({ category, group })
+  }
   // בלי הכנסה אין סכום בסיס, ולכן כל היעדים אפס וכל המסך חסר משמעות.
   // זו הפעולה הראשונה שצריך לעשות בחודש חדש, ולכן היא מקבלת הבלטה.
   const needsIncome = !loading && summary.totalIncome === 0
@@ -142,9 +151,10 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
               />
             ))}
 
-            {/* בלתם אחרונה: היא רזרבה שנותרה, לא חלק מהתכנון החודשי */}
+            {/* השארית אחרונה: היא מה שנותר מעבר לתוכנית, ולא חלק ממנה */}
             <UnplannedCard
               summary={summary}
+              onDeposit={(amount) => openSheet('fund', '', amount)}
               entries={byCategory.unplanned}
               authorOf={shared ? members.get : null}
               actions={actions}
@@ -158,6 +168,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
               </button>
               {isOwner && (
                 <>
+                  <button type="button" className="btn-text" onClick={() => setEditingBase(true)}>
+                    סכום הבסיס
+                  </button>
                   <button type="button" className="btn-text" onClick={() => setEditingBilling(true)}>
                     מועד חיוב
                   </button>
@@ -200,6 +213,17 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
         <Sheet onClose={() => setSharing(false)}>
           <InvitePanel budgetId={budgetId} budgetName={budget?.name} heading="הזמנה לתקציב" />
         </Sheet>
+      )}
+
+      {editingBase && (
+        <BaseAmountDialog
+          value={budget?.baseAmount}
+          onSave={async (next) => {
+            await setBaseAmount({ budgetId, baseAmount: next })
+            setEditingBase(false)
+          }}
+          onCancel={() => setEditingBase(false)}
+        />
       )}
 
       {editingBilling && (
