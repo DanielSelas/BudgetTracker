@@ -16,9 +16,12 @@ service cloud.firestore {
             && data.groupKey.size() <= 40);
     }
 
+    function memberExists(budgetId, uid) {
+      return exists(/databases/$(database)/documents/budgets/$(budgetId)/members/$(uid));
+    }
+
     function isMember(budgetId) {
-      return signedIn()
-        && exists(/databases/$(database)/documents/budgets/$(budgetId)/members/$(request.auth.uid));
+      return signedIn() && memberExists(budgetId, request.auth.uid);
     }
 
     function isOwner(budgetId) {
@@ -108,9 +111,15 @@ service cloud.firestore {
 
         allow read, delete: if isMember(budgetId);
 
+        // מי שהזין חייב להיות חבר בתקציב, אבל לא בהכרח הכותב. שותף
+        // שמעתיק רשומות, למשל בהעברת מבנה, חייב לשמר את מי שהזין
+        // אותן במקור. הקיצור לכותב בלבד מנע בדיוק את זה.
+        // התכונה שנשמרת היא שאי אפשר לייחס רשומה למי שאינו בתקציב,
+        // וזו ממילא אותה רמת אמון שבה שותף כבר יכול לערוך ולמחוק
+        // כל שורה של השני.
         allow create: if isMember(budgetId)
           && validEntry(request.resource.data)
-          && request.resource.data.addedBy == request.auth.uid;
+          && memberExists(budgetId, request.resource.data.addedBy);
 
         // מי שהזין נשאר מי שהזין, גם כששותף מעדכן סכום
         allow update: if isMember(budgetId)

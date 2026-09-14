@@ -29,7 +29,9 @@ export default function Migration() {
     try {
       await work()
     } catch (failure) {
-      setError(failure?.message || 'הפעולה נכשלה')
+      // הקוד של Firestore הוא מה שבאמת מסביר מה קרה, ולכן הוא מוצג
+      const code = failure?.code ? ` (${failure.code})` : ''
+      setError(`${failure?.message || 'הפעולה נכשלה'}${code}`)
     }
     setBusy('')
   }

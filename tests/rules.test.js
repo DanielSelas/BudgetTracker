@@ -793,3 +793,48 @@ describe('רשומות כתת אוסף של התקציב', () => {
     })))
   })
 })
+
+describe('מיגרציה: העתקת רשומות של שותף', () => {
+  it('חבר מעתיק רשומה שהשותף הזין, ושומר על מי שהזין אותה', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'budgets', BUDGET, 'members', PARTNER), {
+        uid: PARTNER, role: 'member',
+      })
+    })
+    const body = entry({ addedBy: PARTNER })
+    delete body.budgetId
+    // זה בדיוק מה שהמיגרציה עושה: הבעלים כותב שורה של השותף
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'copied'), body),
+    )
+  })
+})
+
+describe('מיגרציה: אצווה גדולה', () => {
+  it('אצווה של 150 רשומות משני מחברים עוברת', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'budgets', BUDGET, 'members', PARTNER), {
+        uid: PARTNER, role: 'member',
+      })
+    })
+
+    // כל כתיבה גוררת בדיקת חברות, ולכן זו גם בדיקה שהאצווה לא חורגת
+    // ממספר הגישות למסמכים שמותר בכלל אחד
+    const db = as(OWNER)
+    const batch = writeBatch(db)
+    for (let index = 0; index < 150; index += 1) {
+      const body = entry({ addedBy: index % 2 ? PARTNER : OWNER, name: `שורה ${index}` })
+      delete body.budgetId
+      batch.set(doc(db, 'budgets', BUDGET, 'entries', `bulk-${index}`), body)
+    }
+    await assertSucceeds(batch.commit())
+  })
+
+  it('אי אפשר לייחס רשומה למי שאינו חבר בתקציב', async () => {
+    const body = entry({ addedBy: STRANGER })
+    delete body.budgetId
+    await assertFails(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'forged'), body),
+    )
+  })
+})
