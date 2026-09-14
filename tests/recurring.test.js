@@ -59,9 +59,8 @@ describe('pendingTemplates', () => {
 
 describe('entryFromTemplate', () => {
   it('גוזר שורה מלאה עם קישור חזרה לתבנית', () => {
-    const entry = entryFromTemplate(template(), { budgetId: 'b1', month: '2026-10', uid: 'u1' })
+    const entry = entryFromTemplate(template(), { month: '2026-10', uid: 'u1' })
     expect(entry).toMatchObject({
-      budgetId: 'b1',
       month: '2026-10',
       category: 'fixed',
       budgetGroup: 'fixed',

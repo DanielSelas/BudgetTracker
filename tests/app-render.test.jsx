@@ -143,9 +143,11 @@ describe('סנכרון שורה מסכמת', () => {
     const payloads = firestore.setDoc.mock.calls.map((call) => call[1])
     expect(payloads.map((p) => p.actualAmount).sort((a, b) => a - b)).toEqual([800, 6000])
     expect(payloads[0]).toMatchObject({
-      budgetId: 'b1', category: 'unplanned', budgetGroup: 'none',
+      category: 'unplanned', budgetGroup: 'none',
       name: 'טיול: איטליה', addedBy: 'u1', linkedTripId: 't1',
     })
+    // התקציב עבר לנתיב, ולכן אסור שיישאר גם כשדה שיכול לסתור אותו
+    expect(payloads[0].budgetId).toBeUndefined()
   })
 
   it('לא עושה כלום כשאין קישור', async () => {

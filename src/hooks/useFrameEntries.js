@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
-import {
-  addDoc, collection, deleteDoc, doc, onSnapshot, query, updateDoc, where,
-} from 'firebase/firestore'
-import { db } from '../lib/firebase'
+import { deleteDoc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore'
+import { entriesRef, entryId, entryRef } from '../lib/paths'
 import { monthOfDate, todayDate } from '../lib/model'
 import { useRetry } from './useRetry'
 
@@ -25,7 +23,7 @@ export function useFrameEntries(budgetId) {
 
     setLoading(true)
     return onSnapshot(
-      query(collection(db, 'entries'), where('budgetId', '==', budgetId)),
+      entriesRef(budgetId),
       (snapshot) => {
         setEntries(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })))
         setLoading(false)
@@ -46,8 +44,8 @@ export function frameActions({ budgetId, uid }) {
   return {
     add: ({ category, name, actualAmount = 0, date }) => {
       const day = date || todayDate()
-      return addDoc(collection(db, 'entries'), {
-        budgetId,
+      const month = monthOfDate(day)
+      return setDoc(entryRef(budgetId, entryId({ month, category, name })), {
         category,
           // אין כאן יחס 50/30/20, ולכן אין שיוך לקבוצת תקציב
         budgetGroup: 'none',
@@ -56,13 +54,13 @@ export function frameActions({ budgetId, uid }) {
         actualAmount: Number(actualAmount) || 0,
         date: day,
         // החודש נגזר מהתאריך, כך שטיול שחוצה חודשים מתפצל נכון
-        month: monthOfDate(day),
+        month,
         note: '',
         addedBy: uid,
       })
     },
 
-    update: (entryId, changes) => updateDoc(doc(db, 'entries', entryId), changes),
-    remove: (entryId) => deleteDoc(doc(db, 'entries', entryId)),
+    update: (id, changes) => updateDoc(entryRef(budgetId, id), changes),
+    remove: (id) => deleteDoc(entryRef(budgetId, id)),
   }
 }

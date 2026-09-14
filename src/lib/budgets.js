@@ -3,8 +3,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  query,
-  where,
   onSnapshot,
   serverTimestamp,
   setDoc,
@@ -14,6 +12,7 @@ import {
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { DEFAULT_BILLING_DAY } from './model'
+import { entriesRef, entryRef } from './paths'
 
 const INVITE_TTL_DAYS = 7
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // בלי תווים שמתבלבלים: I,O,0,1
@@ -156,7 +155,7 @@ export function watchMemberships(uid, onChange, onError) {
  */
 export async function deleteBudget({ budgetId, ownerUid, memberUids }) {
   const [entries, templates] = await Promise.all([
-    getDocs(query(collection(db, 'entries'), where('budgetId', '==', budgetId))),
+    getDocs(entriesRef(budgetId)),
     getDocs(collection(db, 'budgets', budgetId, 'recurring')),
   ])
 
@@ -206,7 +205,10 @@ export function watchBudget(budgetId, onChange, onError) {
 export async function setFrameLink({ budgetId, previousLinkedId, months = [], linkedBudgetId }) {
   if (previousLinkedId && previousLinkedId !== linkedBudgetId && months.length > 0) {
     const batch = writeBatch(db)
-    for (const month of months) batch.delete(doc(db, 'entries', `trip_${budgetId}__${month}`))
+    // השורות המסכמות יושבות בתקציב שאליו הן נזקפו, ולא בתקציב המסגרת
+    for (const month of months) {
+      batch.delete(entryRef(previousLinkedId, `trip_${budgetId}__${month}`))
+    }
     await batch.commit()
   }
   await updateDoc(doc(db, 'budgets', budgetId), { linkedBudgetId: linkedBudgetId || null })
