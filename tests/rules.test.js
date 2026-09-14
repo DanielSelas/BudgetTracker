@@ -874,3 +874,19 @@ describe('סכום בסיס מתוכנן', () => {
     await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { baseAmount: '20000' }))
   })
 })
+
+describe('הפקדה מהיתרה', () => {
+  it('הדגל מתקבל כשהוא אמת', async () => {
+    const body = entry({ category: 'fund', budgetGroup: 'savings', fromRemainder: true })
+    delete body.budgetId
+    await assertSucceeds(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'r1'), body))
+  })
+
+  it('שקר או ערך שאינו בוליאני נדחים', async () => {
+    for (const value of [false, 'true', 1]) {
+      const body = entry({ category: 'fund', budgetGroup: 'savings', fromRemainder: value })
+      delete body.budgetId
+      await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'r2'), body))
+    }
+  })
+})

@@ -74,9 +74,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
   )
   // הקבוצות שכבר בשימוש החודש, כדי שהוספה חוזרת תהיה בחירה ולא הקלדה
   const groups = useMemo(() => usedGroups(entries), [entries])
-  const openSheet = (category, group = '', amount = 0) => {
+  const openSheet = (category, group = '', amount = 0, fromRemainder = false) => {
     setPrefill(amount)
-    setSheet({ category, group })
+    setSheet({ category, group, fromRemainder })
   }
   // בלי הכנסה אין סכום בסיס, ולכן כל היעדים אפס וכל המסך חסר משמעות.
   // זו הפעולה הראשונה שצריך לעשות בחודש חדש, ולכן היא מקבלת הבלטה.
@@ -162,7 +162,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
             {/* השארית אחרונה: היא מה שנותר מעבר לתוכנית, ולא חלק ממנה */}
             <UnplannedCard
               summary={summary}
-              onDeposit={(amount) => openSheet('fund', '', amount)}
+              onDeposit={(amount) => openSheet('fund', '', amount, true)}
               entries={byCategory.unplanned}
               authorOf={shared ? members.get : null}
               actions={actions}
@@ -207,6 +207,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
         <EntrySheet
           initialCategory={sheet.category}
           initialGroup={sheet.group}
+          fromRemainder={sheet.fromRemainder}
           groups={groups}
           initialAmount={prefill}
           summary={summary}

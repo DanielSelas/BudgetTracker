@@ -470,3 +470,41 @@ describe('המחזור שרץ עכשיו', () => {
     expect(isMonthClosed('2026-09', 10, at('2026-10-10T09:00:00'))).toBe(true)
   })
 })
+
+describe('הפקדה מהיתרה', () => {
+  const income = (actualAmount) => ({ category: 'income', budgetGroup: 'none', actualAmount })
+  const unplanned = (actualAmount) => ({ category: 'unplanned', budgetGroup: 'none', actualAmount })
+  const deposit = (actualAmount, fromRemainder = false) => ({
+    category: 'fund', budgetGroup: 'savings', actualAmount, fromRemainder,
+  })
+
+  it('הפקדה רגילה לא נוגעת ביתרה', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    const s = summarizeMonth([income(22500), deposit(4000)], { fixedBase: 20000 })
+    expect(s.unplanned.reserve).toBe(2500)
+    expect(s.unplanned.remaining).toBe(2500)
+  })
+
+  it('הפקדה מהיתרה מקטינה אותה, אחרת אותו כסף היה מוצע להפקדה שוב', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    const s = summarizeMonth([income(22500), deposit(2500, true)], { fixedBase: 20000 })
+    expect(s.unplanned.remaining).toBe(0)
+    expect(s.unplanned.deposited).toBe(2500)
+  })
+
+  it('בלת״ם והפקדה מהיתרה מצטברים יחד', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    const s = summarizeMonth(
+      [income(22500), unplanned(510), deposit(1000, true)],
+      { fixedBase: 20000 },
+    )
+    expect(s.unplanned.spent).toBe(1510)
+    expect(s.unplanned.remaining).toBe(990)
+  })
+
+  it('ההפקדה עדיין נספרת בהפקדות, כי היא באמת הופקדה', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    const s = summarizeMonth([income(22500), deposit(2500, true)], { fixedBase: 20000 })
+    expect(s.groups.savings.actual).toBe(2500)
+  })
+})

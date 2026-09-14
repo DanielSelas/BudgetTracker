@@ -12,11 +12,14 @@ import { EXPENSE_PILLS } from '../lib/pills'
  *
  * הבלת״ם הוא מה שכן יוצא ממנה, ולכן הוא כותרת משנה בתוך הכרטיס ולא
  * כרטיס נפרד: זה אותו כסף, רק בכיוון ההפוך.
+ *
+ * והבלת״ם קודם להצעת ההפקדה, כי הוא יורד מהיתרה. מפקידים את מה
+ * שנשאר אחריו, ולכן ההצעה היא השורה האחרונה ולא הראשונה.
  */
 export default function UnplannedCard({
   summary, entries = [], authorOf, actions, onAdd, onDeposit, onStopRecurring,
 }) {
-  const { reserve, spent, remaining } = summary.unplanned
+  const { reserve, spent, remaining, deposited } = summary.unplanned
   const over = remaining < 0
   const progress = reserve > 0 ? Math.min(100, (spent / reserve) * 100) : 0
   // הצעה להפקיד רק כשיש ממש מה להפקיד, ולא על שאריות של שקלים בודדים
@@ -54,17 +57,6 @@ export default function UnplannedCard({
         </p>
       )}
 
-      {worthDepositing && (
-        <button type="button" className="prompt-card" data-category="fund" onClick={() => onDeposit?.(remaining)}>
-          <span className="prompt-title">נשארו {shekels(remaining)} מעבר לתוכנית</span>
-          <span className="prompt-body">
-            זה כסף שלא תוכנן להוצאה החודש. אפשר להשאיר אותו כאן לכל מקרה,
-            אבל אם אין לו ייעוד עדיף להפקיד אותו.
-          </span>
-          <span className="prompt-cta">+ הפקדה</span>
-        </button>
-      )}
-
       {reserve > 0 && (
         <div className="subsection">
           <h3>בלת״ם</h3>
@@ -87,6 +79,24 @@ export default function UnplannedCard({
           </button>
         </div>
       )}
+
+      {worthDepositing && (
+        <button type="button" className="prompt-card" data-category="fund" onClick={() => onDeposit?.(remaining)}>
+          <span className="prompt-title">נשארו {shekels(remaining)} מעבר לתוכנית</span>
+          <span className="prompt-body">
+            זה כסף שלא תוכנן להוצאה החודש. אפשר להשאיר אותו כאן לכל מקרה,
+            אבל אם אין לו ייעוד עדיף להפקיד אותו.
+          </span>
+          <span className="prompt-cta">+ הפקדה</span>
+        </button>
+      )}
+
+      {deposited > 0 && (
+        <p className="hint">
+          מתוך היתרה כבר הופקדו <strong className="num">{shekels(deposited)}</strong>.
+        </p>
+      )}
+
     </section>
   )
 }

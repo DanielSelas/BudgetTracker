@@ -38,6 +38,7 @@ export default function EntrySheet({
   initialCategory = 'fixed',
   initialGroup = '',
   initialAmount = 0,
+  fromRemainder = false,
   groups = [],
   summary,
   me,
@@ -134,6 +135,7 @@ export default function EntrySheet({
             plannedAmount: Number(planned) || 0,
             recurring,
             groupKey: normalizeGroup(group),
+            fromRemainder,
           })
       onClose()
     } catch {

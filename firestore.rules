@@ -123,7 +123,8 @@ service cloud.firestore {
                     && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
                     && data.date[0:7] == data.month))
             && data.addedBy is string
-            && validGroupKey(data);
+            && validGroupKey(data)
+            && (!('fromRemainder' in data) || data.fromRemainder == true);
         }
 
         allow read, delete: if isMember(budgetId);
@@ -233,7 +234,10 @@ service cloud.firestore {
                   && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
                   && data.date[0:7] == data.month))
           && data.addedBy is string
-          && validGroupKey(data);
+          && validGroupKey(data)
+          // הפקדה שמומנה מהיתרה. אם קיים, חייב להיות אמת: הדגל מסמן
+          // מצב אחד ואין משמעות לכתיבתו כשקר
+          && (!('fromRemainder' in data) || data.fromRemainder == true);
       }
 
       // resource הוא null כשהמסמך לא קיים, וגישה ל-resource.data הייתה

@@ -95,9 +95,12 @@ export function summarizeMonth(entries, { fixedBase } = {}) {
     ? Math.min(planned, totalIncome)
     : calcBaseAmount(totalIncome)
 
-  // הרזרבה היא המרווח הנזיל; מה שהוצא ממנה מקטין אותה בזמן אמת
+  // היתרה קטנה משני דברים: בלת״ם, והפקדה שנעשתה מתוכה.
+  // בלי הספירה של ההפקדה היא הייתה נשארת על גובהה גם אחרי שהופקדה,
+  // ואותו כסף היה מוצע להפקדה שוב ושוב.
   const reserve = calcUnplanned(totalIncome, baseAmount)
-  const unplannedSpent = sumActual(unplannedEntries)
+  const depositedFromRemainder = sumActual(entries.filter((entry) => entry.fromRemainder))
+  const unplannedSpent = sumActual(unplannedEntries) + depositedFromRemainder
 
   const groups = {}
   for (const group of Object.keys(BUDGET_GROUP_RATIOS)) {
@@ -125,6 +128,7 @@ export function summarizeMonth(entries, { fixedBase } = {}) {
     unplanned: {
       reserve,
       spent: unplannedSpent,
+      deposited: depositedFromRemainder,
       remaining: reserve - unplannedSpent,
       planned: sumPlanned(unplannedEntries),
     },

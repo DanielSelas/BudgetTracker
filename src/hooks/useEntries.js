@@ -66,7 +66,10 @@ export function useEntries(budgetId, month) {
 /** פעולות כתיבה על רשומות. budgetGroup נגזר מהקטגוריה ואינו נבחר ידנית. */
 export function entryActions({ budgetId, month, uid }) {
   return {
-    add: ({ category, name, plannedAmount = 0, actualAmount = 0, note = '', groupKey = '' }) =>
+    add: ({
+      category, name, plannedAmount = 0, actualAmount = 0, note = '',
+      groupKey = '', fromRemainder = false,
+    }) =>
       addDoc(collection(db, 'entries'), {
         budgetId,
         month,
@@ -79,6 +82,8 @@ export function entryActions({ budgetId, month, uid }) {
         addedBy: uid,
         // שדה ריק לא נכתב בכלל, כדי שרשומה בלי קיבוץ תישאר כפי שהייתה
         ...(groupKey ? { groupKey } : {}),
+        // הפקדה שמומנה מהיתרה, ולכן מקטינה אותה ולא רק מוסיפה להפקדות
+        ...(fromRemainder ? { fromRemainder: true } : {}),
       }),
 
     // קבוצת התקציב נגזרת מהקטגוריה ולא נבחרת, ולכן שינוי קטגוריה
