@@ -196,6 +196,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
             />
 
             <div className="owner-actions">
+              <button type="button" className="btn-text" onClick={() => setShowCommitments(true)}>
+                חיובים קבועים
+              </button>
               <button type="button" className="btn-text" onClick={() => setSharing(true)}>
                 הזמנת שותף
               </button>

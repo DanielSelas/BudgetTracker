@@ -490,3 +490,45 @@ describe('פרופיל נוצר בכניסה הראשונה', () => {
     expect(firestore.setDoc).not.toHaveBeenCalled()
   })
 })
+
+describe('דרכי כניסה למסכי התקציב', () => {
+  /**
+   * כפתור שנבנה אבל לא חוּוט הוא בדיוק מה שקרה כאן: המסך היה מוכן
+   * ולא הייתה ממנו דרך להיכנס. בדיקה אחת על כל כפתור מונעת את זה.
+   */
+  const ACTIONS = [
+    'חיובים קבועים',
+    'הזמנת שותף',
+    'סכום הבסיס',
+    'מועד חיוב',
+    'שינוי שם התקציב',
+    'מחיקת התקציב',
+  ]
+
+  it('כל פעולות התקציב מופיעות לבעלים', async () => {
+    const { default: MonthView } = await import('../src/components/MonthView')
+    const { getByText } = await renderWithContexts(
+      <MonthView budgetId="b1" budget={household} uid="u1" />,
+    )
+    for (const label of ACTIONS) expect(getByText(label)).toBeTruthy()
+  })
+
+  it('לחיצה על חיובים קבועים פותחת את המסך', async () => {
+    const { default: MonthView } = await import('../src/components/MonthView')
+    const { getByText, container } = await renderWithContexts(
+      <MonthView budgetId="b1" budget={household} uid="u1" />,
+    )
+    fireEvent.click(getByText('חיובים קבועים'))
+    expect(container.textContent).toContain('+ חיוב קבוע חדש')
+  })
+
+  it('שותף שאינו בעלים רואה שיתוף וחיובים, לא מחיקה', async () => {
+    const { default: MonthView } = await import('../src/components/MonthView')
+    const { getByText, queryByText } = await renderWithContexts(
+      <MonthView budgetId="b1" budget={household} uid="u2" />,
+    )
+    expect(getByText('חיובים קבועים')).toBeTruthy()
+    expect(getByText('הזמנת שותף')).toBeTruthy()
+    expect(queryByText('מחיקת התקציב')).toBeNull()
+  })
+})
