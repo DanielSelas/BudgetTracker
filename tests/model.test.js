@@ -269,23 +269,32 @@ describe('תאריך רשומה', () => {
   })
 })
 
-describe('השלמת שם חסר', () => {
+describe('השלמת מסמך החבר', () => {
+  const MAIL = 'd@mail.com'
+
   it('מזהה שם חסר או שונה', async () => {
-    const { needsDisplayName } = await import('../src/lib/members')
-    expect(needsDisplayName({ uid: 'u1' }, 'דניאל')).toBe(true)
-    expect(needsDisplayName({ uid: 'u1', displayName: '' }, 'דניאל')).toBe(true)
-    expect(needsDisplayName({ uid: 'u1', displayName: 'ישן' }, 'דניאל')).toBe(true)
+    const { needsMemberSync } = await import('../src/lib/members')
+    expect(needsMemberSync({ uid: 'u1' }, 'דניאל', MAIL)).toBe(true)
+    expect(needsMemberSync({ uid: 'u1', displayName: '' }, 'דניאל', MAIL)).toBe(true)
+    expect(needsMemberSync({ uid: 'u1', displayName: 'ישן' }, 'דניאל', MAIL)).toBe(true)
   })
 
-  it('לא נוגע כששם כבר נכון, כדי לא לכתוב בכל טעינה', async () => {
-    const { needsDisplayName } = await import('../src/lib/members')
-    expect(needsDisplayName({ uid: 'u1', displayName: 'דניאל' }, 'דניאל')).toBe(false)
+  it('מזהה מייל חסר גם כששם כבר נכון', async () => {
+    const { needsMemberSync } = await import('../src/lib/members')
+    // זה היה הבאג: ההשלמה דילגה על מי ששמו נכון, ולכן המייל לא נכתב
+    expect(needsMemberSync({ uid: 'u1', displayName: 'דניאל' }, 'דניאל', MAIL)).toBe(true)
   })
 
-  it('בלי שם להשלים ממנו, לא עושה כלום', async () => {
-    const { needsDisplayName } = await import('../src/lib/members')
-    expect(needsDisplayName({ uid: 'u1' }, '')).toBe(false)
-    expect(needsDisplayName(null, 'דניאל')).toBe(false)
+  it('לא נוגע כששניהם נכונים, כדי לא לכתוב בכל טעינה', async () => {
+    const { needsMemberSync } = await import('../src/lib/members')
+    expect(needsMemberSync({ uid: 'u1', displayName: 'דניאל', email: MAIL }, 'דניאל', MAIL))
+      .toBe(false)
+  })
+
+  it('בלי שם ובלי מייל להשלים מהם, לא עושה כלום', async () => {
+    const { needsMemberSync } = await import('../src/lib/members')
+    expect(needsMemberSync({ uid: 'u1' }, '', '')).toBe(false)
+    expect(needsMemberSync(null, 'דניאל', MAIL)).toBe(false)
   })
 })
 

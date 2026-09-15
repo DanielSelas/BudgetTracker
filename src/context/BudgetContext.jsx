@@ -3,7 +3,7 @@ import {
   healOwnerEmail, memberLabel, setMemberName, syncMemberEmails,
   watchBudget, watchMembers, watchMemberships,
 } from '../lib/budgets'
-import { needsDisplayName } from '../lib/members'
+import { needsMemberSync } from '../lib/members'
 import { useAuth } from './AuthContext'
 
 // מיוצא כדי שאפשר יהיה להרכיב אותו בבדיקות רינדור
@@ -71,9 +71,10 @@ export function BudgetProvider({ children }) {
     for (const [budgetId, members] of Object.entries(membersById)) {
       if (healed.current.has(budgetId) || !members) continue
       const mine = members.find((member) => member.uid === uid)
-      if (!mine || !needsDisplayName(mine, myName)) continue
+      const myEmail = user?.email || ''
+      if (!mine || !needsMemberSync(mine, myName, myEmail)) continue
       healed.current.add(budgetId)
-      setMemberName({ budgetId, uid, displayName: myName, email: user?.email || '' }).catch(() => {})
+      setMemberName({ budgetId, uid, displayName: myName, email: myEmail }).catch(() => {})
     }
   }, [membersById, uid, user])
 

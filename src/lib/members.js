@@ -51,10 +51,13 @@ export function membersSentence(members, profiles = {}) {
 }
 
 /**
- * משלים שם חסר במסמך החבר. חברים שנוצרו לפני שהשדה הזה נוסף מוצגים
- * כ"שותף", וזה מתקן את עצמו בכניסה הבאה בלי שהמשתמש יעשה דבר.
+ * האם מסמך החבר שלי צריך השלמה.
+ *
+ * בודק שם ומייל ולא רק שם: מי שהשם שלו כבר היה נכון לא היה מקבל
+ * לעולם את שדה המייל, כי ההשלמה כולה הייתה מדלגת עליו.
  */
-export function needsDisplayName(member, name) {
-  if (!member || !name) return false
-  return member.displayName !== name
+export function needsMemberSync(member, name, email) {
+  if (!member) return false
+  if (name && member.displayName !== name) return true
+  return Boolean(email) && member.email !== email
 }
