@@ -68,8 +68,10 @@ export default function BudgetHome() {
             <h1>התקציבים שלי</h1>
             <p className="muted">{user.email}</p>
           </div>
-          <button type="button" className="btn-round" aria-label="התנתקות" onClick={signOut}>
-            ↪
+          {/* טקסט ולא סמל: ל-↪ יש גרסת אימוג׳י, ו-iOS צבע אותו כאימוג׳י
+              בתוך ממשק שכולו טיפוגרפי */}
+          <button type="button" className="btn-text quiet" onClick={signOut}>
+            התנתקות
           </button>
         </header>
 

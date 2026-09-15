@@ -1987,3 +1987,17 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .back-link:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
 .back-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+/* פעולה משנית בכותרת מסך, למשל התנתקות */
+.btn-text.quiet {
+  align-self: center;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-neutral-600);
+  padding: 6px 8px;
+  margin-inline-end: -8px;
+  white-space: nowrap;
+}
+
+.btn-text.quiet:hover { color: var(--color-neutral-800); }

@@ -99,7 +99,7 @@ function Home() {
       <div className="app-scroll">
         <header className="screen-head">
           <div><h1>התקציבים שלי</h1><p className="muted">daniel@mail.com</p></div>
-          <button type="button" className="btn-round">↪</button>
+          <button type="button" className="btn-text quiet">התנתקות</button>
         </header>
         <ul className="budget-list">
           <li><button type="button" className="budget-card shared">
@@ -131,11 +131,6 @@ function Home() {
           </button></li>
         </ul>
         <button type="button" className="dashed-card">+ תקציב חדש או הצטרפות עם קוד</button>
-        <section className="invite-panel">
-          <h2>להזמין את בן/בת הזוג</h2>
-          <p className="sub">קוד חד פעמי לשבוע, נשלח בוואטסאפ.</p>
-          <span className="invite-code">K7M2QX4B</span>
-        </section>
       </div>
       <BottomNav active="budgets" onChange={noop} />
     </main>
