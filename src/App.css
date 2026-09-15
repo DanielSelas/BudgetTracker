@@ -1968,3 +1968,22 @@ input[type='date']::-webkit-calendar-picker-indicator {
   font-size: 17px;
   color: var(--cat-ink, var(--color-neutral-700));
 }
+
+/* יציאה מהתקציב, מעל בורר החודשים */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 4px 10px 4px 12px;
+  margin-inline-start: -10px;
+  margin-bottom: 2px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-neutral-700);
+  min-height: 32px;
+}
+
+.back-link:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
+.back-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }

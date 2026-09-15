@@ -430,3 +430,35 @@ describe('הזמנה שייכת לתקציב שממנו נפתחה', () => {
     expect(container.textContent).not.toContain('קוד הזמנה')
   })
 })
+
+describe('יציאה לרשימת התקציבים', () => {
+  it('כפתור חזרה מעל בורר החודשים', async () => {
+    const { default: MonthView } = await import('../src/components/MonthView')
+    const onBack = vi.fn()
+    const { getByText } = await renderWithContexts(
+      <MonthView budgetId="b1" budget={household} uid="u1" onBack={onBack} />,
+    )
+    fireEvent.click(getByText('התקציבים שלי'))
+    expect(onBack).toHaveBeenCalled()
+  })
+
+  it('קיים גם במסך הטיול ובמסך המטרה', async () => {
+    const { default: TripView } = await import('../src/components/TripView')
+    const { default: GoalView } = await import('../src/components/GoalView')
+
+    const onTripBack = vi.fn()
+    const trips = await renderWithContexts(
+      <TripView budgetId="t1" budget={trip} uid="u1" onDeleted={onTripBack} />,
+    )
+    fireEvent.click(trips.getByText('התקציבים שלי'))
+    expect(onTripBack).toHaveBeenCalled()
+    cleanup()
+
+    const onGoalBack = vi.fn()
+    const goals = await renderWithContexts(
+      <GoalView budgetId="g1" budget={goal} uid="u1" onDeleted={onGoalBack} />,
+    )
+    fireEvent.click(goals.getByText('התקציבים שלי'))
+    expect(onGoalBack).toHaveBeenCalled()
+  })
+})

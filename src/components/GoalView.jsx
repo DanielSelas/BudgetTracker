@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import EntryRow from './EntryRow'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
+import BackToBudgets from './BackToBudgets'
 import RenameDialog from './RenameDialog'
 import Sheet from './Sheet'
 import InvitePanel from './InvitePanel'
@@ -64,6 +65,7 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
   return (
     <>
       <div className="sticky-head">
+        <BackToBudgets onClick={onDeleted} />
         <header className="trip-head">
           <h1>{budget?.name || 'מטרת חיסכון'}</h1>
           <p className="muted">{shared ? `משותף · ${members.sorted.length}` : 'אישי'}</p>

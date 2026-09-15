@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import Avatar from '../components/Avatar'
 import Welcome from '../components/Welcome'
+import BackToBudgets from '../components/BackToBudgets'
 import BottomNav from '../components/BottomNav'
 import CategoryCard from '../components/CategoryCard'
 import UnplannedCard from '../components/UnplannedCard'
@@ -58,6 +59,7 @@ function Month() {
   return (
     <main className="app">
       <div className="sticky-head">
+        <BackToBudgets onClick={noop} />
         <MonthPicker month="2026-09" onChange={noop} subtitle="משק הבית · משותף" billingDay={10} />
       </div>
       <div className="app-scroll">

@@ -4,6 +4,7 @@ import SummaryCard from './SummaryCard'
 import MonthVerdict from './MonthVerdict'
 import UnplannedCard from './UnplannedCard'
 import MonthPicker from './MonthPicker'
+import BackToBudgets from './BackToBudgets'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
 import RenameDialog from './RenameDialog'
@@ -31,7 +32,7 @@ function Skeleton() {
   )
 }
 
-export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
+export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDeleted }) {
   const billingDay = budget?.billingDay
   // נפתח על המחזור שרץ עכשיו, שאינו בהכרח החודש שבלוח
   const [month, setMonth] = useState(() => activeMonth(billingDay))
@@ -108,6 +109,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onDeleted }) {
   return (
     <>
       <div className="sticky-head">
+        <BackToBudgets onClick={onBack} />
         <MonthPicker
           month={month}
           onChange={setMonth}
