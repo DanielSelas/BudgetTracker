@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { entryRef } from './paths'
-import { CATEGORIES } from './model'
+import { CATEGORIES, shiftMonth } from './model'
 import { recurringId as readableRecurringId } from './paths'
 
 const templatesRef = (budgetId) => collection(db, 'budgets', budgetId, 'recurring')
@@ -31,7 +31,8 @@ export function watchTemplates(budgetId, onChange, onError) {
 }
 
 export function createTemplate({
-  budgetId, uid, month, category, name, plannedAmount, actualAmount, groupKey = '',
+  budgetId, uid, month, category, name, plannedAmount, actualAmount,
+  groupKey = '', endMonth = '',
 }) {
   const ref = doc(templatesRef(budgetId), readableRecurringId({ category, name }))
   return setDoc(ref, {
@@ -41,6 +42,10 @@ export function createTemplate({
     plannedAmount: Number(plannedAmount) || 0,
     actualAmount: Number(actualAmount) || 0,
     startMonth: month,
+    // חיוב קבוע אינו לנצח: שכירות היא לשנה, ביטוח לשנה, והלוואה
+    // למספר תשלומים ידוע. בלי סיום, כל מבט קדימה מניח התחייבות
+    // שכבר לא קיימת.
+    ...(endMonth ? { endMonth } : {}),
     active: true,
     skipMonths: [],
     createdBy: uid,
@@ -70,9 +75,34 @@ export function pendingTemplates(templates, entries, month) {
   return templates.filter((template) =>
     template.active &&
     template.startMonth <= month &&
+    !isEnded(template, month) &&
     !(template.skipMonths || []).includes(month) &&
     !existing.has(template.id),
   )
+}
+
+/** החודש האחרון שבו החיוב נוצר. חודש ריק פירושו בלי סיום. */
+export const isEnded = (template, month) =>
+  Boolean(template?.endMonth) && month > template.endMonth
+
+/**
+ * התחייבויות שנגמרות החודש או בחודש הבא.
+ * זה הרגע שבו מחדשים שכירות או ביטוח, ולכן שווה לומר אותו לפני
+ * שהחיוב פשוט מפסיק להופיע בלי הסבר.
+ */
+export function endingSoon(templates = [], month) {
+  const next = shiftMonth(month, 1)
+  return templates
+    .filter((template) => template.active && template.endMonth)
+    .filter((template) => template.endMonth === month || template.endMonth === next)
+    .map((template) => ({ ...template, endsThisMonth: template.endMonth === month }))
+}
+
+/** מספר תשלומים מתורגם לחודש הסיום, כי בנתונים נשמר מושג אחד. */
+export function endAfterPayments(startMonth, payments) {
+  const count = Number(payments)
+  if (!startMonth || !Number.isInteger(count) || count < 1) return ''
+  return shiftMonth(startMonth, count - 1)
 }
 
 /** שורת החודש שנגזרת מתבנית. */

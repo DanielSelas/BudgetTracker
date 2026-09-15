@@ -71,3 +71,52 @@ describe('entryFromTemplate', () => {
     })
   })
 })
+
+describe('חיוב קבוע לתקופה', () => {
+  const template = (extra = {}) => ({
+    id: 'r1', active: true, startMonth: '2026-09', skipMonths: [],
+    category: 'fixed', budgetGroup: 'fixed', name: 'שכר דירה',
+    plannedAmount: 5200, actualAmount: 5200, ...extra,
+  })
+
+  it('בלי סיום ממשיך כמו קודם', async () => {
+    const { pendingTemplates } = await import('../src/lib/recurring')
+    expect(pendingTemplates([template()], [], '2027-05')).toHaveLength(1)
+  })
+
+  it('אחרי חודש הסיום מפסיק להיווצר', async () => {
+    const { pendingTemplates } = await import('../src/lib/recurring')
+    const rent = template({ endMonth: '2027-08' })
+    expect(pendingTemplates([rent], [], '2027-08')).toHaveLength(1)
+    expect(pendingTemplates([rent], [], '2027-09')).toHaveLength(0)
+  })
+
+  it('חודש הסיום עצמו עדיין נוצר', async () => {
+    const { isEnded } = await import('../src/lib/recurring')
+    expect(isEnded(template({ endMonth: '2027-08' }), '2027-08')).toBe(false)
+    expect(isEnded(template({ endMonth: '2027-08' }), '2027-09')).toBe(true)
+    expect(isEnded(template(), '2030-01')).toBe(false)
+  })
+
+  it('מספר תשלומים מתורגם לחודש סיום, כולל התשלום הראשון', async () => {
+    const { endAfterPayments } = await import('../src/lib/recurring')
+    expect(endAfterPayments('2026-09', 1)).toBe('2026-09')
+    expect(endAfterPayments('2026-09', 12)).toBe('2027-08')
+    expect(endAfterPayments('2026-09', 0)).toBe('')
+    expect(endAfterPayments('', 12)).toBe('')
+  })
+
+  it('מתריע על מה שנגמר החודש או בחודש הבא בלבד', async () => {
+    const { endingSoon } = await import('../src/lib/recurring')
+    const list = [
+      template({ id: 'a', endMonth: '2026-09' }),
+      template({ id: 'b', endMonth: '2026-10' }),
+      template({ id: 'c', endMonth: '2026-12' }),
+      template({ id: 'd' }),
+    ]
+    const soon = endingSoon(list, '2026-09')
+    expect(soon.map((item) => item.id)).toEqual(['a', 'b'])
+    expect(soon[0].endsThisMonth).toBe(true)
+    expect(soon[1].endsThisMonth).toBe(false)
+  })
+})

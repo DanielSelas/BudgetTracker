@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import Avatar from './Avatar'
 import Sheet from './Sheet'
-import { shekels } from '../lib/format'
+import { monthLabel, shekels } from '../lib/format'
 import { MAX_GROUP_LENGTH, SUGGESTED_GROUPS, normalizeGroup } from '../lib/groups'
+import { endAfterPayments } from '../lib/recurring'
 import { EXPENSE_PILLS, GOAL_PILLS, TRIP_PILLS } from '../lib/pills'
 import { CATEGORIES, calcBaseAmount, groupTarget, incomeOverage, todayDate } from '../lib/model'
 
@@ -40,6 +41,7 @@ export default function EntrySheet({
   initialAmount = 0,
   fromRemainder = false,
   groups = [],
+  month = '',
   summary,
   me,
   partner,
@@ -56,6 +58,10 @@ export default function EntrySheet({
   const [name, setName] = useState('')
   const [planned, setPlanned] = useState('')
   const [recurring, setRecurring] = useState(false)
+  // 'open' בלי סיום, 'until' עד חודש, 'count' מספר תשלומים
+  const [term, setTerm] = useState('open')
+  const [untilMonth, setUntilMonth] = useState('')
+  const [payments, setPayments] = useState('')
   const [group, setGroup] = useState(initialGroup)
   const [date, setDate] = useState(todayDate)
   const [busy, setBusy] = useState(false)
@@ -65,6 +71,11 @@ export default function EntrySheet({
 
   const value = Number(amount) || 0
   const isIncome = category === 'income'
+  const endMonth = !recurring || term === 'open'
+    ? ''
+    : term === 'until'
+      ? untilMonth
+      : endAfterPayments(month, payments)
 
   // התצוגה המקדימה היא מה שהופך את הטופס לשימושי: רואים את ההשפעה לפני השמירה
   const impact = useMemo(() => {
@@ -134,6 +145,7 @@ export default function EntrySheet({
             actualAmount: value,
             plannedAmount: Number(planned) || 0,
             recurring,
+            endMonth,
             groupKey: normalizeGroup(group),
             fromRemainder,
           })
@@ -268,6 +280,57 @@ export default function EntrySheet({
               <span className="switch"><span className="knob" /></span>
             </button>
           </div>
+          )}
+
+          {recurring && !frame && (
+            <div className="term-field">
+              <div className="cat-pills tight">
+                <button
+                  type="button" className="cat-pill"
+                  aria-pressed={term === 'open'} onClick={() => setTerm('open')}
+                >
+                  בלי סיום
+                </button>
+                <button
+                  type="button" className="cat-pill"
+                  aria-pressed={term === 'until'} onClick={() => setTerm('until')}
+                >
+                  עד חודש
+                </button>
+                <button
+                  type="button" className="cat-pill"
+                  aria-pressed={term === 'count'} onClick={() => setTerm('count')}
+                >
+                  מספר תשלומים
+                </button>
+              </div>
+
+              {term === 'until' && (
+                <input
+                  className="input ltr"
+                  type="month"
+                  min={month}
+                  value={untilMonth}
+                  onChange={(event) => setUntilMonth(event.target.value)}
+                />
+              )}
+
+              {term === 'count' && (
+                <input
+                  className="input num"
+                  type="number" inputMode="numeric" min="1" max="120"
+                  placeholder="למשל 12"
+                  value={payments}
+                  onChange={(event) => setPayments(event.target.value)}
+                />
+              )}
+
+              <span className="type-hint">
+                {endMonth
+                  ? `החיוב ייווצר עד ${monthLabel(endMonth)} ואז יפסיק מעצמו.`
+                  : 'שכירות וביטוח הם לתקופה, והלוואה למספר תשלומים ידוע.'}
+              </span>
+            </div>
           )}
         </div>
 

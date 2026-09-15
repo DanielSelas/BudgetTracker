@@ -985,3 +985,25 @@ describe('רשימת חברים לתצוגה', () => {
     }))
   })
 })
+
+describe('סיום לחיוב קבוע', () => {
+  const template = (extra = {}) => ({
+    category: 'fixed', budgetGroup: 'fixed', name: 'שכר דירה',
+    plannedAmount: 5200, actualAmount: 5200, startMonth: '2026-09',
+    active: true, skipMonths: [], createdBy: OWNER, ...extra,
+  })
+
+  it('חודש סיום תקין מתקבל, וגם היעדרו', async () => {
+    await assertSucceeds(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'recurring', 't1'),
+      template({ endMonth: '2027-08' })))
+    await assertSucceeds(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'recurring', 't2'),
+      template()))
+  })
+
+  it('סיום לפני ההתחלה או בפורמט שגוי נדחה', async () => {
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'recurring', 't3'),
+      template({ endMonth: '2026-08' })))
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'recurring', 't4'),
+      template({ endMonth: 'אוגוסט' })))
+  })
+})

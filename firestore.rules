@@ -111,6 +111,11 @@ service cloud.firestore {
             && data.active is bool
             && data.skipMonths is list
             && data.skipMonths.size() <= 120
+            // סיום אופציונלי, ואם יש הוא חודש תקין שאינו לפני ההתחלה
+            && (!('endMonth' in data)
+                || (data.endMonth is string
+                    && data.endMonth.matches('^[0-9]{4}-[0-9]{2}$')
+                    && data.endMonth >= data.startMonth))
             && validGroupKey(data);
         }
 

@@ -2085,3 +2085,28 @@ input[type='date']::-webkit-calendar-picker-indicator {
   text-overflow: ellipsis;
   max-width: 11ch;
 }
+
+/* תקופת החיוב הקבוע, נפתחת רק כשהמתג דלוק */
+.term-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  margin-top: -2px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+}
+
+/* ========== התחייבויות שמסתיימות ========== */
+
+.ending-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--radius-card);
+  background: var(--color-neutral-100);
+  border: 1px solid var(--color-neutral-300);
+}
+
+.ending-card h2 { margin: 0; font-size: 18px; }

@@ -225,7 +225,7 @@ function SheetShot() {
   return (
     <>
       <Month />
-      <EntrySheet initialCategory="fixed" summary={summary}
+      <EntrySheet month="2026-09" initialCategory="fixed" summary={summary}
         me={{ member: m1, index: 0 }} partner="נועה" onSubmit={async () => {}} onClose={noop} />
     </>
   )

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import CategoryCard from './CategoryCard'
 import SummaryCard from './SummaryCard'
 import MonthVerdict from './MonthVerdict'
+import EndingSoon from './EndingSoon'
 import UnplannedCard from './UnplannedCard'
 import MonthPicker from './MonthPicker'
 import BackToBudgets from './BackToBudgets'
@@ -14,7 +15,7 @@ import Sheet from './Sheet'
 import InvitePanel from './InvitePanel'
 import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
-import { createTemplate, skipMonth, stopTemplate } from '../lib/recurring'
+import { createTemplate, endingSoon, skipMonth, stopTemplate } from '../lib/recurring'
 import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth } from '../lib/model'
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
@@ -50,9 +51,10 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
 
   const base = useMemo(() => entryActions({ budgetId, month, uid }), [budgetId, month, uid])
-  const { error: recurringError } = useRecurring({
+  const { templates, error: recurringError } = useRecurring({
     budgetId, month, uid, entries, entriesLoaded: !loading,
   })
+  const ending = useMemo(() => endingSoon(templates, month), [templates, month])
 
   const actions = useMemo(() => ({
     ...base,
@@ -139,6 +141,8 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
 
             {isPast && <MonthVerdict summary={summary} />}
 
+            {!isPast && <EndingSoon items={ending} />}
+
             {needsIncome && (
               <button
                 type="button"
@@ -217,6 +221,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
           initialCategory={sheet.category}
           initialGroup={sheet.group}
           fromRemainder={sheet.fromRemainder}
+          month={month}
           groups={groups}
           initialAmount={prefill}
           summary={summary}
