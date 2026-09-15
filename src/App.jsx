@@ -12,7 +12,7 @@ import BottomNav from './components/BottomNav'
 import UpdatePrompt from './components/UpdatePrompt'
 import OfflineBanner from './components/OfflineBanner'
 import ErrorBoundary from './components/ErrorBoundary'
-import Migration from './components/Migration'
+import Maintenance from './components/Maintenance'
 import Welcome, { seenIntro } from './components/Welcome'
 import { isFirebaseConfigured, missingFirebaseKeys } from './lib/firebase'
 import { clearNudge, readNudge } from './lib/deepLink'
@@ -132,9 +132,7 @@ function AuthGate() {
   if (!user) return <Login />
   return (
     <BudgetProvider>
-      {/* כלי חד פעמי, מאחורי כתובת ולא מאחורי כפתור: אין סיבה
-          שהוא יופיע במסלול של מישהו שרק רוצה להזין הוצאה */}
-      {window.location.hash === '#migrate' ? <Migration /> : <BudgetGate />}
+      {window.location.hash === '#maintenance' ? <Maintenance /> : <BudgetGate />}
     </BudgetProvider>
   )
 }

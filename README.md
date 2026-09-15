@@ -11,7 +11,7 @@ An installable PWA. No developer account, no app store, no native build.
 ![React](https://img.shields.io/badge/React-19-2a78d6?style=flat-square&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-7a8a5e?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-eb6834?style=flat-square&logo=firebase&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-177%20%2B%20101%20rules-1baf7a?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-161%20%2B%20100%20rules-1baf7a?style=flat-square)
 
 The interface is in Hebrew and right to left throughout.
 
@@ -209,7 +209,7 @@ valid, unused and unexpired.
 npm run test:rules
 ```
 
-runs 101 tests against a real Firestore emulator, including the adversarial cases:
+runs 100 tests against a real Firestore emulator, including the adversarial cases:
 joining without a code, a used code, an expired code, a code belonging to another
 budget, adding somebody else with a valid code, extending an expiry, taking over
 ownership, listing invites, moving a record between budgets, forging `addedBy`,

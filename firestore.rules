@@ -251,49 +251,6 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.createdBy == request.auth.uid;
     }
 
-    // האוסף הישן, ברמה העליונה. נשאר פתוח רק לאורך המיגרציה
-    // אל budgets/{budgetId}/entries, ונמחק מכאן בסיומה.
-    match /entries/{entryId} {
-      function validEntry(data) {
-        return data.budgetId is string
-          && data.category in [
-            'income', 'fixed', 'leisure', 'fund', 'unplanned',
-            'lodging', 'transport', 'attractions', 'dining', 'shopping', 'other',
-            'deposit', 'withdrawal'
-          ]
-          && data.budgetGroup in ['fixed', 'leisure', 'savings', 'none']
-          && data.name is string && data.name.size() > 0 && data.name.size() <= 100
-          && data.plannedAmount is number && data.plannedAmount >= 0
-          && data.actualAmount is number && data.actualAmount >= 0
-          && data.month is string && data.month.matches('^[0-9]{4}-[0-9]{2}$')
-          // תאריך אופציונלי, אבל אם יש הוא חייב להתיישב עם החודש,
-          // אחרת הוצאת טיול תיספר בחודש הלא נכון
-          && (!('date' in data)
-              || (data.date is string
-                  && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
-                  && data.date[0:7] == data.month))
-          && data.addedBy is string
-          && validGroupKey(data)
-          // הפקדה שמומנה מהיתרה. אם קיים, חייב להיות אמת: הדגל מסמן
-          // מצב אחד ואין משמעות לכתיבתו כשקר
-          && (!('fromRemainder' in data) || data.fromRemainder == true);
-      }
-
-      // resource הוא null כשהמסמך לא קיים, וגישה ל-resource.data הייתה
-      // זורקת ודוחה גם קריאה תמימה של מסמך שטרם נוצר.
-      allow read, delete: if resource == null || isMember(resource.data.budgetId);
-
-      allow create: if validEntry(request.resource.data)
-        && request.resource.data.addedBy == request.auth.uid
-        && isMember(request.resource.data.budgetId);
-
-      // רשומה לא עוברת בין תקציבים, ולא מחליפה בעלות על ההזנה
-      allow update: if validEntry(request.resource.data)
-        && request.resource.data.budgetId == resource.data.budgetId
-        && request.resource.data.addedBy == resource.data.addedBy
-        && isMember(resource.data.budgetId);
-    }
-
     match /{document=**} {
       allow read, write: if false;
     }

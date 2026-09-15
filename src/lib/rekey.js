@@ -180,3 +180,17 @@ export async function targetExists(newId) {
   const snapshot = await getDoc(doc(db, 'budgets', newId))
   return snapshot.exists()
 }
+
+/**
+ * גיבוי של כל הרשומות בתקציבים שאתם חברים בהם.
+ * שווה להריץ לפני כל שינוי מבנה, וזה הדבר היחיד שאי אפשר לשחזר
+ * ממנו אם משהו משתבש.
+ */
+export async function backupAll(budgetIds = []) {
+  const byBudget = {}
+  for (const budgetId of budgetIds) {
+    const snapshot = await getDocs(entriesRef(budgetId))
+    byBudget[budgetId] = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))
+  }
+  return { takenAt: new Date().toISOString(), entries: byBudget }
+}

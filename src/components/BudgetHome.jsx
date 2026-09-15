@@ -126,15 +126,6 @@ export default function BudgetHome() {
 
         <NotificationCard />
 
-        {/* זמני, עד שהמעבר למבנה החדש יסתיים. באפליקציה המותקנת אין
-            שורת כתובת, ולכן בלי הקישור הזה אי אפשר להגיע למסך בכלל */}
-        <button
-          type="button"
-          className="btn-text"
-          onClick={() => { window.location.hash = '#migrate'; window.location.reload() }}
-        >
-          העברת מבנה הנתונים
-        </button>
       </div>
 
       {editingProfile && (

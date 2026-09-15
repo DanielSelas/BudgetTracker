@@ -19,7 +19,6 @@ const past = () => Timestamp.fromMillis(Date.now() - 1000)
 
 function entry(overrides = {}) {
   return {
-    budgetId: BUDGET,
     category: 'fixed',
     budgetGroup: 'fixed',
     name: 'שכר דירה',
@@ -235,48 +234,45 @@ describe('memberships index', () => {
 describe('entries', () => {
   beforeEach(async () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
-      await setDoc(doc(context.firestore(), 'entries', 'e1'), entry())
+      await setDoc(doc(context.firestore(), 'budgets', BUDGET, 'entries', 'e1'), entry())
     })
   })
 
   it('חבר קורא וכותב, זר לא', async () => {
-    await assertSucceeds(getDoc(doc(as(OWNER), 'entries', 'e1')))
-    await assertFails(getDoc(doc(as(STRANGER), 'entries', 'e1')))
-    await assertFails(setDoc(doc(as(STRANGER), 'entries', 'e2'), entry({ addedBy: STRANGER })))
+    await assertSucceeds(getDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e1')))
+    await assertFails(getDoc(doc(as(STRANGER), 'budgets', BUDGET, 'entries', 'e1')))
+    await assertFails(setDoc(doc(as(STRANGER), 'budgets', BUDGET, 'entries', 'e2'), entry({ addedBy: STRANGER })))
   })
 
   it('addedBy חייב להיות המשתמש עצמו', async () => {
-    await assertFails(setDoc(doc(as(OWNER), 'entries', 'e3'), entry({ addedBy: PARTNER })))
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e3'), entry({ addedBy: PARTNER })))
   })
 
   it('דוחה קטגוריה לא חוקית', async () => {
-    await assertFails(setDoc(doc(as(OWNER), 'entries', 'e4'), entry({ category: 'crypto' })))
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e4'), entry({ category: 'crypto' })))
   })
 
   it('דוחה סכום שלילי', async () => {
-    await assertFails(setDoc(doc(as(OWNER), 'entries', 'e5'), entry({ actualAmount: -1 })))
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e5'), entry({ actualAmount: -1 })))
   })
 
   it('דוחה פורמט חודש שגוי', async () => {
-    await assertFails(setDoc(doc(as(OWNER), 'entries', 'e6'), entry({ month: '2026-9' })))
-    await assertFails(setDoc(doc(as(OWNER), 'entries', 'e7'), entry({ month: 'ספטמבר' })))
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e6'), entry({ month: '2026-9' })))
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e7'), entry({ month: 'ספטמבר' })))
   })
 
   it('דוחה סכום כמחרוזת', async () => {
-    await assertFails(setDoc(doc(as(OWNER), 'entries', 'e8'), entry({ actualAmount: '5000' })))
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e8'), entry({ actualAmount: '5000' })))
   })
 
-  it('אי אפשר להעביר רשומה לתקציב אחר', async () => {
-    await assertFails(updateDoc(doc(as(OWNER), 'entries', 'e1'), { budgetId: 'other' }))
-  })
 
   it('אי אפשר לשנות מי הזין את הרשומה', async () => {
-    await assertFails(updateDoc(doc(as(PARTNER), 'entries', 'e1'), { addedBy: PARTNER }))
+    await assertFails(updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'entries', 'e1'), { addedBy: PARTNER }))
   })
 
   // בלי בדיקה כזו אפשר לשבור עדכון לגמרי ולא לשים לב, כי כל השאר מאמתות דחיות
   it('חבר יכול לעדכן סכום של שורה קיימת', async () => {
-    await assertSucceeds(updateDoc(doc(as(OWNER), 'entries', 'e1'), { actualAmount: 6000 }))
+    await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e1'), { actualAmount: 6000 }))
   })
 })
 
@@ -285,7 +281,7 @@ describe('entries query (list)', () => {
     const { getDocs, collection, query, where } = await import('firebase/firestore')
     await assertSucceeds(
       getDocs(query(
-        collection(as(OWNER), 'entries'),
+        collection(as(OWNER), 'budgets', BUDGET, 'entries'),
         where('budgetId', '==', BUDGET),
         where('month', '==', '2026-09'),
       )),
@@ -295,11 +291,11 @@ describe('entries query (list)', () => {
   it('חבר יכול להריץ את שאילתת החודש כשיש רשומות', async () => {
     const { getDocs, collection, query, where, setDoc: set } = await import('firebase/firestore')
     await testEnv.withSecurityRulesDisabled(async (context) => {
-      await set(doc(context.firestore(), 'entries', 'q1'), entry())
+      await set(doc(context.firestore(), 'budgets', BUDGET, 'entries', 'q1'), entry())
     })
     await assertSucceeds(
       getDocs(query(
-        collection(as(OWNER), 'entries'),
+        collection(as(OWNER), 'budgets', BUDGET, 'entries'),
         where('budgetId', '==', BUDGET),
         where('month', '==', '2026-09'),
       )),
@@ -310,7 +306,7 @@ describe('entries query (list)', () => {
     const { getDocs, collection, query, where } = await import('firebase/firestore')
     await assertFails(
       getDocs(query(
-        collection(as(STRANGER), 'entries'),
+        collection(as(STRANGER), 'budgets', BUDGET, 'entries'),
         where('budgetId', '==', BUDGET),
         where('month', '==', '2026-09'),
       )),
@@ -376,7 +372,7 @@ describe('recurring templates', () => {
 describe('רשומת שארית', () => {
   it('מתקבלת כקטגוריה חוקית', async () => {
     await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'u1'), entry({
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'u1'), entry({
         category: 'unplanned', budgetGroup: 'none', name: 'תיקון רכב', actualAmount: 1500,
       })),
     )
@@ -384,7 +380,7 @@ describe('רשומת שארית', () => {
 
   it('עדיין דוחה קטגוריה מומצאת', async () => {
     await assertFails(
-      setDoc(doc(as(OWNER), 'entries', 'u2'), entry({ category: 'misc', budgetGroup: 'none' })),
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'u2'), entry({ category: 'misc', budgetGroup: 'none' })),
     )
   })
 })
@@ -432,7 +428,7 @@ describe('סוגי תקציב ותאריכים', () => {
 
   it('מקבל קטגוריות טיול', async () => {
     await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'tr1'), entry({
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'tr1'), entry({
         category: 'lodging', budgetGroup: 'none', name: 'מלון', date: '2026-09-04',
       })),
     )
@@ -440,7 +436,7 @@ describe('סוגי תקציב ותאריכים', () => {
 
   it('תאריך שלא מתיישב עם החודש נדחה', async () => {
     await assertFails(
-      setDoc(doc(as(OWNER), 'entries', 'tr2'), entry({
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'tr2'), entry({
         category: 'lodging', budgetGroup: 'none', month: '2026-09', date: '2026-10-04',
       })),
     )
@@ -448,7 +444,7 @@ describe('סוגי תקציב ותאריכים', () => {
 
   it('תאריך בפורמט שגוי נדחה', async () => {
     await assertFails(
-      setDoc(doc(as(OWNER), 'entries', 'tr3'), entry({
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'tr3'), entry({
         category: 'lodging', budgetGroup: 'none', date: '04/09/2026',
       })),
     )
@@ -456,7 +452,7 @@ describe('סוגי תקציב ותאריכים', () => {
 
   it('רשומה בלי תאריך עדיין תקפה', async () => {
     await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'tr4'), entry({ category: 'fixed' })),
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'tr4'), entry({ category: 'fixed' })),
     )
   })
 })
@@ -473,27 +469,27 @@ describe('שורה מסכמת של טיול', () => {
 
   it('חבר בתקציב הבית יכול לכתוב אותה', async () => {
     await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'trip_trip-1__2026-09'), rollup()),
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'trip_trip-1__2026-09'), rollup()),
     )
   })
 
   it('מי שאינו חבר בתקציב הבית לא יכול', async () => {
     await assertFails(
-      setDoc(doc(as(STRANGER), 'entries', 'trip_trip-1__2026-09'), rollup({ addedBy: STRANGER })),
+      setDoc(doc(as(STRANGER), 'budgets', BUDGET, 'entries', 'trip_trip-1__2026-09'), rollup({ addedBy: STRANGER })),
     )
   })
 
   it('שותף אחר יכול לעדכן את הסכום בלי לגעת במי שיצר', async () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const db = context.firestore()
-      await setDoc(doc(db, 'entries', 'trip_trip-1__2026-09'), rollup())
+      await setDoc(doc(db, 'budgets', BUDGET, 'entries', 'trip_trip-1__2026-09'), rollup())
       await setDoc(doc(db, 'budgets', BUDGET, 'members', PARTNER), { uid: PARTNER, role: 'member' })
     })
     await assertSucceeds(
-      updateDoc(doc(as(PARTNER), 'entries', 'trip_trip-1__2026-09'), { actualAmount: 5000 }),
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'entries', 'trip_trip-1__2026-09'), { actualAmount: 5000 }),
     )
     await assertFails(
-      updateDoc(doc(as(PARTNER), 'entries', 'trip_trip-1__2026-09'), { addedBy: PARTNER }),
+      updateDoc(doc(as(PARTNER), 'budgets', BUDGET, 'entries', 'trip_trip-1__2026-09'), { addedBy: PARTNER }),
     )
   })
 })
@@ -574,32 +570,32 @@ describe('עדכון שם החבר', () => {
 describe('קריאת מסמך שאינו קיים', () => {
   beforeEach(async () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
-      await setDoc(doc(context.firestore(), 'entries', 'קיים'), entry())
+      await setDoc(doc(context.firestore(), 'budgets', BUDGET, 'entries', 'קיים'), entry())
     })
   })
 
   // בלי זה, יצירת שורה מסכמת של טיול נכשלת: הלקוח בודק אם היא קיימת,
   // והכלל נשבר על מסמך שטרם נוצר
   it('חבר יכול לבדוק אם שורה קיימת בלי שזה ייחשב הפרה', async () => {
-    await assertSucceeds(getDoc(doc(as(OWNER), 'entries', 'לא-קיים')))
+    await assertSucceeds(getDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'לא-קיים')))
   })
 
   it('זר עדיין לא קורא שורה שכן קיימת', async () => {
-    await assertFails(getDoc(doc(as(STRANGER), 'entries', 'קיים')))
+    await assertFails(getDoc(doc(as(STRANGER), 'budgets', BUDGET, 'entries', 'קיים')))
   })
 })
 
 describe('מחיקת תקציב', () => {
   beforeEach(async () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
-      await setDoc(doc(context.firestore(), 'entries', 'e1'), entry())
+      await setDoc(doc(context.firestore(), 'budgets', BUDGET, 'entries', 'e1'), entry())
     })
   })
 
   it('הבעלים מוחק את התקציב ואת מה שתלוי בו', async () => {
     const db = as(OWNER)
     const batch = writeBatch(db)
-    batch.delete(doc(db, 'entries', 'e1'))
+    batch.delete(doc(db, 'budgets', BUDGET, 'entries', 'e1'))
     batch.delete(doc(db, 'users', OWNER, 'memberships', BUDGET))
     batch.delete(doc(db, 'budgets', BUDGET, 'members', OWNER))
     batch.delete(doc(db, 'budgets', BUDGET))
@@ -620,7 +616,7 @@ describe('שורה מסכמת מקצה לקצה', () => {
   // מדמה בדיוק את מה ש-syncRollup עושה: בודק אם קיימת, ואז יוצר
   it('יצירה של שורה מסכמת חדשה עוברת', async () => {
     const db = as(OWNER)
-    const ref = doc(db, 'entries', 'trip_abc__2026-09')
+    const ref = doc(db, 'budgets', BUDGET, 'entries', 'trip_abc__2026-09')
 
     const existing = await getDoc(ref)
     expect(existing.exists()).toBe(false)
@@ -659,12 +655,12 @@ describe('מטרת חיסכון', () => {
 
   it('מקבל הפקדה ומשיכה כקטגוריות', async () => {
     await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'g1'), entry({
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'g1'), entry({
         category: 'deposit', budgetGroup: 'none', name: 'הפקדה',
       })),
     )
     await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'g2'), entry({
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'g2'), entry({
         category: 'withdrawal', budgetGroup: 'none', name: 'משיכה',
       })),
     )
@@ -684,12 +680,12 @@ describe('שורה מסכמת של מטרת חיסכון', () => {
 
   it('חבר בתקציב הבית יכול לכתוב אותה לקרן', async () => {
     await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'trip_goal-1__2026-09'), rollup()),
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'trip_goal-1__2026-09'), rollup()),
     )
   })
 
   it('עדכון הסכום בלי לגעת במי שיצר', async () => {
-    const ref = doc(as(OWNER), 'entries', 'trip_goal-1__2026-09')
+    const ref = doc(as(OWNER), 'budgets', BUDGET, 'entries', 'trip_goal-1__2026-09')
     await setDoc(ref, rollup())
     await assertSucceeds(updateDoc(ref, { actualAmount: 2500 }))
   })
@@ -716,26 +712,26 @@ describe('קישור תקציב מסגרת בדיעבד', () => {
 describe('קיבוץ שורות בתוך קטגוריה', () => {
   it('שם קיבוץ תקין מתקבל', async () => {
     await assertSucceeds(
-      setDoc(doc(as(OWNER), 'entries', 'g-ok'), entry({ groupKey: 'קניות בסופר' })),
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'g-ok'), entry({ groupKey: 'קניות בסופר' })),
     )
   })
 
   it('רשומה בלי קיבוץ ממשיכה לעבוד', async () => {
-    await assertSucceeds(setDoc(doc(as(OWNER), 'entries', 'g-none'), entry()))
+    await assertSucceeds(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'g-none'), entry()))
   })
 
   it('שם ריק או ארוך מדי נדחה', async () => {
     await assertFails(
-      setDoc(doc(as(OWNER), 'entries', 'g-empty'), entry({ groupKey: '' })),
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'g-empty'), entry({ groupKey: '' })),
     )
     await assertFails(
-      setDoc(doc(as(OWNER), 'entries', 'g-long'), entry({ groupKey: 'א'.repeat(41) })),
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'g-long'), entry({ groupKey: 'א'.repeat(41) })),
     )
   })
 
   it('שם שאינו מחרוזת נדחה', async () => {
     await assertFails(
-      setDoc(doc(as(OWNER), 'entries', 'g-num'), entry({ groupKey: 7 })),
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'g-num'), entry({ groupKey: 7 })),
     )
   })
 })
