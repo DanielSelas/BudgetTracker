@@ -215,8 +215,8 @@ export default function Migration() {
                 <span className="cat-title"><h2>3. אימות</h2></span>
               </div>
               <p className="hint">
-                סופר את הרשומות ומסכם את הסכומים בשני המקומות. שניהם חייבים
-                להיות זהים.
+                בודק שכל רשומה שבישן קיימת בחדש. רשומות שהוספתם אחרי המעבר
+                קיימות רק בחדש, וזה תקין ולא מונע מחיקה.
               </p>
               <button type="button" className="btn-primary" disabled={!copied || busy === 'verify'} onClick={verify}>
                 {busy === 'verify' ? 'בודק...' : 'אימות'}
@@ -232,6 +232,9 @@ export default function Migration() {
                       <span className="recurring-tag as-tag">
                         חדש {check.movedCount}
                       </span>
+                      {check.missing?.length > 0 && (
+                        <span className="recurring-tag as-tag">חסרות {check.missing.length}</span>
+                      )}
                       <span className="entry-amount num">{check.ok ? '✓' : '✗'}</span>
                     </li>
                   ))}
@@ -240,7 +243,7 @@ export default function Migration() {
               {checks && !allOk && (
                 <>
                   <p className="notice block" role="alert">
-                    יש פער בין הישן לחדש. אל תמחקו כלום.
+                    יש רשומות בישן שאינן בחדש. אל תמחקו כלום.
                   </p>
                   <button type="button" className="btn-primary" disabled={busy === 'explain'} onClick={explain}>
                     {busy === 'explain' ? 'בודק...' : 'מה חסר?'}

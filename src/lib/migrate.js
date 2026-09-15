@@ -85,23 +85,30 @@ export async function migrateBudget(budgetId) {
   return { budgetId, read: items.length, written }
 }
 
-/** בדיקה שאחרי ההעתקה יש במקום החדש בדיוק מה שהיה בישן. */
+/**
+ * האם כל מה שיש בישן קיים בחדש.
+ *
+ * לא השוואת ספירות. ברגע שהאפליקציה עברה לקרוא מהמבנה החדש, כל
+ * רשומה חדשה נכתבת רק שם, ולכן הצד החדש גדול מהישן וזה תקין. מה
+ * שחייב להתקיים לפני מחיקה הוא שהחדש מכיל את הישן, ולא שהם שווים.
+ */
 export async function verifyBudget(budgetId) {
   const [legacy, moved] = await Promise.all([
     readLegacy(budgetId),
     getDocs(entriesRef(budgetId)),
   ])
 
-  const sum = (list) => list.reduce((total, item) => total + (item.actualAmount || 0), 0)
-  const movedItems = moved.docs.map((item) => item.data())
+  const movedIds = new Set(moved.docs.map((item) => item.id))
+  const missing = legacy.filter((item) => !movedIds.has(targetId(item)))
 
   return {
     budgetId,
     legacyCount: legacy.length,
-    movedCount: movedItems.length,
-    legacyTotal: sum(legacy),
-    movedTotal: sum(movedItems),
-    ok: legacy.length === movedItems.length && sum(legacy) === sum(movedItems),
+    movedCount: movedIds.size,
+    // רשומות שנוספו אחרי המעבר. צפוי, ואינו מונע מחיקה
+    addedSince: Math.max(0, movedIds.size - legacy.length),
+    missing: missing.map((item) => ({ id: item.id, name: item.name, month: item.month })),
+    ok: missing.length === 0,
   }
 }
 

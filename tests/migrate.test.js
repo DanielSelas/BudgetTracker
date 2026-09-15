@@ -183,3 +183,26 @@ describe('זיהוי תקציבים שצריכים מזהה קריא', () => {
     expect(proposedId({ name: 'הבית' }).startsWith('household_הבית_')).toBe(true)
   })
 })
+
+describe('אימות לפני מחיקת הישן', () => {
+  it('רשומות שנוספו אחרי המעבר אינן פער', async () => {
+    // הצד החדש גדול מהישן, וזה בדיוק מה שקורה אחרי שהאפליקציה עברה
+    const { targetId } = await import('../src/lib/migrate')
+    const legacy = [{ id: 'a1', month: '2026-09', category: 'fixed', name: 'חשמל' }]
+    const nested = new Set([targetId(legacy[0]), '2026-10_fixed_מים_zzz'])
+    const missing = legacy.filter((item) => !nested.has(targetId(item)))
+    expect(missing).toHaveLength(0)
+  })
+
+  it('רשומה שלא הועתקה כן נספרת כפער', async () => {
+    const { targetId } = await import('../src/lib/migrate')
+    const legacy = [
+      { id: 'a1', month: '2026-09', category: 'fixed', name: 'חשמל' },
+      { id: 'a2', month: '2026-09', category: 'fixed', name: 'מים' },
+    ]
+    const nested = new Set([targetId(legacy[0])])
+    const missing = legacy.filter((item) => !nested.has(targetId(item)))
+    expect(missing).toHaveLength(1)
+    expect(missing[0].name).toBe('מים')
+  })
+})
