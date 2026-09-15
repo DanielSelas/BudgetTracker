@@ -918,3 +918,18 @@ describe('פרופיל משתמש', () => {
     await assertFails(setDoc(doc(anon, 'users', OWNER), { displayName: 'זר' }))
   })
 })
+
+describe('יצירת תקציב עם מזהה קריא', () => {
+  it('מזהה קריא מתקבל כמו כל מזהה אחר', async () => {
+    await assertSucceeds(setDoc(doc(as(PARTNER), 'budgets', 'trip_איטליה_qkmubg'), {
+      name: 'איטליה', ownerUid: PARTNER, type: 'trip', frame: 5000, linkedBudgetId: null,
+    }))
+  })
+
+  it('שדה rekeyedFrom אינו מפריע לוולידציה', async () => {
+    await assertSucceeds(setDoc(doc(as(PARTNER), 'budgets', 'household_הבית_x1'), {
+      name: 'הבית', ownerUid: PARTNER, type: 'household',
+      billingDay: 10, baseAmount: 20000, rekeyedFrom: 'oldRandomId',
+    }))
+  })
+})

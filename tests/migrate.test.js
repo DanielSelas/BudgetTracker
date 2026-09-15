@@ -167,3 +167,19 @@ describe('מזהים קריאים לתקציב ולחיוב קבוע', () => {
       .startsWith('fixed-שכר-דירה-')).toBe(true)
   })
 })
+
+describe('זיהוי תקציבים שצריכים מזהה קריא', () => {
+  it('מזהה אקראי מסומן להעברה, וקריא לא', async () => {
+    const { alreadyReadable } = await import('../src/lib/rekey')
+    expect(alreadyReadable('3s1KtlGpv2SSKliqamXf')).toBe(false)
+    expect(alreadyReadable('trip_איטליה_qkmubg')).toBe(true)
+    expect(alreadyReadable('household_תקציב-משפחתי_bc43zy')).toBe(true)
+    expect(alreadyReadable('goal_רכב-חדש_tndiv1')).toBe(true)
+  })
+
+  it('המזהה המוצע נגזר מהסוג ומהשם', async () => {
+    const { proposedId } = await import('../src/lib/rekey')
+    expect(proposedId({ type: 'trip', name: 'איטליה' }).startsWith('trip_איטליה_')).toBe(true)
+    expect(proposedId({ name: 'הבית' }).startsWith('household_הבית_')).toBe(true)
+  })
+})

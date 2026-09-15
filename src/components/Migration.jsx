@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import Rekey from './Rekey'
 import { useBudget } from '../context/BudgetContext'
 import {
   diagnose, dropLegacy, migrateBudget, resetTarget, snapshotForBackup, verifyBudget,
@@ -154,6 +155,8 @@ export default function Migration() {
                 ))}
               </ul>
             </section>
+
+            <Rekey />
 
             <section className="cat-card">
               <div className="cat-head">
