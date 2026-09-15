@@ -149,6 +149,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
                 summary={summary}
                 templates={templates}
                 billingDay={billingDay}
+                onManage={() => setShowCommitments(true)}
               />
             )}
 

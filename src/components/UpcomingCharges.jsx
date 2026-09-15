@@ -11,7 +11,7 @@ import { buildTimeline, formatDay, peakRequirement } from '../lib/upcoming'
  *
  * מכווץ כברירת מחדל: רוב הימים מספיקה השורה התחתונה.
  */
-export default function UpcomingCharges({ summary, templates, billingDay }) {
+export default function UpcomingCharges({ summary, templates, billingDay, onManage }) {
   const [open, setOpen] = useState(false)
 
   const events = useMemo(
@@ -61,11 +61,25 @@ export default function UpcomingCharges({ summary, templates, billingDay }) {
             </div>
           )}
 
-          <p className="hint">
-            {dated
-              ? 'זה מה שצריך להיות בחשבון עכשיו כדי לעבור את כל האירועים עד הכנסה שמכסה אותם.'
-              : 'הוסיפו מועד להכנסה ולחיובים שיורדים ישירות מהחשבון, וכאן יופיע כמה צריך ומתי.'}
-          </p>
+          {dated ? (
+            <p className="hint">
+              זה מה שצריך להיות בחשבון עכשיו כדי לעבור את כל האירועים עד
+              הכנסה שמכסה אותם.
+            </p>
+          ) : (
+            <>
+              <p className="hint">
+                בציר יש רק את חיוב האשראי. משכורת והוצאה שיורדת ישירות
+                מהחשבון נכנסות אליו רק כשהן מוגדרות כחיוב קבוע עם תאריך,
+                ואז אפשר לדעת כמה צריך להחזיק ועד מתי.
+              </p>
+              {onManage && (
+                <button type="button" className="btn-text" onClick={onManage}>
+                  הגדרת חיובים קבועים
+                </button>
+              )}
+            </>
+          )}
         </div>
       )}
     </section>
