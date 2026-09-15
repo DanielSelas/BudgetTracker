@@ -12,7 +12,9 @@ vi.mock('../src/lib/firebase', () => ({
   isFirebaseConfigured: true, missingFirebaseKeys: [],
 }))
 // onSnapshot מחזיר מיד תמונה ריקה, כדי שהרכיבים יעברו ממצב טעינה לתוכן
-const emptySnapshot = { docs: [], empty: true }
+// גם אוסף ריק וגם מסמך שאינו קיים: onSnapshot משמש לשניהם,
+// והפרופיל הוא האזנה למסמך בודד
+const emptySnapshot = { docs: [], empty: true, exists: () => false, data: () => ({}) }
 vi.mock('firebase/firestore', () => ({
   collection: vi.fn(() => ({})),
   doc: vi.fn(() => ({})),

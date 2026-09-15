@@ -134,3 +134,36 @@ describe('מזהה יציב להעתקה', () => {
       .toBe('trip_t1__2026-09')
   })
 })
+
+describe('מזהים קריאים לתקציב ולחיוב קבוע', () => {
+  it('התקציב מתחיל בסוג, כדי שהרשימה בקונסולה תהיה ממוינת לפי סוג', async () => {
+    const { budgetId } = await import('../src/lib/paths')
+    expect(budgetId({ type: 'trip', name: 'איטליה' }).startsWith('trip_איטליה_')).toBe(true)
+    expect(budgetId({ type: 'goal', name: 'רכב חדש' }).startsWith('goal_רכב-חדש_')).toBe(true)
+  })
+
+  it('בלי סוג נופל למשק בית, ובלי שם עדיין מייצר מזהה תקין', async () => {
+    const { budgetId } = await import('../src/lib/paths')
+    expect(budgetId({ name: 'הבית' }).startsWith('household_')).toBe(true)
+    expect(budgetId({ type: 'trip', name: '' }).startsWith('trip_')).toBe(true)
+  })
+
+  it('שני תקציבים באותו שם מקבלים מזהים שונים', async () => {
+    const { budgetId } = await import('../src/lib/paths')
+    const same = { type: 'trip', name: 'יוון' }
+    expect(budgetId(same)).not.toBe(budgetId(same))
+  })
+
+  it('תווים אסורים במזהה מסמך מוסרים', async () => {
+    const { budgetId } = await import('../src/lib/paths')
+    const id = budgetId({ type: 'trip', name: 'יוון/כרתים #2' })
+    expect(id).not.toContain('/')
+    expect(id).not.toContain('#')
+  })
+
+  it('חיוב קבוע מקבל מזהה קריא לפי הקטגוריה והשם', async () => {
+    const { recurringId } = await import('../src/lib/paths')
+    expect(recurringId({ category: 'fixed', name: 'שכר דירה' })
+      .startsWith('fixed-שכר-דירה-')).toBe(true)
+  })
+})

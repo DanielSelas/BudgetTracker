@@ -1,12 +1,12 @@
 import { avatarTone, initial } from '../lib/members'
 
-export default function Avatar({ member, index = 0, size = '', stacked = false, title }) {
-  const classes = ['avatar', avatarTone(index), size, stacked ? 'stacked' : '']
+export default function Avatar({ member, profile = null, size = '', stacked = false, title }) {
+  const classes = ['avatar', avatarTone(member, profile), size, stacked ? 'stacked' : '']
     .filter(Boolean)
     .join(' ')
   return (
     <span className={classes} title={title} aria-hidden={!title}>
-      {initial(member)}
+      {initial(member, profile)}
     </span>
   )
 }

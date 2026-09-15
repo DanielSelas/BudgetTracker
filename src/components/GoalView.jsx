@@ -12,6 +12,7 @@ import { shekels } from '../lib/format'
 import { GOAL_CATEGORIES, GOAL_ORDER, summarizeGoal } from '../lib/model'
 import { GOAL_PILLS } from '../lib/pills'
 import { memberIndex } from '../lib/members'
+import { useProfiles } from '../hooks/useProfiles'
 import { useFrameEntries, frameActions } from '../hooks/useFrameEntries'
 import { useTripRollup } from '../hooks/useTripRollup'
 import { deleteTrip } from '../lib/trips'
@@ -37,7 +38,13 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
     () => summarizeGoal(entries, budget?.frame || 0),
     [entries, budget?.frame],
   )
-  const members = useMemo(() => memberIndex(budget?.members), [budget?.members])
+  const memberList = budget?.members
+  const memberUids = useMemo(
+    () => (memberList || []).map((member) => member.uid),
+    [memberList],
+  )
+  const profiles = useProfiles(memberUids)
+  const members = useMemo(() => memberIndex(memberList, profiles), [memberList, profiles])
   const shared = members.sorted.length > 1
   const isOwner = budget?.ownerUid === uid
   // החודשים שיש בהם רשומות, כדי שניתוק קישור ידע אילו שורות למחוק בבית

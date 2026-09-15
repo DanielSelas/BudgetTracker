@@ -362,9 +362,19 @@ button:disabled {
 .avatar.md { width: 26px; height: 26px; font-size: 12px; }
 .avatar.stacked { margin-right: -16px; }
 
-.avatar.a1 { background: var(--color-accent-700); color: var(--color-accent-100); }
-.avatar.a2 { background: var(--color-accent-2-700); color: var(--color-accent-2-100); }
-.avatar.a3 { background: var(--color-neutral-700); color: var(--color-neutral-100); }
+/* ששת הגוונים, כולם מתוך הפלטה. שלושה כהים ושלושה בהירים, כדי
+   שיהיו נבדלים זה מזה גם בעיגול קטן עם אות אחת. */
+.avatar.a1, .tone.a1 { background: var(--color-accent-700); }
+.avatar.a2, .tone.a2 { background: var(--color-accent-2-700); }
+.avatar.a3, .tone.a3 { background: var(--color-neutral-700); }
+.avatar.a4, .tone.a4 { background: var(--color-accent-400); }
+.avatar.a5, .tone.a5 { background: var(--color-accent-2-400); }
+.avatar.a6, .tone.a6 { background: var(--color-neutral-400); }
+
+.avatar.a1 { color: var(--color-accent-100); }
+.avatar.a2 { color: var(--color-accent-2-100); }
+.avatar.a3 { color: var(--color-neutral-100); }
+.avatar.a4, .avatar.a5, .avatar.a6 { color: var(--color-neutral-900); }
 
 .budget-remaining {
   display: flex;
@@ -2001,3 +2011,63 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .btn-text.quiet:hover { color: var(--color-neutral-800); }
+
+/* ========== פרופיל ========== */
+
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+}
+
+.profile-preview > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile-preview strong { font-size: 17px; }
+
+.profile-preview .hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: ltr;
+  text-align: start;
+}
+
+.avatar.lg {
+  width: 52px;
+  height: 52px;
+  font-size: 22px;
+}
+
+.tone-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* הצבע עצמו הוא התוכן, ולכן העיגול גדול מספיק כדי לשפוט אותו */
+.tone {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text) 12%, transparent);
+}
+
+.tone[aria-pressed='true'] {
+  border-color: var(--color-text);
+  box-shadow: none;
+}

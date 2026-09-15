@@ -273,7 +273,7 @@ export default function EntrySheet({
 
         {me && (
           <div className="attribution">
-            <Avatar member={me.member} index={me.index} size="md" />
+            <Avatar member={me.member} profile={me.profile} size="md" />
             נרשם על שמך{partner ? ` · ${partner} יראה את זה מיד` : ''}
           </div>
         )}

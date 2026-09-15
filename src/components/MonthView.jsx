@@ -18,6 +18,7 @@ import { createTemplate, skipMonth, stopTemplate } from '../lib/recurring'
 import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth } from '../lib/model'
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
+import { useProfiles } from '../hooks/useProfiles'
 import { deleteBudget, renameBudget, setBaseAmount, setBillingDay } from '../lib/budgets'
 
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
@@ -82,7 +83,13 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
   // בלי הכנסה אין סכום בסיס, ולכן כל היעדים אפס וכל המסך חסר משמעות.
   // זו הפעולה הראשונה שצריך לעשות בחודש חדש, ולכן היא מקבלת הבלטה.
   const needsIncome = !loading && summary.totalIncome === 0
-  const members = useMemo(() => memberIndex(budget?.members), [budget?.members])
+  const memberList = budget?.members
+  const memberUids = useMemo(
+    () => (memberList || []).map((member) => member.uid),
+    [memberList],
+  )
+  const profiles = useProfiles(memberUids)
+  const members = useMemo(() => memberIndex(memberList, profiles), [memberList, profiles])
   const me = members.get(uid)
   const partner = members.sorted.find((member) => member.uid !== uid)
   const shared = members.sorted.length > 1

@@ -11,6 +11,7 @@ import {
 import { db } from './firebase'
 import { entryRef } from './paths'
 import { CATEGORIES } from './model'
+import { recurringId as readableRecurringId } from './paths'
 
 const templatesRef = (budgetId) => collection(db, 'budgets', budgetId, 'recurring')
 
@@ -32,7 +33,7 @@ export function watchTemplates(budgetId, onChange, onError) {
 export function createTemplate({
   budgetId, uid, month, category, name, plannedAmount, actualAmount, groupKey = '',
 }) {
-  const ref = doc(templatesRef(budgetId))
+  const ref = doc(templatesRef(budgetId), readableRecurringId({ category, name }))
   return setDoc(ref, {
     category,
     budgetGroup: CATEGORIES[category].budgetGroup,

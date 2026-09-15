@@ -7,7 +7,9 @@ import { cleanup, render, waitFor } from '@testing-library/react'
  */
 
 const USER = { uid: 'u1', email: 'daniel@mail.com', displayName: 'דניאל' }
-const emptySnapshot = { docs: [], empty: true }
+// גם אוסף ריק וגם מסמך שאינו קיים: onSnapshot משמש לשניהם,
+// והפרופיל הוא האזנה למסמך בודד
+const emptySnapshot = { docs: [], empty: true, exists: () => false, data: () => ({}) }
 
 vi.mock('../src/lib/firebase', () => ({
   db: {}, auth: {}, default: {},

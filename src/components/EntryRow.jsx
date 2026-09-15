@@ -142,9 +142,9 @@ export default function EntryRow({
       {author && (
         <Avatar
           member={author.member}
-          index={author.index}
+          profile={author.profile}
           size="sm"
-          title={`הוזן על ידי ${displayName(author.member)}`}
+          title={`הוזן על ידי ${displayName(author.member, author.profile)}`}
         />
       )}
 

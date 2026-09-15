@@ -890,3 +890,31 @@ describe('הפקדה מהיתרה', () => {
     }
   })
 })
+
+describe('פרופיל משתמש', () => {
+  it('כותבים רק את הפרופיל של עצמכם', async () => {
+    await assertSucceeds(setDoc(doc(as(OWNER), 'users', OWNER), { displayName: 'דניאל', tone: 'a1' }))
+    await assertFails(setDoc(doc(as(OWNER), 'users', PARTNER), { displayName: 'נועה' }))
+  })
+
+  it('שותף יכול לקרוא פרופיל, אחרת לא היה רואה מי הזין שורה', async () => {
+    await setDoc(doc(as(OWNER), 'users', OWNER), { displayName: 'דניאל', tone: 'a1' })
+    await assertSucceeds(getDoc(doc(as(PARTNER), 'users', OWNER)))
+  })
+
+  it('אי אפשר לסרוק את כל המשתמשים', async () => {
+    const { getDocs, collection } = await import('firebase/firestore')
+    await assertFails(getDocs(collection(as(STRANGER), 'users')))
+  })
+
+  it('שם ארוך מדי או גוון שאינו מחרוזת נדחים', async () => {
+    await assertFails(setDoc(doc(as(OWNER), 'users', OWNER), { displayName: 'א'.repeat(61) }))
+    await assertFails(setDoc(doc(as(OWNER), 'users', OWNER), { displayName: 'דניאל', tone: 7 }))
+  })
+
+  it('מי שאינו מחובר לא קורא ולא כותב', async () => {
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anon, 'users', OWNER)))
+    await assertFails(setDoc(doc(anon, 'users', OWNER), { displayName: 'זר' }))
+  })
+})

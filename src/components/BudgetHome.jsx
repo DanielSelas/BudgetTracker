@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Avatar from './Avatar'
+import { useProfiles } from '../hooks/useProfiles'
+import ProfileSheet from './ProfileSheet'
 import BudgetSetup from './BudgetSetup'
 import NotificationCard from './NotificationCard'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
-import { membersSentence, sortMembers } from '../lib/members'
+import { displayName, membersSentence, sortMembers } from '../lib/members'
 import { BUDGET_TYPES, budgetType, isFrameBudget, isGoal } from '../lib/model'
 import { useMonthBalance, useFrameTotal } from '../hooks/useBudgetBalance'
 import { shekels } from '../lib/format'
@@ -38,17 +40,17 @@ function Remaining({ budget }) {
   )
 }
 
-function MemberRow({ budget, isOwner }) {
+function MemberRow({ budget, isOwner, profiles }) {
   const members = sortMembers(budget.members)
   if (!budget.members) return <span className="member-row">טוען...</span>
 
   return (
     <span className="member-row">
       {members.map((member, index) => (
-        <Avatar key={member.uid} member={member} index={index} stacked={index > 0} />
+        <Avatar key={member.uid} member={member} profile={profiles[member.uid]} stacked={index > 0} />
       ))}
       <span className="names">
-        {members.length > 1 ? membersSentence(members) : 'רק אתה רואה אותו'}
+        {members.length > 1 ? membersSentence(members, profiles) : 'רק אתה רואה אותו'}
         {isOwner ? ' · נוצר על ידך' : ''}
       </span>
     </span>
@@ -58,7 +60,14 @@ function MemberRow({ budget, isOwner }) {
 export default function BudgetHome() {
   const { user, signOut } = useAuth()
   const { budgets, selectBudget } = useBudget()
+  // הפרופילים של כל מי שמופיע באיזשהו תקציב, לשם ולצבע אחידים
+  const memberUids = useMemo(
+    () => budgets.flatMap((budget) => (budget.members || []).map((member) => member.uid)),
+    [budgets],
+  )
+  const profiles = useProfiles(memberUids)
   const [adding, setAdding] = useState(false)
+  const [editingProfile, setEditingProfile] = useState(false)
 
   return (
     <>
@@ -66,13 +75,18 @@ export default function BudgetHome() {
         <header className="screen-head">
           <div>
             <h1>התקציבים שלי</h1>
-            <p className="muted">{user.email}</p>
+            <p className="muted">{displayName({ uid: user.uid, email: user.email }, profiles[user.uid])}</p>
           </div>
           {/* טקסט ולא סמל: ל-↪ יש גרסת אימוג׳י, ו-iOS צבע אותו כאימוג׳י
               בתוך ממשק שכולו טיפוגרפי */}
-          <button type="button" className="btn-text quiet" onClick={signOut}>
-            התנתקות
-          </button>
+          <div className="head-actions">
+            <button type="button" className="btn-text quiet" onClick={() => setEditingProfile(true)}>
+              הפרופיל שלי
+            </button>
+            <button type="button" className="btn-text quiet" onClick={signOut}>
+              התנתקות
+            </button>
+          </div>
         </header>
 
         <ul className="budget-list">
@@ -98,7 +112,7 @@ export default function BudgetHome() {
                     </span>
                   </span>
 
-                  <MemberRow budget={budget} isOwner={isOwner} />
+                  <MemberRow budget={budget} isOwner={isOwner} profiles={profiles} />
                   <Remaining budget={budget} />
                 </button>
               </li>
@@ -122,6 +136,13 @@ export default function BudgetHome() {
           העברת מבנה הנתונים
         </button>
       </div>
+
+      {editingProfile && (
+        <ProfileSheet
+          profile={profiles[user.uid]}
+          onClose={() => setEditingProfile(false)}
+        />
+      )}
 
       {adding && (
         <BudgetSetup

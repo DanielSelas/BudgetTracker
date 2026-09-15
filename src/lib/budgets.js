@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { DEFAULT_BILLING_DAY } from './model'
-import { entriesRef, entryRef } from './paths'
+import { budgetId as readableBudgetId, entriesRef, entryRef } from './paths'
 
 const INVITE_TTL_DAYS = 7
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // בלי תווים שמתבלבלים: I,O,0,1
@@ -40,7 +40,9 @@ export async function createBudget({
   billingDay = DEFAULT_BILLING_DAY,
   baseAmount = 0,
 }) {
-  const budgetRef = doc(collection(db, 'budgets'))
+  // מזהה קריא במקום מחרוזת אקראית, כדי שרשימת התקציבים בקונסולה
+  // תהיה מובנת בלי להיכנס לכל מסמך
+  const budgetRef = doc(db, 'budgets', readableBudgetId({ type, name }))
 
   // שני שלבים ולא כתיבה אטומית אחת: הכלל שמאשר את מסמך החבר של הבעלים
   // קורא את ownerUid מתוך מסמך התקציב, והכללים מוערכים מול המצב שלפני

@@ -508,3 +508,32 @@ describe('הפקדה מהיתרה', () => {
     expect(s.groups.savings.actual).toBe(2500)
   })
 })
+
+describe('פרופיל: שם וגוון', () => {
+  it('הפרופיל גובר על השם שבמסמך החבר', async () => {
+    const { displayName } = await import('../src/lib/members')
+    const member = { uid: 'u1', displayName: 'דניאל' }
+    expect(displayName(member)).toBe('דניאל')
+    expect(displayName(member, { displayName: 'דני' })).toBe('דני')
+  })
+
+  it('בלי פרופיל ממשיכים בדיוק כמו קודם', async () => {
+    const { displayName } = await import('../src/lib/members')
+    expect(displayName({ uid: 'u1', email: 'noa@mail.com' })).toBe('noa')
+    expect(displayName(null)).toBe('שותף')
+  })
+
+  it('הגוון שייך לאדם ולא למקום ברשימה', async () => {
+    const { avatarTone } = await import('../src/lib/members')
+    const member = { uid: 'u1' }
+    // אותו אדם, אותו גוון, בלי קשר לאן הוא ממוין
+    expect(avatarTone(member)).toBe(avatarTone(member))
+    expect(avatarTone(member, { tone: 'a5' })).toBe('a5')
+  })
+
+  it('שני אנשים שונים מקבלים ברירות מחדל שונות', async () => {
+    const { defaultTone } = await import('../src/lib/profile')
+    const tones = new Set(['abc', 'def', 'ghi', 'jkl'].map(defaultTone))
+    expect(tones.size).toBeGreaterThan(1)
+  })
+})

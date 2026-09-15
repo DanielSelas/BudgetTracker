@@ -175,6 +175,22 @@ service cloud.firestore {
       }
     }
 
+    // פרופיל: שם וגוון, מקור אמת אחד לכל התקציבים.
+    // כל מחובר יכול לקרוא פרופיל בודד לפי מזהה, כי שותף חייב לראות
+    // את השם של מי שהזין שורה. אין הרשאת list, ולכן אי אפשר לסרוק
+    // את כל המשתמשים, ואין כאן מידע שאינו מוצג ממילא בתוך התקציב.
+    match /users/{uid} {
+      allow get: if signedIn();
+      allow list: if false;
+
+      allow write: if signedIn()
+        && uid == request.auth.uid
+        && request.resource.data.get('displayName', '') is string
+        && request.resource.data.get('displayName', '').size() <= 60
+        && request.resource.data.get('tone', 'a1') is string
+        && request.resource.data.get('tone', 'a1').size() <= 8;
+    }
+
     // אינדקס אישי פרטי: "באילו תקציבים אני חבר".
     // מצביע בלבד, הרשאות הגישה האמיתיות נאכפות על budgets ועל entries,
     // ולכן מספיק שהמשתמש כותב רק לעץ של עצמו. אין כאן בדיקת isMember

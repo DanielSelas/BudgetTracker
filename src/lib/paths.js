@@ -68,3 +68,35 @@ export function stableTail(seed) {
 export function migratedEntryId({ month, category, name, id }) {
   return entryId({ month, category, name }).replace(/_[^_]*$/, `_${stableTail(id)}`)
 }
+
+/**
+ * מזהה קריא לתקציב חדש: סוג, שם, וזנב קצר.
+ *
+ * בקונסולה של Firebase רואים רשימת מסמכים ותו לא, ולכן מזהה אקראי
+ * פירושו להיכנס לכל אחד כדי לדעת מה הוא. עם הסוג בהתחלה הרשימה
+ * ממוינת מאליה, ורואים מיד מה יש.
+ *
+ * מזהה של מסמך אינו ניתן לשינוי, ולכן הוא משקף את השם בזמן היצירה.
+ * שינוי שם התקציב אחר כך לא יזיז אותו, וזה בסדר: המזהה הוא לזיהוי
+ * ולא לתצוגה.
+ */
+export function budgetId({ type, name }) {
+  const slug = (name || '')
+    .trim()
+    .replace(/[/\\.#$[\]]/g, '')
+    .replace(/\s+/g, '-')
+    .slice(0, MAX_SLUG)
+  const tail = Math.random().toString(36).slice(2, 8)
+  return [type || 'household', slug, tail].filter(Boolean).join('_')
+}
+
+/** אותו רעיון לתבנית של חיוב קבוע, שממנה נגזר גם מזהה השורה החודשית. */
+export function recurringId({ category, name }) {
+  const slug = (name || '')
+    .trim()
+    .replace(/[/\\.#$[\]]/g, '')
+    .replace(/\s+/g, '-')
+    .slice(0, MAX_SLUG)
+  const tail = Math.random().toString(36).slice(2, 8)
+  return [category, slug, tail].filter(Boolean).join('-')
+}
