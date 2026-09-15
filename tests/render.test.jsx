@@ -464,3 +464,29 @@ describe('יציאה לרשימת התקציבים', () => {
     expect(onGoalBack).toHaveBeenCalled()
   })
 })
+
+describe('פרופיל נוצר בכניסה הראשונה', () => {
+  it('משתמש בלי פרופיל מקבל אחד עם השם מההזדהות', async () => {
+    const firestore = await import('firebase/firestore')
+    firestore.setDoc.mockClear()
+    const { renderHook, waitFor } = await import('@testing-library/react')
+    const { useOwnProfile } = await import('../src/hooks/useOwnProfile')
+
+    renderHook(() => useOwnProfile({ uid: 'u9', displayName: 'דניאל סלע', email: 'd@mail.com' }))
+
+    await waitFor(() => expect(firestore.setDoc).toHaveBeenCalled())
+    const [, body] = firestore.setDoc.mock.calls[0]
+    expect(body.displayName).toBe('דניאל סלע')
+    expect(body.tone).toBeTruthy()
+  })
+
+  it('בלי משתמש לא נכתב כלום', async () => {
+    const firestore = await import('firebase/firestore')
+    firestore.setDoc.mockClear()
+    const { renderHook } = await import('@testing-library/react')
+    const { useOwnProfile } = await import('../src/hooks/useOwnProfile')
+
+    renderHook(() => useOwnProfile(null))
+    expect(firestore.setDoc).not.toHaveBeenCalled()
+  })
+})

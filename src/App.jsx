@@ -16,6 +16,7 @@ import Migration from './components/Migration'
 import Welcome, { seenIntro } from './components/Welcome'
 import { isFirebaseConfigured, missingFirebaseKeys } from './lib/firebase'
 import { clearNudge, readNudge } from './lib/deepLink'
+import { useOwnProfile } from './hooks/useOwnProfile'
 import { budgetType, isGoal, isTrip } from './lib/model'
 import './App.css'
 
@@ -125,6 +126,8 @@ function BudgetGate() {
 
 function AuthGate() {
   const { user, loading } = useAuth()
+  // יוצר את הפרופיל בכניסה הראשונה, כדי שלכל משתמש יהיה שם
+  useOwnProfile(user)
   if (loading) return <Loading label="מתחבר" />
   if (!user) return <Login />
   return (
