@@ -62,6 +62,7 @@ export default function EntrySheet({
   const [term, setTerm] = useState('open')
   const [untilMonth, setUntilMonth] = useState('')
   const [payments, setPayments] = useState('')
+  const [offCard, setOffCard] = useState(false)
   const [group, setGroup] = useState(initialGroup)
   const [date, setDate] = useState(todayDate)
   const [busy, setBusy] = useState(false)
@@ -146,6 +147,7 @@ export default function EntrySheet({
             plannedAmount: Number(planned) || 0,
             recurring,
             endMonth,
+            offCard,
             groupKey: normalizeGroup(group),
             fromRemainder,
           })
@@ -329,6 +331,20 @@ export default function EntrySheet({
                 {endMonth
                   ? `החיוב ייווצר עד ${monthLabel(endMonth)} ואז יפסיק מעצמו.`
                   : 'שכירות וביטוח הם לתקופה, והלוואה למספר תשלומים ידוע.'}
+              </span>
+
+              <button
+                type="button"
+                className="recur-toggle"
+                aria-pressed={offCard}
+                onClick={() => setOffCard((on) => !on)}
+              >
+                יורד ישירות מהחשבון
+                <span className="switch"><span className="knob" /></span>
+              </button>
+              <span className="type-hint">
+                הוראת קבע או צ׳ק, שאינם חלק מחיוב האשראי. ברירת המחדל
+                היא שהכל עובר בכרטיס.
               </span>
             </div>
           )}

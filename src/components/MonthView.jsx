@@ -3,6 +3,7 @@ import CategoryCard from './CategoryCard'
 import SummaryCard from './SummaryCard'
 import MonthVerdict from './MonthVerdict'
 import EndingSoon from './EndingSoon'
+import UpcomingCharges from './UpcomingCharges'
 import UnplannedCard from './UnplannedCard'
 import MonthPicker from './MonthPicker'
 import BackToBudgets from './BackToBudgets'
@@ -15,7 +16,7 @@ import Sheet from './Sheet'
 import InvitePanel from './InvitePanel'
 import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
-import { createTemplate, endingSoon, skipMonth, stopTemplate } from '../lib/recurring'
+import { createTemplate, endingSoon, skipMonth, stopTemplate, upcomingCharge } from '../lib/recurring'
 import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth } from '../lib/model'
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
@@ -72,10 +73,10 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
   }), [base, budgetId, month, uid])
 
   const fixedBase = budget?.baseAmount
-  const summary = useMemo(
-    () => summarizeMonth(entries, { fixedBase }),
-    [entries, fixedBase],
-  )
+  const summary = useMemo(() => {
+    const base = summarizeMonth(entries, { fixedBase })
+    return { ...base, upcoming: upcomingCharge(entries, templates) }
+  }, [entries, fixedBase, templates])
   // הקבוצות שכבר בשימוש החודש, כדי שהוספה חוזרת תהיה בחירה ולא הקלדה
   const groups = useMemo(() => usedGroups(entries), [entries])
   const openSheet = (category, group = '', amount = 0, fromRemainder = false) => {
@@ -140,6 +141,10 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
             <SummaryCard summary={summary} />
 
             {isPast && <MonthVerdict summary={summary} />}
+
+            {!isPast && (
+              <UpcomingCharges summary={summary} billingDay={billingDay} month={month} />
+            )}
 
             {!isPast && <EndingSoon items={ending} />}
 

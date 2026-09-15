@@ -5,6 +5,8 @@ import Welcome from '../components/Welcome'
 import ProfileSheet from '../components/ProfileSheet'
 import { AuthContext } from '../context/AuthContext'
 import BackToBudgets from '../components/BackToBudgets'
+import { upcomingCharge } from '../lib/recurring'
+import UpcomingCharges from '../components/UpcomingCharges'
 import BottomNav from '../components/BottomNav'
 import CategoryCard from '../components/CategoryCard'
 import UnplannedCard from '../components/UnplannedCard'
@@ -42,7 +44,13 @@ const entries = [
   { id: '11', category: 'unplanned', budgetGroup: 'none', name: 'תיקון רכב', plannedAmount: 0, actualAmount: 1800, addedBy: 'u1' },
   { id: '12', category: 'unplanned', budgetGroup: 'none', name: 'טיול: איטליה', plannedAmount: 0, actualAmount: 1200, addedBy: 'u1', linkedTripId: 't1' },
 ]
-const summary = summarizeMonth(entries, { fixedBase: 20000 })
+const templates = [
+  { id: 'r2', offCard: true },
+]
+const summary = {
+  ...summarizeMonth(entries, { fixedBase: 20000 }),
+  upcoming: upcomingCharge(entries, templates),
+}
 const byCategory = { income: [], fixed: [], leisure: [], fund: [], unplanned: [] }
 entries.forEach((e) => byCategory[e.category].push(e))
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
@@ -66,6 +74,7 @@ function Month() {
       </div>
       <div className="app-scroll">
         <SummaryCard summary={summary} />
+        <UpcomingCharges summary={summary} billingDay={2} month="2026-09" />
         {ORDER.map((category) => (
           <CategoryCard key={category} category={category} entries={byCategory[category]}
             group={summary.groups[CATEGORIES[category].budgetGroup]} authorOf={authorOf}

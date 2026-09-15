@@ -1007,3 +1007,25 @@ describe('סיום לחיוב קבוע', () => {
       template({ endMonth: 'אוגוסט' })))
   })
 })
+
+describe('חיוב שיורד ישירות מהחשבון', () => {
+  const template = (extra = {}) => ({
+    category: 'fixed', budgetGroup: 'fixed', name: 'שכר דירה',
+    plannedAmount: 5200, actualAmount: 5200, startMonth: '2026-09',
+    active: true, skipMonths: [], createdBy: OWNER, ...extra,
+  })
+
+  it('הדגל מתקבל כשהוא אמת, וגם כשאינו קיים', async () => {
+    await assertSucceeds(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'recurring', 'o1'),
+      template({ offCard: true })))
+    await assertSucceeds(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'recurring', 'o2'),
+      template()))
+  })
+
+  it('שקר או ערך שאינו בוליאני נדחים', async () => {
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'recurring', 'o3'),
+      template({ offCard: false })))
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'recurring', 'o4'),
+      template({ offCard: 'yes' })))
+  })
+})

@@ -116,6 +116,8 @@ service cloud.firestore {
                 || (data.endMonth is string
                     && data.endMonth.matches('^[0-9]{4}-[0-9]{2}$')
                     && data.endMonth >= data.startMonth))
+            // יורד ישירות מהחשבון. אם קיים, חייב להיות אמת
+            && (!('offCard' in data) || data.offCard == true)
             && validGroupKey(data);
         }
 

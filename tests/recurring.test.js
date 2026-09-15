@@ -120,3 +120,46 @@ describe('חיוב קבוע לתקופה', () => {
     expect(soon[1].endsThisMonth).toBe(false)
   })
 })
+
+describe('מה ייגבה בכרטיס', () => {
+  const income = (actualAmount) => ({ category: 'income', actualAmount })
+  const spend = (actualAmount, recurringId) => ({
+    id: `e${actualAmount}`, category: 'fixed', name: 'הוצאה', actualAmount, recurringId,
+  })
+
+  it('בלי סימונים הכל נחשב כרטיס', async () => {
+    const { upcomingCharge } = await import('../src/lib/recurring')
+    const result = upcomingCharge([income(24600), spend(5200), spend(800)], [])
+    expect(result.card).toBe(6000)
+    expect(result.direct).toBe(0)
+  })
+
+  it('חיוב שסומן יורד מהחשבון ואינו נכנס לחיוב האשראי', async () => {
+    const { upcomingCharge } = await import('../src/lib/recurring')
+    const templates = [{ id: 'rent', offCard: true }, { id: 'gym' }]
+    const result = upcomingCharge(
+      [income(24600), spend(5200, 'rent'), spend(200, 'gym'), spend(800)],
+      templates,
+    )
+    expect(result.card).toBe(1000)
+    expect(result.direct).toBe(5200)
+    expect(result.directRows).toHaveLength(1)
+  })
+
+  it('הכנסה אינה נספרת כחיוב', async () => {
+    const { upcomingCharge } = await import('../src/lib/recurring')
+    const result = upcomingCharge([income(24600)], [])
+    expect(result.card).toBe(0)
+    expect(result.income).toBe(24600)
+    expect(result.left).toBe(24600)
+  })
+
+  it('השורה התחתונה מקזזת את שניהם', async () => {
+    const { upcomingCharge } = await import('../src/lib/recurring')
+    const result = upcomingCharge(
+      [income(24600), spend(5200, 'rent'), spend(800)],
+      [{ id: 'rent', offCard: true }],
+    )
+    expect(result.left).toBe(24600 - 6000)
+  })
+})

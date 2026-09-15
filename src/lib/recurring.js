@@ -32,7 +32,7 @@ export function watchTemplates(budgetId, onChange, onError) {
 
 export function createTemplate({
   budgetId, uid, month, category, name, plannedAmount, actualAmount,
-  groupKey = '', endMonth = '',
+  groupKey = '', endMonth = '', offCard = false,
 }) {
   const ref = doc(templatesRef(budgetId), readableRecurringId({ category, name }))
   return setDoc(ref, {
@@ -46,6 +46,9 @@ export function createTemplate({
     // למספר תשלומים ידוע. בלי סיום, כל מבט קדימה מניח התחייבות
     // שכבר לא קיימת.
     ...(endMonth ? { endMonth } : {}),
+    // חיוב שיורד ישירות מהחשבון, כמו הוראת קבע או צ׳ק, ולכן אינו
+    // חלק מחיוב האשראי החודשי
+    ...(offCard ? { offCard: true } : {}),
     active: true,
     skipMonths: [],
     createdBy: uid,
@@ -133,4 +136,34 @@ export function materialize(templates, { budgetId, month, uid }) {
       ),
     ),
   )
+}
+
+/** מזהי התבניות שאינן עוברות בכרטיס. */
+export const offCardIds = (templates = []) =>
+  new Set(templates.filter((template) => template.offCard).map((template) => template.id))
+
+/**
+ * מה ייגבה בכרטיס במועד החיוב, ומה יורד ישירות מהחשבון.
+ *
+ * ההנחה היא שכל הוצאה עוברת בכרטיס, כי זה נכון ברוב המוחלט של
+ * המקרים. היוצאים מן הכלל הם חיובים קבועים שסומנו, וזה גם המקום
+ * היחיד שבו סימון כזה לא מוסיף חיכוך להזנה יומיומית.
+ */
+export function upcomingCharge(entries = [], templates = []) {
+  const off = offCardIds(templates)
+  const sum = (list) => list.reduce((total, item) => total + (item.actualAmount || 0), 0)
+
+  const income = entries.filter((entry) => entry.category === 'income')
+  const spending = entries.filter((entry) => entry.category !== 'income')
+  const direct = spending.filter((entry) => entry.recurringId && off.has(entry.recurringId))
+  const card = spending.filter((entry) => !(entry.recurringId && off.has(entry.recurringId)))
+
+  return {
+    card: sum(card),
+    cardRows: card.length,
+    direct: sum(direct),
+    directRows: direct,
+    income: sum(income),
+    left: sum(income) - sum(spending),
+  }
 }
