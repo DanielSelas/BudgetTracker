@@ -46,3 +46,25 @@ export function entryId({ month, category, name }) {
  * אחרת אותה שורה תיווצר שוב בכניסה הבאה למסך.
  */
 export const isDerivedId = (id) => id.includes('__')
+
+/**
+ * זנב יציב שנגזר ממחרוזת, ולא אקראי.
+ *
+ * זה ההבדל בין רשומה חדשה למיגרציה. בהזנה חדשה הזנב חייב להיות
+ * אקראי, כי שתי קניות זהות באותו חודש הן שתי רשומות. בהעתקה הוא
+ * חייב להיות יציב, אחרת כל הרצה חוזרת מייצרת מזהים חדשים ומשכפלת
+ * את הכל במקום לכתוב מעל. בדיוק זה קרה.
+ */
+export function stableTail(seed) {
+  let hash = 0x811c9dc5
+  for (let index = 0; index < String(seed).length; index += 1) {
+    hash ^= String(seed).charCodeAt(index)
+    hash = Math.imul(hash, 0x01000193) >>> 0
+  }
+  return hash.toString(36).padStart(6, '0').slice(0, 6)
+}
+
+/** שם קריא לרשומה מועתקת, יציב לחלוטין מול מזהה המקור. */
+export function migratedEntryId({ month, category, name, id }) {
+  return entryId({ month, category, name }).replace(/_[^_]*$/, `_${stableTail(id)}`)
+}

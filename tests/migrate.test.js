@@ -107,3 +107,30 @@ describe('גוף הרשומה במקום החדש', () => {
     expect(body.date).toBe('2026-09-02')
   })
 })
+
+describe('מזהה יציב להעתקה', () => {
+  it('אותה רשומה מקבלת אותו מזהה בכל הרצה, אחרת כל הרצה משכפלת', async () => {
+    const { targetId } = await import('../src/lib/migrate')
+    const item = { id: 'kJ3nR9xQ', month: '2026-09', category: 'fixed', name: 'חשמל' }
+    expect(targetId(item)).toBe(targetId(item))
+    expect(targetId(item)).toBe(targetId({ ...item }))
+  })
+
+  it('שתי רשומות שונות עם אותו תוכן עדיין נבדלות, לפי מזהה המקור', async () => {
+    const { targetId } = await import('../src/lib/migrate')
+    const base = { month: '2026-09', category: 'fund', name: 'הפקדה' }
+    expect(targetId({ ...base, id: 'aaa' })).not.toBe(targetId({ ...base, id: 'bbb' }))
+  })
+
+  it('המזהה עדיין קריא ומתחיל בחודש ובקטגוריה', async () => {
+    const { targetId } = await import('../src/lib/migrate')
+    const id = targetId({ id: 'kJ3nR9xQ', month: '2026-09', category: 'fixed', name: 'חשמל' })
+    expect(id.startsWith('2026-09_fixed_חשמל_')).toBe(true)
+  })
+
+  it('מזהה נגזר עדיין עובר כלשונו', async () => {
+    const { targetId } = await import('../src/lib/migrate')
+    expect(targetId({ id: 'trip_t1__2026-09', month: '2026-09', category: 'unplanned', name: 'טיול' }))
+      .toBe('trip_t1__2026-09')
+  })
+})

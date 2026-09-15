@@ -1,6 +1,6 @@
 import { getDocs, query, where, writeBatch } from 'firebase/firestore'
 import { db } from './firebase'
-import { entriesRef, entryId, entryRef, isDerivedId, legacyEntriesRef } from './paths'
+import { entriesRef, entryRef, isDerivedId, legacyEntriesRef, migratedEntryId } from './paths'
 
 /**
  * העברה חד פעמית של רשומות מהאוסף הישן ברמה העליונה אל תת האוסף של
@@ -26,7 +26,7 @@ export async function readLegacy(budgetId) {
  * מזהה נגזר נשמר כלשונו, כי הוא מה שמונע כפילויות בחודשים הבאים.
  */
 export function targetId(item) {
-  return isDerivedId(item.id) ? item.id : entryId(item)
+  return isDerivedId(item.id) ? item.id : migratedEntryId(item)
 }
 
 /** גוף הרשומה במקום החדש: בלי המזהה ובלי budgetId, שנמצא עכשיו בנתיב. */
@@ -47,9 +47,26 @@ export async function snapshotForBackup(budgetIds) {
 }
 
 /**
+ * מוחקת את מה שכבר הועתק, כדי שאפשר יהיה להתחיל נקי.
+ * בטוח כל עוד האפליקציה עוד קוראת מהאוסף הישן: הצד החדש הוא עותק
+ * בלבד, והמקור שלם.
+ */
+export async function resetTarget(budgetId) {
+  const snapshot = await getDocs(entriesRef(budgetId))
+  for (let start = 0; start < snapshot.docs.length; start += BATCH_LIMIT) {
+    const batch = writeBatch(db)
+    for (const item of snapshot.docs.slice(start, start + BATCH_LIMIT)) {
+      batch.delete(item.ref)
+    }
+    await batch.commit()
+  }
+  return { budgetId, cleared: snapshot.docs.length }
+}
+
+/**
  * מעתיקה את הרשומות של תקציב אחד אל תת האוסף שלו.
- * setDoc ולא addDoc: הרצה שנייה כותבת מעל אותם מסמכים במקום לשכפל,
- * כך שאם המיגרציה נקטעה באמצע אפשר פשוט להריץ אותה שוב.
+ * המזהה נגזר ממזהה המקור ולכן יציב, והרצה חוזרת כותבת מעל אותם
+ * מסמכים בדיוק במקום לשכפל אותם.
  */
 export async function migrateBudget(budgetId) {
   const items = await readLegacy(budgetId)

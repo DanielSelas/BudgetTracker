@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
-import { diagnose, dropLegacy, migrateBudget, snapshotForBackup, verifyBudget } from '../lib/migrate'
+import {
+  diagnose, dropLegacy, migrateBudget, resetTarget, snapshotForBackup, verifyBudget,
+} from '../lib/migrate'
 
 /**
  * מסך חד פעמי להעברת הרשומות אל תת האוסף של כל תקציב.
@@ -81,11 +83,17 @@ export default function Migration() {
     }
   }
 
+  // ניקוי ואז העתקה. הצד החדש הוא עותק בלבד כל עוד האפליקציה קוראת
+  // מהישן, ולכן מחיקתו בטוחה והיא מה שמנקה הרצות קודמות שהשתבשו.
   const copy = () => guard('copy', async () => {
     const results = []
-    for (const id of ids) results.push(await migrateBudget(id))
+    for (const id of ids) {
+      await resetTarget(id)
+      results.push(await migrateBudget(id))
+    }
     setCopied(results)
     setChecks(null)
+    setReport(null)
   })
 
   const verify = () => guard('verify', async () => {
@@ -180,7 +188,8 @@ export default function Migration() {
               </div>
               <p className="hint">
                 מעתיק, לא מעביר. הרשומות הישנות נשארות במקומן עד שתמחקו אותן
-                בשלב 4. הרצה חוזרת בטוחה, היא כותבת מעל אותם מסמכים.
+                בשלב 4. כל הרצה מנקה קודם את מה שהועתק ומעתיקה מחדש, ולכן
+                אפשר להריץ שוב בלי לשכפל.
               </p>
               <button type="button" className="btn-primary" disabled={!backedUp || busy === 'copy'} onClick={copy}>
                 {busy === 'copy' ? 'מעתיק...' : 'העתקה'}
@@ -215,7 +224,10 @@ export default function Migration() {
                     <li className="entry-row" key={check.budgetId}>
                       <span className="entry-name">{nameOf(check.budgetId)}</span>
                       <span className="recurring-tag as-tag">
-                        {check.legacyCount} → {check.movedCount}
+                        ישן {check.legacyCount}
+                      </span>
+                      <span className="recurring-tag as-tag">
+                        חדש {check.movedCount}
                       </span>
                       <span className="entry-amount num">{check.ok ? '✓' : '✗'}</span>
                     </li>
