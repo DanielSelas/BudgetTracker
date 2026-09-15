@@ -45,7 +45,8 @@ const entries = [
   { id: '12', category: 'unplanned', budgetGroup: 'none', name: 'טיול: איטליה', plannedAmount: 0, actualAmount: 1200, addedBy: 'u1', linkedTripId: 't1' },
 ]
 const templates = [
-  { id: 'r2', offCard: true },
+  { id: 'r2', active: true, offCard: true, dueDay: 1, name: 'שכר דירה', actualAmount: 5200 },
+  { id: 'r1', active: true, category: 'income', dueDay: 10, name: 'משכורת דניאל', actualAmount: 14200 },
 ]
 const summary = {
   ...summarizeMonth(entries, { fixedBase: 20000 }),
@@ -74,7 +75,7 @@ function Month() {
       </div>
       <div className="app-scroll">
         <SummaryCard summary={summary} />
-        <UpcomingCharges summary={summary} billingDay={2} month="2026-09" />
+        <UpcomingCharges summary={summary} templates={templates} billingDay={2} />
         {ORDER.map((category) => (
           <CategoryCard key={category} category={category} entries={byCategory[category]}
             group={summary.groups[CATEGORIES[category].budgetGroup]} authorOf={authorOf}

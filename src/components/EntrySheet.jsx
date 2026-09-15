@@ -63,6 +63,7 @@ export default function EntrySheet({
   const [untilMonth, setUntilMonth] = useState('')
   const [payments, setPayments] = useState('')
   const [offCard, setOffCard] = useState(false)
+  const [dueDay, setDueDay] = useState('')
   const [group, setGroup] = useState(initialGroup)
   const [date, setDate] = useState(todayDate)
   const [busy, setBusy] = useState(false)
@@ -72,6 +73,9 @@ export default function EntrySheet({
 
   const value = Number(amount) || 0
   const isIncome = category === 'income'
+  // ליום יש משמעות רק כשהחיוב לא עובר בכרטיס, או כשזו הכנסה.
+  // מה שעובר בכרטיס נגבה במועד החיוב ואין לו מועד משלו.
+  const needsDay = recurring && (offCard || isIncome)
   const endMonth = !recurring || term === 'open'
     ? ''
     : term === 'until'
@@ -148,6 +152,7 @@ export default function EntrySheet({
             recurring,
             endMonth,
             offCard,
+            dueDay: needsDay ? Number(dueDay) || 0 : 0,
             groupKey: normalizeGroup(group),
             fromRemainder,
           })
@@ -333,19 +338,42 @@ export default function EntrySheet({
                   : 'שכירות וביטוח הם לתקופה, והלוואה למספר תשלומים ידוע.'}
               </span>
 
-              <button
-                type="button"
-                className="recur-toggle"
-                aria-pressed={offCard}
-                onClick={() => setOffCard((on) => !on)}
-              >
-                יורד ישירות מהחשבון
-                <span className="switch"><span className="knob" /></span>
-              </button>
-              <span className="type-hint">
-                הוראת קבע או צ׳ק, שאינם חלק מחיוב האשראי. ברירת המחדל
-                היא שהכל עובר בכרטיס.
-              </span>
+              {/* להכנסה אין מה לעבור בכרטיס, ולכן רק המועד רלוונטי */}
+              {!isIncome && (
+                <>
+                  <button
+                    type="button"
+                    className="recur-toggle"
+                    aria-pressed={offCard}
+                    onClick={() => setOffCard((on) => !on)}
+                  >
+                    יורד ישירות מהחשבון
+                    <span className="switch"><span className="knob" /></span>
+                  </button>
+                  <span className="type-hint">
+                    הוראת קבע או צ׳ק, שאינם חלק מחיוב האשראי. ברירת
+                    המחדל היא שהכל עובר בכרטיס.
+                  </span>
+                </>
+              )}
+
+              {needsDay && (
+                <>
+                  <label className="field">
+                    {isIncome ? 'נכנס ביום' : 'יורד ביום'}
+                    <input
+                      className="input num"
+                      type="number" inputMode="numeric" min="1" max="28"
+                      placeholder="למשל 10"
+                      value={dueDay}
+                      onChange={(event) => setDueDay(event.target.value)}
+                    />
+                  </label>
+                  <span className="type-hint">
+                    כך אפשר לדעת כמה צריך להיות בחשבון ובאיזה תאריך.
+                  </span>
+                </>
+              )}
             </div>
           )}
         </div>

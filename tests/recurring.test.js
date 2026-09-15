@@ -163,3 +163,64 @@ describe('מה ייגבה בכרטיס', () => {
     expect(result.left).toBe(24600 - 6000)
   })
 })
+
+describe('ציר הזמן של החיובים הקרובים', () => {
+  const at = (iso) => new Date(iso)
+
+  it('התאריך הקרוב של יום בחודש, וגלישה לחודש הבא כשהוא כבר עבר', async () => {
+    const { nextOccurrence, formatDay } = await import('../src/lib/upcoming')
+    expect(formatDay(nextOccurrence(10, at('2026-09-05T08:00:00')))).toBe('10.9')
+    expect(formatDay(nextOccurrence(2, at('2026-09-05T08:00:00')))).toBe('2.10')
+    // היום עצמו עדיין נחשב קרוב, ולא נדחה בחודש
+    expect(formatDay(nextOccurrence(5, at('2026-09-05T08:00:00')))).toBe('5.9')
+    expect(nextOccurrence(31, at('2026-09-05T08:00:00'))).toBeNull()
+  })
+
+  it('חיוב שעובר בכרטיס אינו אירוע נפרד, כי הוא כבר בחיוב האשראי', async () => {
+    const { buildTimeline } = await import('../src/lib/upcoming')
+    const events = buildTimeline({
+      templates: [{ id: 'gym', active: true, dueDay: 5, name: 'חדר כושר', actualAmount: 200 }],
+      cardTotal: 12230,
+      billingDay: 2,
+      today: at('2026-09-03T08:00:00'),
+    })
+    expect(events.map((event) => event.id)).toEqual(['card'])
+  })
+
+  it('מסדר לפי תאריך ומסמן הכנסה כחיובית', async () => {
+    const { buildTimeline } = await import('../src/lib/upcoming')
+    const events = buildTimeline({
+      templates: [
+        { id: 'rent', active: true, dueDay: 1, offCard: true, name: 'שכר דירה', actualAmount: 5200 },
+        { id: 'pay', active: true, dueDay: 10, category: 'income', name: 'משכורת', actualAmount: 24600 },
+      ],
+      cardTotal: 12230,
+      billingDay: 2,
+      today: at('2026-09-03T08:00:00'),
+    })
+    expect(events.map((event) => event.name)).toEqual(['משכורת', 'שכר דירה', 'חיוב האשראי'])
+    expect(events[0].amount).toBe(24600)
+    expect(events[1].amount).toBe(-5200)
+  })
+
+  it('הנקודה הקשה היא השפל בציר, לא הסכום הכולל', async () => {
+    const { peakRequirement } = await import('../src/lib/upcoming')
+    const events = [
+      { id: 'a', name: 'שכר דירה', amount: -5200, when: new Date('2026-10-01') },
+      { id: 'b', name: 'אשראי', amount: -12230, when: new Date('2026-10-02') },
+      { id: 'c', name: 'משכורת', amount: 24600, when: new Date('2026-10-10') },
+    ]
+    const peak = peakRequirement(events)
+    expect(peak.needed).toBe(17430)
+    expect(peak.at.name).toBe('אשראי')
+  })
+
+  it('כשההכנסה קודמת, לא צריך להחזיק כלום מראש', async () => {
+    const { peakRequirement } = await import('../src/lib/upcoming')
+    const peak = peakRequirement([
+      { id: 'c', name: 'משכורת', amount: 24600, when: new Date('2026-10-01') },
+      { id: 'b', name: 'אשראי', amount: -12230, when: new Date('2026-10-02') },
+    ])
+    expect(peak.needed).toBe(0)
+  })
+})

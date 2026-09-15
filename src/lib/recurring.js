@@ -32,7 +32,7 @@ export function watchTemplates(budgetId, onChange, onError) {
 
 export function createTemplate({
   budgetId, uid, month, category, name, plannedAmount, actualAmount,
-  groupKey = '', endMonth = '', offCard = false,
+  groupKey = '', endMonth = '', offCard = false, dueDay = 0,
 }) {
   const ref = doc(templatesRef(budgetId), readableRecurringId({ category, name }))
   return setDoc(ref, {
@@ -49,6 +49,9 @@ export function createTemplate({
     // חיוב שיורד ישירות מהחשבון, כמו הוראת קבע או צ׳ק, ולכן אינו
     // חלק מחיוב האשראי החודשי
     ...(offCard ? { offCard: true } : {}),
+    // היום בחודש שבו זה קורה. רלוונטי להכנסה ולחיוב שיורד ישירות
+    // מהחשבון; מה שעובר בכרטיס נגבה במועד החיוב של הכרטיס
+    ...(dueDay ? { dueDay: Number(dueDay) } : {}),
     active: true,
     skipMonths: [],
     createdBy: uid,

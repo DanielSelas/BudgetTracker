@@ -143,7 +143,11 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
             {isPast && <MonthVerdict summary={summary} />}
 
             {!isPast && (
-              <UpcomingCharges summary={summary} billingDay={billingDay} month={month} />
+              <UpcomingCharges
+                summary={summary}
+                templates={templates}
+                billingDay={billingDay}
+              />
             )}
 
             {!isPast && <EndingSoon items={ending} />}
