@@ -1,4 +1,20 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// רוב הבדיקות כאן על פונקציות טהורות, אבל העדכון כותב, ולכן
+// Firestore ממוקה כדי לבדוק מה בדיוק נשלח
+vi.mock('firebase/firestore', () => ({
+  arrayUnion: vi.fn(() => 'arrayUnion'),
+  collection: vi.fn(() => ({})),
+  deleteDoc: vi.fn(async () => {}),
+  deleteField: vi.fn(() => 'deleteField'),
+  doc: vi.fn(() => ({})),
+  onSnapshot: vi.fn(() => () => {}),
+  serverTimestamp: vi.fn(() => null),
+  setDoc: vi.fn(async () => {}),
+  updateDoc: vi.fn(async () => {}),
+}))
+vi.mock('../src/lib/firebase', () => ({ db: {} }))
+
 import {
   entryFromTemplate,
   materializedEntryId,
@@ -222,5 +238,42 @@ describe('ציר הזמן של החיובים הקרובים', () => {
       { id: 'b', name: 'אשראי', amount: -12230, when: new Date('2026-10-02') },
     ])
     expect(peak.needed).toBe(0)
+  })
+})
+
+describe('עדכון חיוב קבוע', () => {
+  it('ריק מנקה את השדה במקום להשאיר את הערך הישן', async () => {
+    const firestore = await import('firebase/firestore')
+    const { updateTemplate } = await import('../src/lib/recurring')
+    firestore.updateDoc.mockClear()
+
+    await updateTemplate('b1', 'r1', {
+      actualAmount: 5400, offCard: false, dueDay: 0, endMonth: '',
+    })
+
+    const [, changes] = firestore.updateDoc.mock.calls[0]
+    expect(changes.actualAmount).toBe(5400)
+    // deleteField ולא השמטה: השמטה הייתה משאירה את הערך הקודם
+    expect(changes.offCard).toBeDefined()
+    expect(changes.dueDay).toBeDefined()
+    expect(changes.endMonth).toBeDefined()
+    expect(firestore.deleteField).toHaveBeenCalledTimes(3)
+  })
+
+  it('ערכים אמיתיים נשמרים כמו שהם', async () => {
+    const firestore = await import('firebase/firestore')
+    const { updateTemplate } = await import('../src/lib/recurring')
+    firestore.updateDoc.mockClear()
+    firestore.deleteField.mockClear()
+
+    await updateTemplate('b1', 'r1', {
+      actualAmount: 5400, offCard: true, dueDay: 1, endMonth: '2027-08',
+    })
+
+    const [, changes] = firestore.updateDoc.mock.calls[0]
+    expect(changes).toMatchObject({
+      actualAmount: 5400, offCard: true, dueDay: 1, endMonth: '2027-08',
+    })
+    expect(firestore.deleteField).not.toHaveBeenCalled()
   })
 })

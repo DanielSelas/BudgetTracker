@@ -4,6 +4,7 @@ import SummaryCard from './SummaryCard'
 import MonthVerdict from './MonthVerdict'
 import EndingSoon from './EndingSoon'
 import UpcomingCharges from './UpcomingCharges'
+import Commitments from './Commitments'
 import UnplannedCard from './UnplannedCard'
 import MonthPicker from './MonthPicker'
 import BackToBudgets from './BackToBudgets'
@@ -49,6 +50,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
   const [sharing, setSharing] = useState(false)
   const [editingBilling, setEditingBilling] = useState(false)
   const [editingBase, setEditingBase] = useState(false)
+  const [showCommitments, setShowCommitments] = useState(false)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
 
   const base = useMemo(() => entryActions({ budgetId, month, uid }), [budgetId, month, uid])
@@ -79,9 +81,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
   }, [entries, fixedBase, templates])
   // הקבוצות שכבר בשימוש החודש, כדי שהוספה חוזרת תהיה בחירה ולא הקלדה
   const groups = useMemo(() => usedGroups(entries), [entries])
-  const openSheet = (category, group = '', amount = 0, fromRemainder = false) => {
+  const openSheet = (category, group = '', amount = 0, fromRemainder = false, recurring = false) => {
     setPrefill(amount)
-    setSheet({ category, group, fromRemainder })
+    setSheet({ category, group, fromRemainder, recurring })
   }
   // בלי הכנסה אין סכום בסיס, ולכן כל היעדים אפס וכל המסך חסר משמעות.
   // זו הפעולה הראשונה שצריך לעשות בחודש חדש, ולכן היא מקבלת הבלטה.
@@ -230,6 +232,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
           initialCategory={sheet.category}
           initialGroup={sheet.group}
           fromRemainder={sheet.fromRemainder}
+          initialRecurring={sheet.recurring}
           month={month}
           groups={groups}
           initialAmount={prefill}
@@ -238,6 +241,17 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
           partner={partner ? displayName(partner) : ''}
           onSubmit={actions.add}
           onClose={() => { setSheet(null); setPrefill(0) }}
+        />
+      )}
+
+      {showCommitments && (
+        <Commitments
+          budgetId={budgetId}
+          templates={templates}
+          month={month}
+          onStop={(template) => { setShowCommitments(false); setPendingStop(template) }}
+          onAdd={() => { setShowCommitments(false); openSheet('fixed', '', 0, false, true) }}
+          onClose={() => setShowCommitments(false)}
         />
       )}
 

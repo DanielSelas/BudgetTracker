@@ -40,6 +40,7 @@ export default function EntrySheet({
   initialGroup = '',
   initialAmount = 0,
   fromRemainder = false,
+  initialRecurring = false,
   groups = [],
   month = '',
   summary,
@@ -57,7 +58,7 @@ export default function EntrySheet({
   const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : '')
   const [name, setName] = useState('')
   const [planned, setPlanned] = useState('')
-  const [recurring, setRecurring] = useState(false)
+  const [recurring, setRecurring] = useState(initialRecurring)
   // 'open' בלי סיום, 'until' עד חודש, 'count' מספר תשלומים
   const [term, setTerm] = useState('open')
   const [untilMonth, setUntilMonth] = useState('')

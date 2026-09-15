@@ -6,6 +6,7 @@ import {
   onSnapshot,
   serverTimestamp,
   setDoc,
+  deleteField,
   updateDoc,
 } from 'firebase/firestore'
 import { db } from './firebase'
@@ -58,6 +59,26 @@ export function createTemplate({
     ...(groupKey ? { groupKey } : {}),
     createdAt: serverTimestamp(),
   }).then(() => ref.id)
+}
+
+/**
+ * עדכון תבנית קיימת.
+ *
+ * עד עכשיו אפשר היה רק ליצור ולהפסיק, ולכן שכירות שעלתה או חיוב
+ * שצריך תאריך היו מחייבים למחוק וליצור מחדש, ובדרך לאבד את
+ * ההיסטוריה שנגזרה ממנו.
+ *
+ * חודשים שכבר נוצרו אינם משתנים: כל חודש מחזיק שורה משלו, ולכן
+ * העבר שומר על מה ששולם בפועל וקדימה נכנס הסכום החדש.
+ */
+export function updateTemplate(budgetId, recurringId, changes) {
+  const clean = { ...changes }
+  // ריק פירושו "בטל", וזה מחייב deleteField: השמטת המפתח הייתה
+  // משאירה את הערך הישן במסמך במקום להסיר אותו
+  for (const key of ['endMonth', 'dueDay', 'offCard']) {
+    if (key in clean && !clean[key]) clean[key] = deleteField()
+  }
+  return updateDoc(doc(templatesRef(budgetId), recurringId), clean)
 }
 
 /** דילוג על חודש בודד, למשל כשמוחקים שורה שנוצרה מתבנית. */

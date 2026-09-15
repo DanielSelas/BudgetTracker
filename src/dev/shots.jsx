@@ -7,6 +7,7 @@ import { AuthContext } from '../context/AuthContext'
 import BackToBudgets from '../components/BackToBudgets'
 import { upcomingCharge } from '../lib/recurring'
 import UpcomingCharges from '../components/UpcomingCharges'
+import Commitments from '../components/Commitments'
 import BottomNav from '../components/BottomNav'
 import CategoryCard from '../components/CategoryCard'
 import UnplannedCard from '../components/UnplannedCard'
@@ -321,6 +322,27 @@ const SCREENS = {
   types: <Types />, trip: <Trip />, goal: <Goal />, sheet: <SheetShot />, login: <LoginShot />,
   // ההסבר מוצג מעל מסך החודש, כי זה ההקשר שבו הוא מופיע באמת
   intro: <><Month /><Welcome onClose={noop} /></>,
+  commitments: (
+    <>
+      <Month />
+      <Commitments
+        budgetId="b1"
+        month="2026-09"
+        templates={[
+          { id: 'r2', active: true, name: 'שכר דירה', category: 'fixed',
+            actualAmount: 5200, offCard: true, dueDay: 1, startMonth: '2026-01',
+            endMonth: '2027-08' },
+          { id: 'r1', active: true, name: 'משכורת דניאל', category: 'income',
+            actualAmount: 14200, dueDay: 10, startMonth: '2026-01' },
+          { id: 'r6', active: true, name: 'חשמל, מים, אינטרנט', category: 'fixed',
+            actualAmount: 850, startMonth: '2026-01' },
+        ]}
+        onStop={noop}
+        onAdd={noop}
+        onClose={noop}
+      />
+    </>
+  ),
   profile: (
     <AuthContext.Provider
       value={{ user: { uid: 'u1', displayName: 'דניאל סלע', email: 'daniel@mail.com' } }}

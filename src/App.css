@@ -2201,3 +2201,20 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .timeline-row[data-in] .entry-amount { color: var(--color-accent-2-700); }
+
+/* שורת חיוב קבוע במסך ההתחייבויות */
+.commitment { display: block; }
+
+.commitment-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  color: inherit;
+  text-align: start;
+  padding: 2px 0;
+}
+
+.commitment[data-open] .chevron { transform: rotate(180deg); }
+.commitment .row-edit { margin-top: 8px; }
+.commitment > .type-hint { padding-inline-start: 26px; }
