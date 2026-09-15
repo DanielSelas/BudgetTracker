@@ -105,6 +105,7 @@ export default function Rekey() {
               {budget.name}
             </button>
             <span className="recurring-tag as-tag">{budget.type || 'household'}</span>
+            <code className="tiny-id">{budget.id}</code>
             <span className="recurring-tag as-tag">
               {(budget.members?.length ?? 1) > 1 ? 'משותף' : 'אישי'}
             </span>
@@ -116,6 +117,9 @@ export default function Rekey() {
         <div className="subsection">
           <h3>{current.name}</h3>
 
+          <p className="hint">
+            המזהה הנוכחי בקונסולה: <code>{current.id}</code>
+          </p>
           <p className="hint">
             המזהה החדש יהיה <code>{step.newId || proposedId(current)}</code>
           </p>

@@ -2071,3 +2071,17 @@ input[type='date']::-webkit-calendar-picker-indicator {
   border-color: var(--color-text);
   box-shadow: none;
 }
+
+/* מזהה המסמך, כדי שאפשר יהיה להתאים אותו למה שרואים בקונסולה */
+.tiny-id {
+  font-size: 11px;
+  direction: ltr;
+  color: var(--color-neutral-600);
+  background: var(--color-neutral-200);
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 11ch;
+}
