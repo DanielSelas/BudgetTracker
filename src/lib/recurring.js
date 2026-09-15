@@ -9,6 +9,7 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { entryRef } from './paths'
 import { CATEGORIES } from './model'
 
 const templatesRef = (budgetId) => collection(db, 'budgets', budgetId, 'recurring')
@@ -74,9 +75,8 @@ export function pendingTemplates(templates, entries, month) {
 }
 
 /** שורת החודש שנגזרת מתבנית. */
-export function entryFromTemplate(template, { budgetId, month, uid }) {
+export function entryFromTemplate(template, { month, uid }) {
   return {
-    budgetId,
     month,
     category: template.category,
     budgetGroup: template.budgetGroup,
@@ -97,8 +97,8 @@ export function materialize(templates, { budgetId, month, uid }) {
   return Promise.all(
     templates.map((template) =>
       setDoc(
-        doc(db, 'entries', materializedEntryId(template.id, month)),
-        entryFromTemplate(template, { budgetId, month, uid }),
+        entryRef(budgetId, materializedEntryId(template.id, month)),
+        entryFromTemplate(template, { month, uid }),
       ),
     ),
   )

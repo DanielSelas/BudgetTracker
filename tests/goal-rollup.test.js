@@ -4,12 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const store = new Map()
 
 vi.mock('firebase/firestore', () => ({
-  collection: (...path) => ({ path }),
-  doc: (_db, _collection, id) => ({ id }),
-  getDoc: async (ref) => ({ exists: () => store.has(ref.id), data: () => store.get(ref.id) }),
-  setDoc: async (ref, data) => void store.set(ref.id, data),
-  updateDoc: async (ref, data) => void store.set(ref.id, { ...store.get(ref.id), ...data }),
-  deleteDoc: async (ref) => void store.delete(ref.id),
+  // הנתיב המלא הוא המפתח, כדי שהבדיקה תוכיח גם לאיזה תקציב נכתב
+  collection: (_db, ...path) => ({ path: path.join('/') }),
+  doc: (_db, ...path) => ({ path: path.join('/') }),
+  getDoc: async (ref) => ({ exists: () => store.has(ref.path), data: () => store.get(ref.path) }),
+  setDoc: async (ref, data) => void store.set(ref.path, data),
+  updateDoc: async (ref, data) => void store.set(ref.path, { ...store.get(ref.path), ...data }),
+  deleteDoc: async (ref) => void store.delete(ref.path),
   getDocs: async () => ({ docs: [] }),
   query: (...parts) => parts,
   where: (...parts) => parts,
@@ -30,10 +31,11 @@ describe('שורה מסכמת של מטרת חיסכון', () => {
 
   it('נכנסת לקרן ולא לשארית', async () => {
     await syncRollup({ trip: goal, entries: [deposit('2026-09', 2000)], uid: 'u1' })
-    const row = store.get('trip_g1__2026-09')
+    // הנתיב עצמו הוא ההוכחה שהשורה נחתה בתקציב הבית ולא במטרה
+    const row = store.get('budgets/home/entries/trip_g1__2026-09')
     expect(row.category).toBe('fund')
     expect(row.budgetGroup).toBe('savings')
-    expect(row.budgetId).toBe('home')
+    expect(row.budgetId).toBeUndefined()
     expect(row.name).toBe('חיסכון: רכב חדש')
     expect(row.actualAmount).toBe(2000)
   })
@@ -44,7 +46,7 @@ describe('שורה מסכמת של מטרת חיסכון', () => {
       entries: [deposit('2026-09', 2000), withdrawal('2026-09', 500)],
       uid: 'u1',
     })
-    expect(store.get('trip_g1__2026-09').actualAmount).toBe(1500)
+    expect(store.get('budgets/home/entries/trip_g1__2026-09').actualAmount).toBe(1500)
   })
 
   it('משיכה שמאפסת את החודש מוחקת את השורה מהבית', async () => {
@@ -55,12 +57,12 @@ describe('שורה מסכמת של מטרת חיסכון', () => {
       uid: 'u1',
       knownMonths: ['2026-09'],
     })
-    expect(store.has('trip_g1__2026-09')).toBe(false)
+    expect(store.has('budgets/home/entries/trip_g1__2026-09')).toBe(false)
   })
 
   it('טיול ממשיך להיזקף לשארית', async () => {
     await syncRollup({ trip, entries: [{ month: '2026-09', actualAmount: 4650 }], uid: 'u1' })
-    const row = store.get('trip_t1__2026-09')
+    const row = store.get('budgets/home/entries/trip_t1__2026-09')
     expect(row.category).toBe('unplanned')
     expect(row.budgetGroup).toBe('none')
     expect(row.name).toBe('טיול: יוון')
