@@ -223,10 +223,6 @@ export const GOAL_CATEGORIES = {
 
 export const GOAL_ORDER = Object.keys(GOAL_CATEGORIES)
 
-/** כל קטגוריה חוקית באפליקציה, לצורך ולידציה. */
-export const ALL_CATEGORIES = [
-  ...Object.keys(CATEGORIES), ...TRIP_ORDER, ...GOAL_ORDER,
-]
 
 /** סיכום טיול: מסגרת אחת, בלי בסיס ובלי יעדים לקטגוריה. */
 export function summarizeTrip(entries, frame = 0) {

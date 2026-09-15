@@ -2,6 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import Avatar from '../components/Avatar'
 import Welcome from '../components/Welcome'
+import ProfileSheet from '../components/ProfileSheet'
+import { AuthContext } from '../context/AuthContext'
 import BackToBudgets from '../components/BackToBudgets'
 import BottomNav from '../components/BottomNav'
 import CategoryCard from '../components/CategoryCard'
@@ -309,6 +311,14 @@ const SCREENS = {
   types: <Types />, trip: <Trip />, goal: <Goal />, sheet: <SheetShot />, login: <LoginShot />,
   // ההסבר מוצג מעל מסך החודש, כי זה ההקשר שבו הוא מופיע באמת
   intro: <><Month /><Welcome onClose={noop} /></>,
+  profile: (
+    <AuthContext.Provider
+      value={{ user: { uid: 'u1', displayName: 'דניאל סלע', email: 'daniel@mail.com' } }}
+    >
+      <main className="app"><div className="app-scroll" /></main>
+      <ProfileSheet profile={{ displayName: 'דניאל סלע', tone: 'a1' }} onClose={noop} />
+    </AuthContext.Provider>
+  ),
 }
 const which = new URLSearchParams(location.search).get('s') || 'month'
 createRoot(document.getElementById('root')).render(<StrictMode>{SCREENS[which]}</StrictMode>)
