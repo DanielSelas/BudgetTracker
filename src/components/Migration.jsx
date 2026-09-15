@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
-import { dropLegacy, migrateBudget, snapshotForBackup, verifyBudget } from '../lib/migrate'
+import { diagnose, dropLegacy, migrateBudget, snapshotForBackup, verifyBudget } from '../lib/migrate'
 
 /**
  * מסך חד פעמי להעברת הרשומות אל תת האוסף של כל תקציב.
@@ -18,6 +18,7 @@ export default function Migration() {
   const [copied, setCopied] = useState(null)
   const [checks, setChecks] = useState(null)
   const [dropped, setDropped] = useState(null)
+  const [report, setReport] = useState(null)
   const [error, setError] = useState('')
 
   const ids = (budgets || []).map((budget) => budget.id)
@@ -91,6 +92,12 @@ export default function Migration() {
     const results = []
     for (const id of ids) results.push(await verifyBudget(id))
     setChecks(results)
+  })
+
+  const explain = () => guard('explain', async () => {
+    const results = []
+    for (const id of ids) results.push({ id, ...(await diagnose(id)) })
+    setReport(results)
   })
 
   const drop = () => guard('drop', async () => {
@@ -216,9 +223,26 @@ export default function Migration() {
                 </ul>
               )}
               {checks && !allOk && (
-                <p className="notice block" role="alert">
-                  יש פער בין הישן לחדש. אל תמחקו כלום, תגידו לי מה מופיע כאן.
-                </p>
+                <>
+                  <p className="notice block" role="alert">
+                    יש פער בין הישן לחדש. אל תמחקו כלום.
+                  </p>
+                  <button type="button" className="btn-primary" disabled={busy === 'explain'} onClick={explain}>
+                    {busy === 'explain' ? 'בודק...' : 'מה חסר?'}
+                  </button>
+                </>
+              )}
+
+              {report && (
+                <div className="backup-copy">
+                  <p className="hint">העתיקו את זה ושלחו לי.</p>
+                  <textarea
+                    className="input"
+                    readOnly
+                    rows={10}
+                    value={JSON.stringify(report, null, 2)}
+                  />
+                </div>
               )}
             </section>
 

@@ -88,6 +88,46 @@ export async function verifyBudget(budgetId) {
   }
 }
 
+/**
+ * מה בדיוק לא עבר, וזה הדבר היחיד שאפשר לעשות איתו משהו.
+ * ספירה שלא מסתדרת אומרת שיש בעיה, והאבחון אומר איזו.
+ */
+export async function diagnose(budgetId) {
+  const [legacy, movedSnapshot] = await Promise.all([
+    readLegacy(budgetId),
+    getDocs(entriesRef(budgetId)),
+  ])
+
+  const movedIds = new Set(movedSnapshot.docs.map((item) => item.id))
+  const byTarget = new Map()
+  for (const item of legacy) {
+    const target = targetId(item)
+    if (!byTarget.has(target)) byTarget.set(target, [])
+    byTarget.get(target).push(item)
+  }
+
+  // שתי רשומות שונות שמקבלות אותו מזהה: השנייה דורסת את הראשונה
+  const collisions = [...byTarget.entries()]
+    .filter(([, items]) => items.length > 1)
+    .map(([target, items]) => ({ target, names: items.map((item) => item.name) }))
+
+  const missing = legacy
+    .filter((item) => !isDerivedId(item.id) || !movedIds.has(item.id))
+    .filter((item) => isDerivedId(item.id))
+    .map((item) => ({ id: item.id, name: item.name, month: item.month }))
+
+  const noMonth = legacy.filter((item) => !item.month)
+    .map((item) => ({ id: item.id, name: item.name }))
+
+  return {
+    legacyCount: legacy.length,
+    movedCount: movedIds.size,
+    collisions,
+    missingDerived: missing,
+    noMonth,
+  }
+}
+
 /** מחיקת האוסף הישן. נפרדת בכוונה, ורק אחרי אימות. */
 export async function dropLegacy(budgetId) {
   const items = await readLegacy(budgetId)
