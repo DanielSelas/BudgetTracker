@@ -25,6 +25,14 @@ service cloud.firestore {
 
     // סכום הבסיס שהמשתמש מתכנן. אופציונלי, ואפס פירושו גזירה
     // אוטומטית מההכנסה, כפי שהיה לפני שהשדה היה קיים.
+    // עותק לקריאה אנושית. אינו משמש להרשאות, ולכן די בכך שהוא
+    // המייל של מי שכותב: כך אי אפשר לשתול שם מייל של מישהו אחר.
+    function validOwnerEmail(data) {
+      return !('ownerEmail' in data)
+        || data.ownerEmail == ''
+        || data.ownerEmail == request.auth.token.email;
+    }
+
     function validBaseAmount(data) {
       return !('baseAmount' in data)
         || (data.baseAmount is number && data.baseAmount >= 0);
@@ -61,6 +69,8 @@ service cloud.firestore {
         && request.resource.data.name.size() <= 60
         && request.resource.data.type in ['household', 'trip', 'goal']
         && validBillingDay(request.resource.data)
+        && validBaseAmount(request.resource.data)
+        && validOwnerEmail(request.resource.data)
         // לטיול ולמטרה יש סכום שנקבע מראש; למשק בית אין
         && (request.resource.data.type == 'household'
             || (request.resource.data.frame is number
@@ -73,6 +83,7 @@ service cloud.firestore {
       allow update: if isMember(budgetId)
         && validBillingDay(request.resource.data)
         && validBaseAmount(request.resource.data)
+        && validOwnerEmail(request.resource.data)
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.get('type', 'household')
            == resource.data.get('type', 'household');
@@ -171,7 +182,10 @@ service cloud.firestore {
           && request.resource.data.uid == resource.data.uid
           && request.resource.data.get('role', '') == resource.data.get('role', '')
           && request.resource.data.displayName is string
-          && request.resource.data.displayName.size() <= 60;
+          && request.resource.data.displayName.size() <= 60
+          && (!('email' in request.resource.data)
+              || request.resource.data.email == ''
+              || request.resource.data.email == request.auth.token.email);
       }
     }
 

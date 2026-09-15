@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { setMemberName, watchBudget, watchMembers, watchMemberships } from '../lib/budgets'
+import { healOwnerEmail, setMemberName, watchBudget, watchMembers, watchMemberships } from '../lib/budgets'
 import { needsDisplayName } from '../lib/members'
 import { useAuth } from './AuthContext'
 
@@ -70,9 +70,22 @@ export function BudgetProvider({ children }) {
       const mine = members.find((member) => member.uid === uid)
       if (!mine || !needsDisplayName(mine, myName)) continue
       healed.current.add(budgetId)
-      setMemberName({ budgetId, uid, displayName: myName }).catch(() => {})
+      setMemberName({ budgetId, uid, displayName: myName, email: user?.email || '' }).catch(() => {})
     }
   }, [membersById, uid, user])
+
+  // תקציבים שנוצרו לפני שהשדה היה קיים מקבלים אותו בכניסה הבאה,
+  // כדי שבקונסולה יהיה ברור של מי הם בלי לפענח מזהה
+  const emailed = useRef(new Set())
+  useEffect(() => {
+    if (!uid || !user?.email) return
+    for (const [budgetId, budget] of Object.entries(budgetsById)) {
+      if (!budget || emailed.current.has(budgetId)) continue
+      if (budget.ownerUid !== uid || budget.ownerEmail) continue
+      emailed.current.add(budgetId)
+      healOwnerEmail({ budgetId, email: user.email }).catch(() => {})
+    }
+  }, [budgetsById, uid, user])
 
   const budgets = useMemo(
     () => (budgetIds || [])

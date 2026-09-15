@@ -50,6 +50,8 @@ beforeEach(async () => {
 })
 
 const as = (uid) => testEnv.authenticatedContext(uid).firestore()
+// הכלל משווה מייל מול הטוקן, ולכן צריך הקשר שיש בו מייל
+const asEmail = (uid, email) => testEnv.authenticatedContext(uid, { email }).firestore()
 const anon = () => testEnv.unauthenticatedContext().firestore()
 
 describe('budgets', () => {
@@ -930,6 +932,37 @@ describe('יצירת תקציב עם מזהה קריא', () => {
     await assertSucceeds(setDoc(doc(as(PARTNER), 'budgets', 'household_הבית_x1'), {
       name: 'הבית', ownerUid: PARTNER, type: 'household',
       billingDay: 10, baseAmount: 20000, rekeyedFrom: 'oldRandomId',
+    }))
+  })
+})
+
+describe('מייל לקריאה אנושית', () => {
+  const MAIL = 'partner@example.com'
+
+  it('הבעלים שומר את המייל שלו על התקציב', async () => {
+    await assertSucceeds(setDoc(doc(asEmail(PARTNER, MAIL), 'budgets', 'b-mail'), {
+      name: 'הבית', ownerUid: PARTNER, type: 'household', ownerEmail: MAIL,
+    }))
+  })
+
+  it('אי אפשר לשתול מייל של מישהו אחר', async () => {
+    await assertFails(setDoc(doc(asEmail(PARTNER, MAIL), 'budgets', 'b-fake'), {
+      name: 'הבית', ownerUid: PARTNER, type: 'household',
+      ownerEmail: 'someone.else@example.com',
+    }))
+  })
+
+  it('תקציב בלי השדה ממשיך לעבוד', async () => {
+    await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { name: 'הבית שלנו' }))
+  })
+
+  it('חבר שומר את המייל שלו במסמך החברות', async () => {
+    const mine = 'owner@example.com'
+    await assertSucceeds(updateDoc(doc(asEmail(OWNER, mine), 'budgets', BUDGET, 'members', OWNER), {
+      displayName: 'דניאל', email: mine,
+    }))
+    await assertFails(updateDoc(doc(asEmail(OWNER, mine), 'budgets', BUDGET, 'members', OWNER), {
+      displayName: 'דניאל', email: 'someone.else@example.com',
     }))
   })
 })

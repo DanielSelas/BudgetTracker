@@ -32,6 +32,7 @@ export function normalizeInviteCode(raw) {
  */
 export async function createBudget({
   uid,
+  email = '',
   name,
   displayName = '',
   type = 'household',
@@ -50,6 +51,9 @@ export async function createBudget({
   await setDoc(budgetRef, {
     name: name.trim(),
     ownerUid: uid,
+    // עותק לקריאה אנושית בלבד. המערכת עובדת מול ownerUid, וזה כאן
+    // כדי שבקונסולה יהיה ברור של מי התקציב בלי לחפש את המזהה
+    ownerEmail: email,
     type,
     // מועד החיוב שייך למשק בית בלבד. לטיול ולמטרה אין כרטיס משלהם
     ...(type === 'household'
@@ -65,6 +69,7 @@ export async function createBudget({
   const batch = writeBatch(db)
   batch.set(doc(budgetRef, 'members', uid), {
     uid,
+    email,
     role: 'owner',
     displayName,
     joinedAt: serverTimestamp(),
@@ -113,7 +118,7 @@ export async function peekInvite(rawCode) {
  * מצרף את המשתמש לתקציב ומכבה את ההזמנה, הכל או כלום.
  * הכתיבה האטומית היא שמונעת קוד שנוצל אך ההצטרפות נכשלה, או להפך.
  */
-export async function joinBudgetWithInvite({ uid, rawCode, displayName = '' }) {
+export async function joinBudgetWithInvite({ uid, email = '', rawCode, displayName = '' }) {
   const invite = await peekInvite(rawCode)
   if (invite.status !== 'ok') return invite
 
@@ -122,6 +127,7 @@ export async function joinBudgetWithInvite({ uid, rawCode, displayName = '' }) {
 
   batch.set(doc(db, 'budgets', budgetId, 'members', uid), {
     uid,
+    email,
     role: 'member',
     displayName,
     inviteCode: code,
@@ -176,9 +182,20 @@ export async function deleteBudget({ budgetId, ownerUid, memberUids }) {
   await batch.commit()
 }
 
-/** מעדכן את השם שלך במסמך החבר. מותר רק על עצמך, לפי כללי האבטחה. */
-export function setMemberName({ budgetId, uid, displayName }) {
-  return updateDoc(doc(db, 'budgets', budgetId, 'members', uid), { displayName })
+/** מעדכן את השם והמייל שלך במסמך החבר. מותר רק על עצמך, לפי הכללים. */
+export function setMemberName({ budgetId, uid, displayName, email }) {
+  return updateDoc(doc(db, 'budgets', budgetId, 'members', uid), {
+    displayName,
+    ...(email ? { email } : {}),
+  })
+}
+
+/**
+ * משלים את המייל של הבעלים בתקציבים שנוצרו לפני שהשדה היה קיים.
+ * רק הבעלים יכול, וגם הוא רק במייל שלו, לפי הכללים.
+ */
+export function healOwnerEmail({ budgetId, email }) {
+  return updateDoc(doc(db, 'budgets', budgetId), { ownerEmail: email })
 }
 
 /** מאזין לרשימת החברים של תקציב, משמש להבחנה בין אישי למשותף. */

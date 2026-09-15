@@ -37,7 +37,9 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
     setBusy(true)
     try {
       if (mode === 'join') {
-        const result = await joinBudgetWithInvite({ uid: user.uid, rawCode: code, displayName: who })
+        const result = await joinBudgetWithInvite({
+          uid: user.uid, email: user.email || '', rawCode: code, displayName: who,
+        })
         if (result.status === 'joined') onDone?.(result.budgetId)
         else { setError(JOIN_MESSAGES[result.status] || 'ההצטרפות נכשלה'); setBusy(false) }
         return
@@ -45,6 +47,7 @@ export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
 
       const budgetId = await createBudget({
         uid: user.uid,
+        email: user.email || '',
         name,
         displayName: who,
         type,
