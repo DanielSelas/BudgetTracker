@@ -966,3 +966,26 @@ describe('מייל לקריאה אנושית', () => {
     }))
   })
 })
+
+describe('רשימת חברים לתצוגה', () => {
+  it('חבר מעדכן את הרשימה', async () => {
+    await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', BUDGET), {
+      memberEmails: ['a@example.com', 'b@example.com'],
+    }))
+  })
+
+  it('רשימה ארוכה מדי או שאינה רשימה נדחות', async () => {
+    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), {
+      memberEmails: Array.from({ length: 21 }, (_, i) => `u${i}@example.com`),
+    }))
+    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), {
+      memberEmails: 'a@example.com',
+    }))
+  })
+
+  it('מי שאינו חבר לא נוגע בה', async () => {
+    await assertFails(updateDoc(doc(as(STRANGER), 'budgets', BUDGET), {
+      memberEmails: ['hacker@example.com'],
+    }))
+  })
+})

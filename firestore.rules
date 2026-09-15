@@ -33,6 +33,13 @@ service cloud.firestore {
         || data.ownerEmail == request.auth.token.email;
     }
 
+    // רשימת החברים לתצוגה. עותק של תת האוסף members, שהוא מקור
+    // האמת, ולכן די בהגבלת גודל כדי שלא תהפוך לשדה חופשי.
+    function validMemberEmails(data) {
+      return !('memberEmails' in data)
+        || (data.memberEmails is list && data.memberEmails.size() <= 20);
+    }
+
     function validBaseAmount(data) {
       return !('baseAmount' in data)
         || (data.baseAmount is number && data.baseAmount >= 0);
@@ -71,6 +78,7 @@ service cloud.firestore {
         && validBillingDay(request.resource.data)
         && validBaseAmount(request.resource.data)
         && validOwnerEmail(request.resource.data)
+        && validMemberEmails(request.resource.data)
         // לטיול ולמטרה יש סכום שנקבע מראש; למשק בית אין
         && (request.resource.data.type == 'household'
             || (request.resource.data.frame is number
@@ -84,6 +92,7 @@ service cloud.firestore {
         && validBillingDay(request.resource.data)
         && validBaseAmount(request.resource.data)
         && validOwnerEmail(request.resource.data)
+        && validMemberEmails(request.resource.data)
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.get('type', 'household')
            == resource.data.get('type', 'household');

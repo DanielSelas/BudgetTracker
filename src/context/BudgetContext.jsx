@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { healOwnerEmail, setMemberName, watchBudget, watchMembers, watchMemberships } from '../lib/budgets'
+import {
+  healOwnerEmail, memberLabel, setMemberName, syncMemberEmails,
+  watchBudget, watchMembers, watchMemberships,
+} from '../lib/budgets'
 import { needsDisplayName } from '../lib/members'
 import { useAuth } from './AuthContext'
 
@@ -86,6 +89,21 @@ export function BudgetProvider({ children }) {
       healOwnerEmail({ budgetId, email: user.email }).catch(() => {})
     }
   }, [budgetsById, uid, user])
+
+  // רשימת החברים כשדה על התקציב, לקריאה בקונסולה. מתיישרת מאליה
+  // כשמישהו מצטרף או יוצא, ונכתבת רק כשהיא באמת שונה כדי לא להיכנס
+  // ללולאה של כתיבה ועדכון
+  useEffect(() => {
+    if (!uid) return
+    for (const [budgetId, members] of Object.entries(membersById)) {
+      const budget = budgetsById[budgetId]
+      if (!budget || !members) continue
+      const next = members.map(memberLabel).filter(Boolean).sort()
+      const now = [...(budget.memberEmails || [])].sort()
+      if (next.length === 0 || next.join('|') === now.join('|')) continue
+      syncMemberEmails({ budgetId, emails: next }).catch(() => {})
+    }
+  }, [membersById, budgetsById, uid])
 
   const budgets = useMemo(
     () => (budgetIds || [])

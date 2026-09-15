@@ -191,6 +191,21 @@ export function setMemberName({ budgetId, uid, displayName, email }) {
 }
 
 /**
+ * רשימת המיילים של החברים, כשדה על מסמך התקציב.
+ *
+ * תת האוסף members הוא מקור האמת, וזה עותק לתצוגה בלבד: בקונסולה
+ * רואים מי בתקציב בלי להיכנס פנימה. מתעדכן מאליו כשמישהו מצטרף או
+ * יוצא, ולכן אין צורך לתחזק אותו ידנית.
+ */
+export function syncMemberEmails({ budgetId, emails }) {
+  return updateDoc(doc(db, 'budgets', budgetId), { memberEmails: emails })
+}
+
+/** התווית של חבר לרשימה: מייל, ואם אין עדיין, השם. */
+export const memberLabel = (member) =>
+  member?.email || member?.displayName || member?.uid || ''
+
+/**
  * משלים את המייל של הבעלים בתקציבים שנוצרו לפני שהשדה היה קיים.
  * רק הבעלים יכול, וגם הוא רק במייל שלו, לפי הכללים.
  */

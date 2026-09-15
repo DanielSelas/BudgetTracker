@@ -537,3 +537,13 @@ describe('פרופיל: שם וגוון', () => {
     expect(tones.size).toBeGreaterThan(1)
   })
 })
+
+describe('תווית חבר לרשימה', () => {
+  it('מייל כשיש, ואחרת השם', async () => {
+    const { memberLabel } = await import('../src/lib/budgets')
+    expect(memberLabel({ email: 'd@mail.com', displayName: 'דניאל' })).toBe('d@mail.com')
+    expect(memberLabel({ displayName: 'דניאל', uid: 'u1' })).toBe('דניאל')
+    expect(memberLabel({ uid: 'u1' })).toBe('u1')
+    expect(memberLabel(null)).toBe('')
+  })
+})
