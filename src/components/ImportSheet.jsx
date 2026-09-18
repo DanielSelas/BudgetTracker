@@ -276,6 +276,11 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
                   המטבע נגזר משם בית העסק ונבדק מול שורת הסיכום שבראש
                   הקובץ.
                 </p>
+                <p>
+                  החיובים האלה שולמו מיתרת המט״ח, ולכן השער שצריך כאן
+                  הוא <strong>השער שבו המרתם את הכסף</strong> ולא שער
+                  היום. זה מה שהעסקה באמת עלתה לכם בשקלים.
+                </p>
 
                 <ul className="timeline">
                   {[...extracted.foreign].map(([currency, amount]) => (
@@ -292,7 +297,7 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
                   .filter((currency) => currency !== '?')
                   .map((currency) => (
                     <label className="field" key={currency}>
-                      {`כמה שקלים ב${CURRENCY_LABEL[currency] || currency} אחד`}
+                      {`כמה שקלים שילמתם על ${CURRENCY_LABEL[currency] || currency} אחד`}
                       <input
                         className="input num" type="number" inputMode="decimal"
                         min="0" step="0.01" placeholder={currency === 'USD' ? '3.7' : '4'}
@@ -310,6 +315,12 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
                     עדיף להזין שער או לחזור בלי הקבצים האלה.
                   </p>
                 )}
+
+                <p className="hint">
+                  ההמרה עצמה אינה הוצאה אלא העברה בין חשבונות, ולכן אין
+                  להזין אותה בנפרד: מה שיוצא בפועל נרשם כאן, בשורות של
+                  בתי העסק.
+                </p>
 
                 {extracted.unreconciled.length > 0 && (
                   <p className="hint">
