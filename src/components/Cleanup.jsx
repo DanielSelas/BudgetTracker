@@ -3,7 +3,8 @@ import { getDocs } from 'firebase/firestore'
 import { entriesRef } from '../lib/paths'
 import { cleanupPlan, runCleanup } from '../lib/cleanup'
 import { monthLabel, shekels } from '../lib/format'
-import { monthKey } from '../lib/model'
+import MonthSelect from './MonthSelect'
+import { monthKey, shiftMonth } from '../lib/model'
 
 /**
  * מחיקת היסטוריה שכבר לא נכונה.
@@ -88,9 +89,9 @@ export default function Cleanup({ budgets = [] }) {
 
       <label className="field">
         למחוק את כל מה שלפני
-        <input
-          className="input ltr" type="month" value={before}
-          onChange={(event) => { setBefore(event.target.value); setPlan(null) }}
+        <MonthSelect
+          value={before} from={shiftMonth(monthKey(), -36)} months={48}
+          onChange={(next) => { setBefore(next); setPlan(null) }}
         />
       </label>
 

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import Sheet from './Sheet'
+import MonthSelect from './MonthSelect'
 import { shekels, monthLabel } from '../lib/format'
-import { CATEGORIES, intervalLabel } from '../lib/model'
+import { CATEGORIES, intervalLabel, shiftMonth } from '../lib/model'
 import { isEnded, updateTemplate } from '../lib/recurring'
 
 /**
@@ -16,6 +17,7 @@ function Row({ budgetId, template, onStop }) {
   const [amount, setAmount] = useState(String(template.actualAmount ?? 0))
   const [dueDay, setDueDay] = useState(String(template.dueDay || ''))
   const [offCard, setOffCard] = useState(Boolean(template.offCard))
+  const [startMonth, setStartMonth] = useState(template.startMonth || '')
   const [endMonth, setEndMonth] = useState(template.endMonth || '')
   const [everyMonths, setEveryMonths] = useState(String(template.everyMonths || 1))
   const [busy, setBusy] = useState(false)
@@ -33,6 +35,7 @@ function Row({ budgetId, template, onStop }) {
         offCard: !income && offCard,
         dueDay: (income || offCard) ? Number(dueDay) || 0 : 0,
         everyMonths: Number(everyMonths) || 1,
+        startMonth,
         endMonth,
       })
       setOpen(false)
@@ -113,11 +116,18 @@ function Row({ budgetId, template, onStop }) {
           </label>
 
           <label className="field">
-            קבוע עד (לא חובה)
-            <input
-              className="input ltr" type="month"
-              min={template.startMonth}
-              value={endMonth} onChange={(event) => setEndMonth(event.target.value)}
+            מאיזה חודש
+            <MonthSelect
+              value={startMonth} onChange={setStartMonth}
+              from={shiftMonth(startMonth || template.startMonth, -24)} months={48}
+            />
+          </label>
+
+          <label className="field">
+            עד מתי
+            <MonthSelect
+              value={endMonth} onChange={setEndMonth}
+              from={template.startMonth} allowEmpty
             />
           </label>
 
@@ -134,6 +144,12 @@ function Row({ budgetId, template, onStop }) {
               הפסקה
             </button>
           </div>
+
+          <span className="type-hint">
+            השורה נוצרת בחודש שפותחים, ולכן חודש שלא נפתח מאז ההגדרה
+            עדיין ריק. הזזת חודש ההתחלה אחורה מוסיפה אותו גם לחודשים
+            קודמים ברגע שנכנסים אליהם.
+          </span>
 
           <span className="type-hint">
             שינוי הסכום חל מהחודש הבא. חודשים שכבר נוצרו שומרים על מה

@@ -3,14 +3,18 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDocs,
   onSnapshot,
+  query,
+  where,
+  writeBatch,
   serverTimestamp,
   setDoc,
   deleteField,
   updateDoc,
 } from 'firebase/firestore'
 import { db } from './firebase'
-import { entryRef } from './paths'
+import { entriesRef, entryRef } from './paths'
 import { CATEGORIES, runsInMonth, shiftMonth } from './model'
 import { recurringId as readableRecurringId } from './paths'
 
@@ -97,7 +101,36 @@ export function skipMonth(budgetId, recurringId, month) {
 
 /** הפסקת החיוב הקבוע. שורות שכבר נוצרו בחודשים קודמים נשארות. */
 export function stopTemplate(budgetId, recurringId) {
+  if (!recurringId) throw new Error('חסר מזהה של החיוב הקבוע')
   return deleteDoc(doc(templatesRef(budgetId), recurringId))
+}
+
+/**
+ * מחיקה מלאה: התבנית וכל השורות שנגזרו ממנה, בכל החודשים.
+ *
+ * "הפסקה" משאירה את ההיסטוריה, וזה הנכון לחיוב שבאמת היה. אבל
+ * תבנית שנוצרה בטעות, למשל כפילות, משאירה שורות בכל חודש שנפתח
+ * מאז, ומחיקה שלהן אחת אחת אינה סבירה.
+ */
+export async function deleteTemplateEverywhere(budgetId, recurringId) {
+  if (!recurringId) throw new Error('חסר מזהה של החיוב הקבוע')
+  const snapshot = await getDocs(
+    query(entriesRef(budgetId), where('recurringId', '==', recurringId)),
+  )
+
+  let removed = 0
+  const ids = snapshot.docs.map((item) => item.id)
+  for (let start = 0; start < ids.length; start += 400) {
+    const batch = writeBatch(db)
+    for (const id of ids.slice(start, start + 400)) {
+      batch.delete(entryRef(budgetId, id))
+      removed += 1
+    }
+    await batch.commit()
+  }
+
+  await deleteDoc(doc(templatesRef(budgetId), recurringId))
+  return { removed }
 }
 
 /**

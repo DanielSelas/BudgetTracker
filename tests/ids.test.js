@@ -57,7 +57,22 @@ describe('מזהה קריא לתקציב', () => {
 
 describe('מזהה קריא לחיוב קבוע', () => {
   it('קטגוריה ושם', () => {
-    expect(recurringId({ category: 'fixed', name: 'שכר דירה' })
-      .startsWith('fixed-שכר-דירה-')).toBe(true)
+    expect(recurringId({ category: 'fixed', name: 'שכר דירה' })).toBe('fixed-שכר-דירה')
+  })
+
+  /**
+   * זנב אקראי כאן יצר שלוש תבניות לשכר דירה אחד, כי כל לחיצה על
+   * שמירה נתנה מזהה חדש. שתי קניות באותו שם הן שתי עסקאות אמיתיות,
+   * אבל התחייבות קבועה באותו שם היא אותה התחייבות.
+   */
+  it('אותו שם נותן אותו מזהה, ולכן שמירה חוזרת דורסת ולא מוסיפה', () => {
+    const first = recurringId({ category: 'fixed', name: 'שכר דירה' })
+    const second = recurringId({ category: 'fixed', name: '  שכר דירה  ' })
+    expect(second).toBe(first)
+  })
+
+  it('קטגוריה אחרת היא התחייבות אחרת', () => {
+    expect(recurringId({ category: 'leisure', name: 'שכר דירה' }))
+      .not.toBe(recurringId({ category: 'fixed', name: 'שכר דירה' }))
   })
 })

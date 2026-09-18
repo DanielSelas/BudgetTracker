@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Avatar from './Avatar'
 import Sheet from './Sheet'
+import MonthSelect from './MonthSelect'
 import { monthLabel, shekels } from '../lib/format'
 import { MAX_GROUP_LENGTH, SUGGESTED_GROUPS, normalizeGroup } from '../lib/groups'
 import { merchantGroup } from '../lib/merchants'
@@ -317,12 +318,9 @@ export default function EntrySheet({
               </div>
 
               {term === 'until' && (
-                <input
-                  className="input ltr"
-                  type="month"
-                  min={month}
-                  value={untilMonth}
-                  onChange={(event) => setUntilMonth(event.target.value)}
+                <MonthSelect
+                  value={untilMonth} onChange={setUntilMonth}
+                  from={month} allowEmpty emptyLabel="בלי תאריך סיום"
                 />
               )}
 

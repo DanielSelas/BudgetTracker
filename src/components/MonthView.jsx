@@ -11,6 +11,7 @@ import MonthPicker from './MonthPicker'
 import BackToBudgets from './BackToBudgets'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
+import StopRecurring from './StopRecurring'
 import RenameDialog from './RenameDialog'
 import BillingDayDialog from './BillingDayDialog'
 import BaseAmountDialog from './BaseAmountDialog'
@@ -18,7 +19,9 @@ import Sheet from './Sheet'
 import InvitePanel from './InvitePanel'
 import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
-import { createTemplate, endingSoon, skipMonth, stopTemplate, upcomingCharge } from '../lib/recurring'
+import {
+  createTemplate, deleteTemplateEverywhere, endingSoon, skipMonth, stopTemplate, upcomingCharge,
+} from '../lib/recurring'
 import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth } from '../lib/model'
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
@@ -336,15 +339,10 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
       )}
 
       {pendingStop && (
-        <ConfirmDialog
-          title="להפסיק את החיוב הקבוע?"
-          body={`"${pendingStop.name}" לא יתווסף יותר בחודשים הבאים. השורה של החודש הזה ושל החודשים הקודמים תישאר.`}
-          confirmLabel="הפסק"
-          onConfirm={() => {
-            stopTemplate(budgetId, pendingStop.recurringId)
-            setPendingStop(null)
-          }}
-          onCancel={() => setPendingStop(null)}
+        <StopRecurring
+          template={pendingStop}
+          budgetId={budgetId}
+          onDone={() => setPendingStop(null)}
         />
       )}
     </>

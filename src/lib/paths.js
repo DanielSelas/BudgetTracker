@@ -65,6 +65,9 @@ export function recurringId({ category, name }) {
     .replace(/[/\\.#$[\]]/g, '')
     .replace(/\s+/g, '-')
     .slice(0, MAX_SLUG)
-  const tail = Math.random().toString(36).slice(2, 8)
-  return [category, slug, tail].filter(Boolean).join('-')
+  // בלי זנב אקראי, ובכוונה. שתי קניות באותו שם הן שתי עסקאות
+  // אמיתיות, אבל "שכר דירה" שנוצר פעמיים הוא אותה התחייבות: לחיצה
+  // שנייה על שמירה צריכה לדרוס ולא להוסיף. זנב אקראי כאן יצר שלוש
+  // תבניות לשכר דירה אחד, ואיתן שלוש שורות בכל חודש
+  return [category, slug].filter(Boolean).join('-')
 }

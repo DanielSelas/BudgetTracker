@@ -619,3 +619,81 @@ describe('כלל הקיבוץ בהזנה ידנית', () => {
     expect(onSubmit.mock.calls[0][0].groupKey).toBe('דלק')
   })
 })
+
+describe('בחירת חודש', () => {
+  /**
+   * input type="month" אינו נתמך בספארי במחשב ובפיירפוקס, ושם הוא
+   * נופל לשדה טקסט חופשי בלי בורר ובלי רמז מה להקליד. זה מה שמנע
+   * שמירה של "עד מתי".
+   */
+  it('אין בשום מסך שדה תאריך שספארי לא תומך בו', async () => {
+    for (const name of ['Commitments', 'Cleanup', 'EntrySheet']) {
+      const source = await import(`../src/components/${name}.jsx?raw`)
+      expect(source.default).not.toContain('type="month"')
+    }
+  })
+
+  it('הרשימה מציגה חודשים בעברית ומחזירה מפתח', async () => {
+    const { default: MonthSelect } = await import('../src/components/MonthSelect')
+    const onChange = vi.fn()
+    const { container, getByText } = render(
+      <MonthSelect value="2026-09" from="2026-09" months={3} onChange={onChange} />,
+    )
+    expect(getByText('ספטמבר 2026')).toBeTruthy()
+    expect(getByText('נובמבר 2026')).toBeTruthy()
+    fireEvent.change(container.querySelector('select'), { target: { value: '2026-10' } })
+    expect(onChange).toHaveBeenCalledWith('2026-10')
+  })
+
+  it('חודש שמור שמחוץ לטווח עדיין מופיע, כדי שהבחירה לא תימחק', async () => {
+    const { default: MonthSelect } = await import('../src/components/MonthSelect')
+    const { getByText } = render(
+      <MonthSelect value="2024-01" from="2026-09" months={3} onChange={() => {}} />,
+    )
+    expect(getByText('ינואר 2024')).toBeTruthy()
+  })
+
+  it('אפשר לבחור בלי תאריך סיום', async () => {
+    const { default: MonthSelect } = await import('../src/components/MonthSelect')
+    const { getByText } = render(
+      <MonthSelect value="" from="2026-09" months={2} allowEmpty onChange={() => {}} />,
+    )
+    expect(getByText('בלי תאריך סיום')).toBeTruthy()
+  })
+})
+
+describe('הפסקת חיוב קבוע', () => {
+  /**
+   * ממסך החיובים הקבועים הגיעה התבנית, שהמזהה שלה הוא id, והקוד קרא
+   * ל-recurringId שקיים רק על שורה. הקריאה נכשלה בשקט, ושום דבר לא
+   * קרה כשלחצו על הפסקה.
+   */
+  it('עובד גם עם תבנית וגם עם שורה', async () => {
+    const recurring = await import('../src/lib/recurring')
+    const stop = vi.spyOn(recurring, 'stopTemplate').mockResolvedValue()
+    const { default: StopRecurring } = await import('../src/components/StopRecurring')
+
+    // מסך החיובים הקבועים מעביר תבנית, ושורת החודש מעבירה רשומה
+    for (const [template, expected] of [
+      [{ id: 'fixed-שכר-דירה', name: 'שכר דירה' }, 'fixed-שכר-דירה'],
+      [{ recurringId: 'fixed-חשמל', name: 'חשמל' }, 'fixed-חשמל'],
+    ]) {
+      const { getByText } = render(
+        <StopRecurring template={template} budgetId="b1" onDone={() => {}} />,
+      )
+      fireEvent.click(getByText('הפסקה מהחודש הבא'))
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(stop).toHaveBeenLastCalledWith('b1', expected)
+      cleanup()
+    }
+    stop.mockRestore()
+  })
+
+  it('מציע גם מחיקה מכל החודשים', async () => {
+    const { default: StopRecurring } = await import('../src/components/StopRecurring')
+    const { getByText } = render(
+      <StopRecurring template={{ id: 'x', name: 'שכר דירה' }} budgetId="b1" onDone={() => {}} />,
+    )
+    expect(getByText('מחיקה מכל החודשים')).toBeTruthy()
+  })
+})
