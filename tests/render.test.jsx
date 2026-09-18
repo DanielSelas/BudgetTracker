@@ -784,3 +784,42 @@ describe('כרטיס הבלת״ם', () => {
     expect(container.querySelector('.cat-total').textContent).toContain('4,000')
   })
 })
+
+describe('שורות הבלת״ם', () => {
+  /**
+   * הרשימה הייתה מותנית ביתרה, ולכן בחודש מיובא בלי הכנסה כל שורות
+   * הבלת״ם נעלמו מהמסך. הכסף נספר בסכום החודשי ולא היה שום מקום
+   * לראות אותו או לתקן את הסיווג שלו.
+   */
+  const entries = [
+    { id: 'e1', name: 'וט המומחים', category: 'unplanned', actualAmount: 11178, month: '2025-08' },
+    { id: 'e2', name: 'וט המומחים', category: 'unplanned', actualAmount: 4037, month: '2025-08' },
+  ]
+  const summary = {
+    usesFixedBase: false,
+    unplanned: { reserve: 0, spent: 15215, remaining: -15215, deposited: 0, planned: 0 },
+  }
+
+  it('מוצגות גם כשאין יתרה', async () => {
+    const { default: UnplannedCard } = await import('../src/components/UnplannedCard')
+    const { container } = render(
+      <UnplannedCard
+        summary={summary} entries={entries} actions={{}}
+        onAdd={() => {}} onDeposit={() => {}}
+      />,
+    )
+    expect(container.textContent).toContain('וט המומחים')
+    expect(container.textContent).toContain('בלת״ם')
+  })
+
+  it('ובחודש ריק בלי יתרה הכרטיס לא מציג רשימה ריקה', async () => {
+    const { default: UnplannedCard } = await import('../src/components/UnplannedCard')
+    const { container } = render(
+      <UnplannedCard
+        summary={{ usesFixedBase: false, unplanned: { reserve: 0, spent: 0, remaining: 0, deposited: 0, planned: 0 } }}
+        entries={[]} actions={{}} onAdd={() => {}} onDeposit={() => {}}
+      />,
+    )
+    expect(container.querySelector('.subsection')).toBeNull()
+  })
+})
