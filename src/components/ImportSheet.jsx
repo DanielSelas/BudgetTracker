@@ -206,9 +206,9 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
             {plan.count > 0 && (
               <div className="notice block">
                 <p>
-                  <strong>{plan.count}</strong> מהעסקאות הן בתשלומים. הסכום
-                  שבקובץ הוא התשלום החודשי, ועוד <strong>{shekels(plan.total)}</strong>
-                  {' '}יירדו בחודשים הבאים:
+                  ל<strong>{plan.count}</strong> מעסקאות התשלומים יש המשך
+                  שלא נמצא בקובץ. לפי התשלום האחרון שמופיע, עוד
+                  {' '}<strong>{shekels(plan.total)}</strong> צפויים לרדת:
                 </p>
                 <ul className="timeline">
                   {plan.byMonth.map((item) => (
@@ -307,9 +307,9 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
             )}
             {report.committed > 0 && (
               <p className="hint">
-                <strong>{shekels(report.committed)}</strong> מתוך מה שיובא הם
-                תשלומים שעוד לא ירדו. הם לא בתקציב של החודש הזה, אבל הם כבר
-                התחייבות, וכדאי לזכור אותם כשמתכננים את החודשים הבאים.
+                <strong>{shekels(report.committed)}</strong> צפויים לרדת
+                בהמשך תוכניות התשלומים. הם לא בתקציב של החודש הזה, אבל הם
+                כבר התחייבות, וכדאי לזכור אותם כשמתכננים את החודשים הבאים.
               </p>
             )}
             <p className="hint">

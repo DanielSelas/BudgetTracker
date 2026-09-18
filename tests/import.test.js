@@ -378,7 +378,7 @@ describe('תשלומים', () => {
       ['08/04/2025', 'רהיטים', '300', 'תשלום 3 מתוך 3'],
     ]
     const { rows: out } = extractRows(last, detectColumns(last))
-    expect(installmentPlan(out)).toEqual({ count: 1, total: 0, byMonth: [] })
+    expect(installmentPlan(out)).toEqual({ count: 0, total: 0, byMonth: [] })
   })
 
   it('זיכוי בתשלומים לא נספר כהתחייבות עתידית', () => {
@@ -411,8 +411,86 @@ describe('תשלומים', () => {
       ['08/05/2025', 'רהיטים', '300', 'תשלום 2 מתוך 3'],
     ]
     const { rows: out } = extractRows(many, detectColumns(many))
-    const group = byMerchant(out)[0]
-    expect(group.installment).toEqual({ index: 2, total: 3 })
-    expect(group.remaining).toBe(900)
+    expect(byMerchant(out)[0].installment).toEqual({ index: 2, total: 3 })
+  })
+
+  /**
+   * כך דיינרס מציג עסקת תשלומים: כל התשלומים באותו קובץ ובאותו
+   * תאריך. אין כאן התחייבות עתידית, והחישוב הישן ניבא אחת.
+   */
+  it('כל התשלומים באותו תאריך פירושם שאין מה לצפות', () => {
+    const together = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'הערות'],
+      ['31/03/2025', 'סקוט אייר', '255', 'תשלום 2 מתוך 2'],
+      ['31/03/2025', 'סקוט אייר', '255', 'תשלום 1 מתוך 2'],
+    ]
+    const { rows: out } = extractRows(together, detectColumns(together))
+    expect(installmentPlan(out)).toEqual({ count: 0, total: 0, byMonth: [] })
+  })
+
+  it('גם כששני התשלומים בסכומים שונים', () => {
+    // אצל דיינרס תוכנית של שניים יכולה להתחלק 1 ו-11178
+    const uneven = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'הערות'],
+      ['21/08/2025', 'וט המומחים', '11178', 'תשלום 2 מתוך 2'],
+      ['21/08/2025', 'וט המומחים', '1', 'תשלום 1 מתוך 2'],
+    ]
+    const { rows: out } = extractRows(uneven, detectColumns(uneven))
+    expect(installmentPlan(out).total).toBe(0)
+  })
+
+  it('שתי קניות נפרדות באותו עסק אינן מתערבבות', () => {
+    const twice = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'הערות'],
+      ['21/08/2025', 'וט המומחים', '500', 'תשלום 1 מתוך 2'],
+      ['21/08/2025', 'וט המומחים', '500', 'תשלום 2 מתוך 2'],
+      ['21/10/2025', 'וט המומחים', '600', 'תשלום 1 מתוך 2'],
+    ]
+    const { rows: out } = extractRows(twice, detectColumns(twice))
+    // הראשונה הושלמה, השנייה עוד חייבת תשלום אחד
+    expect(installmentPlan(out)).toEqual({
+      count: 1, total: 600, byMonth: [{ month: '2025-11', amount: 600 }],
+    })
+  })
+})
+
+describe('ניחוש לפי ענף', () => {
+  /**
+   * שמות הענפים נלקחו מדוחות אשראי אמיתיים ולא נוחשו. הבדיקות כאן
+   * נועלות את המלכודות שהתגלו כשעברנו על הדוחות.
+   */
+  const guess = async (sector) => {
+    const { seedCategory } = await import('../src/lib/sectors')
+    return seedCategory(sector)
+  }
+
+  it('מזון מהיר אינו קניות בסופר', async () => {
+    // הסדר ברשימה הוא מה שמכריע: "מזון" היה תופס גם את "מזון מהיר"
+    expect(await guess('מזון מהיר')).toBe('leisure')
+    expect(await guess('מזון ומשקאות')).toBe('fixed')
+  })
+
+  it('דלק יושב תחת אנרגיה', async () => {
+    expect(await guess('אנרגיה')).toBe('fixed')
+    expect(await guess('רכב ותחבורה')).toBe('fixed')
+  })
+
+  it('ארנונה ומים מגיעים תחת מוסדות', async () => {
+    expect(await guess('מוסדות')).toBe('fixed')
+  })
+
+  it('דמי כרטיס מגיעים תחת ציוד ומשרד', async () => {
+    expect(await guess('ציוד ומשרד')).toBe('fixed')
+  })
+
+  it('חופשות הן הוצאה משתנה', async () => {
+    expect(await guess('תיירות')).toBe('leisure')
+    expect(await guess('מלונאות ואירוח')).toBe('leisure')
+    expect(await guess('אירועים')).toBe('leisure')
+  })
+
+  it('ענף ריק לא מקבל הצעה', async () => {
+    expect(await guess('')).toBe('')
+    expect(await guess('ענף שלא מוכר')).toBe('')
   })
 })

@@ -212,12 +212,6 @@ export function extractRows(rows, mapping) {
 }
 
 /** קיבוץ לפי בית עסק, כי סיווג לפי עסקה אינו בר ביצוע. */
-/** מה שעוד צפוי לרדת מהעסקה הזאת אחרי החיוב שבקובץ. */
-export const remainingOf = (row) =>
-  row.installment && row.amount > 0
-    ? row.amount * (row.installment.total - row.installment.index)
-    : 0
-
 const addMonths = (month, count) => {
   const [year, index] = month.split('-').map(Number)
   const moved = new Date(Date.UTC(year, index - 1 + count, 1))
@@ -225,29 +219,62 @@ const addMonths = (month, count) => {
 }
 
 /**
- * מה שכבר התחייבנו אליו ועוד לא ירד.
+ * פירוק שורות התשלומים לעסקאות.
  *
- * עסקת תשלומים היא הוצאה של החודשים הבאים שנחתמה החודש, ובלי הפירוק
- * הזה היא פשוט לא קיימת בתקציב עד שהיא מפתיעה.
+ * כל תשלום הוא שורה נפרדת, ולפעמים כל תשלומי העסקה מופיעים באותו
+ * קובץ ובאותו תאריך: חברת האשראי מציגה את כל התוכנית ולא רק את מה
+ * שירד. לכן אי אפשר להסיק מ"תשלום 1 מתוך 2" שהשני עוד לפנינו.
+ *
+ * הפיצול הוא כרונולוגי: מספר תשלום שאינו גדול מקודמו פותח עסקה
+ * חדשה, וכך שתי קניות נפרדות באותו עסק לא מתערבבות.
  */
-export function installmentPlan(rows) {
-  // אותה עסקה מופיעה שוב בכל חודש שהיא ירדה בו. קובץ שחוצה חודשים
-  // מכיל גם "1 מתוך 3" וגם "2 מתוך 3" של אותה קנייה, ורק התשלום
-  // המתקדם ביותר מלמד מה באמת נשאר. בלי זה החודשים המשותפים
-  // נספרים פעמיים
-  const latest = new Map()
+function purchases(rows) {
+  const byName = new Map()
   for (const row of rows) {
     if (!row.installment || row.amount <= 0) continue
-    const key = `${row.name}|${row.amount}|${row.installment.total}`
-    const known = latest.get(key)
-    if (!known || row.installment.index > known.installment.index) latest.set(key, row)
+    const key = `${row.name}|${row.installment.total}`
+    if (!byName.has(key)) byName.set(key, [])
+    byName.get(key).push(row)
   }
 
+  const out = []
+  for (const list of byName.values()) {
+    list.sort((a, b) =>
+      a.date.localeCompare(b.date) || a.installment.index - b.installment.index)
+    let current = null
+    for (const row of list) {
+      if (!current || row.installment.index <= current.last.installment.index) {
+        current = { seen: new Set(), last: row }
+        out.push(current)
+      }
+      current.seen.add(row.installment.index)
+      current.last = row
+    }
+  }
+  return out
+}
+
+/**
+ * מה שכבר התחייבנו אליו ועוד לא הופיע בקובץ.
+ *
+ * מה שנותר הוא התשלומים שאינם בקובץ, ולא חישוב לפי מספר התשלום
+ * האחרון. הסכום הוא הערכה לפי התשלום האחרון שנראה, כי תוכנית
+ * תשלומים לא תמיד מתחלקת שווה בשווה.
+ */
+export function installmentPlan(rows) {
   const months = new Map()
-  for (const row of latest.values()) {
-    for (let step = 1; step <= row.installment.total - row.installment.index; step += 1) {
-      const month = addMonths(row.month, step)
-      months.set(month, (months.get(month) || 0) + row.amount)
+  let count = 0
+
+  for (const { last } of purchases(rows)) {
+    // מה שנותר נמדד מהתשלום האחרון שנראה ולא ממספר השורות: קובץ
+    // שנפתח באמצע תוכנית מראה "3 מתוך 12" בלי השניים הראשונים,
+    // והם כבר ירדו
+    const missing = last.installment.total - last.installment.index
+    if (missing <= 0) continue
+    count += 1
+    for (let step = 1; step <= missing; step += 1) {
+      const month = addMonths(last.month, step)
+      months.set(month, (months.get(month) || 0) + last.amount)
     }
   }
 
@@ -256,7 +283,7 @@ export function installmentPlan(rows) {
     .sort((a, b) => a.month.localeCompare(b.month))
 
   return {
-    count: latest.size,
+    count,
     total: Math.round(byMonth.reduce((sum, item) => sum + item.amount, 0) * 100) / 100,
     byMonth,
   }
@@ -284,7 +311,6 @@ export function byMerchant(rows) {
       type: [...group.types.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '',
       // התשלום האחרון בקבוצה הוא המצב העדכני של העסקה
       installment: group.rows.filter((row) => row.installment).at(-1)?.installment || null,
-      remaining: group.rows.reduce((sum, row) => sum + remainingOf(row), 0),
     }))
     .sort((a, b) => b.total - a.total)
 }
