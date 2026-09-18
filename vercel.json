@@ -3,7 +3,13 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "rewrites": [
+    {
+      "//": "assets מוחרג בכוונה: קובץ שנמחק בפריסה חדשה צריך להחזיר 404 ולא index.html, אחרת הדפדפן מקבל HTML במקום JavaScript ונופל על שגיאת MIME מבלבלת",
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

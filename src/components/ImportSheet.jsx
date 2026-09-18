@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import Sheet from './Sheet'
 import { monthLabel, shekels } from '../lib/format'
 import { readAnyFile } from '../lib/readAny'
+import { isStaleBuildError } from '../lib/freshBuild'
 import {
   byMerchant, detectColumns, extractRows, installmentPlan, mergeFiles, monthsIn,
 } from '../lib/importRows'
@@ -17,6 +18,15 @@ import { isStanding, suggestCategory } from '../lib/sectors'
  * שבהם מכסים את רוב הכסף.
  */
 const STEPS = { file: 'file', map: 'map', classify: 'classify', done: 'done' }
+
+/**
+ * הודעת שגיאה קצרה גם כשנכשלו תשעה עשר קבצים. רשימה מלאה מציפה את
+ * המסך ואי אפשר לקרוא ממנה כלום, ושלוש דוגמאות מספיקות כדי להבין.
+ */
+const summarize = (items, limit = 3) =>
+  items.length <= limit
+    ? items.join(' | ')
+    : `${items.slice(0, limit).join(' | ')} ועוד ${items.length - limit}`
 
 // למה זה מסומן: הצעה בלי הסבר נראית כמו החלטה שרירותית
 const SOURCE_NOTE = {
@@ -87,17 +97,24 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
         if (parsed.length === 0) throw new Error('לא נמצאו שורות')
         read.push({ name: file.name, rows: parsed, mapping: detectColumns(parsed) })
       } catch (failure) {
+        // גרסה תקועה נכשלת על כל הקבצים באותה סיבה, וזו תקלה של
+        // האפליקציה ולא של הקבצים. אין טעם לדווח עליה תשע עשרה פעם
+        if (isStaleBuildError(failure)) {
+          setBusy(false)
+          setError('האפליקציה התעדכנה ברקע. סגרו ופתחו אותה, ונסו שוב.')
+          return
+        }
         // קובץ אחד פגום לא אמור להפיל העלאה של תריסר. הוא מדווח בשמו
         failed.push(`${file.name}: ${failure?.message || 'לא ניתן לקריאה'}`)
       }
     }
     setBusy(false)
     if (read.length === 0) {
-      setError(failed.join(' | ') || 'לא הצלחתי לקרוא את הקבצים')
+      setError(summarize(failed) || 'לא הצלחתי לקרוא את הקבצים')
       return
     }
     setFiles(read)
-    setError(failed.length > 0 ? `דולגו ${failed.length} קבצים. ${failed.join(' | ')}` : '')
+    setError(failed.length > 0 ? `דולגו ${failed.length} קבצים. ${summarize(failed)}` : '')
     setStep(STEPS.map)
   }
 
