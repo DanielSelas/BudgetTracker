@@ -13,7 +13,13 @@ import { monthKey } from '../lib/model'
  * וזה מסך תחזוקה ולא מסך יומיומי.
  */
 export default function Cleanup({ budgets = [] }) {
-  const [budgetId, setBudgetId] = useState(budgets[0]?.id || '')
+  // הבחירה נגזרת ולא נשמרת: מסמכי התקציב מגיעים אחרי רשימת
+  // החברויות, ולכן ערך התחלתי היה נתפס ריק ולא מתעדכן לעולם
+  const [chosenId, setChosenId] = useState('')
+  const budgetId = budgets.some((budget) => budget.id === chosenId)
+    ? chosenId
+    : budgets[0]?.id || ''
+  const target = budgets.find((budget) => budget.id === budgetId)
   const [before, setBefore] = useState(monthKey())
   const [keepIncome, setKeepIncome] = useState(true)
   const [plan, setPlan] = useState(null)
@@ -61,18 +67,23 @@ export default function Cleanup({ budgets = [] }) {
         וכך גם כל מה שאחריו. כדאי לגבות קודם.
       </p>
 
-      {budgets.length > 1 && (
+      {budgets.length > 1 ? (
         <label className="field">
           תקציב
           <select
             className="input rtl" value={budgetId}
-            onChange={(event) => { setBudgetId(event.target.value); setPlan(null) }}
+            onChange={(event) => { setChosenId(event.target.value); setPlan(null) }}
           >
             {budgets.map((budget) => (
               <option key={budget.id} value={budget.id}>{budget.name || budget.id}</option>
             ))}
           </select>
         </label>
+      ) : (
+        // גם עם תקציב אחד צריך לראות על מה זה עומד לפעול
+        <p className="hint">
+          {target ? <>התקציב: <strong>{target.name || target.id}</strong></> : 'טוען תקציבים...'}
+        </p>
       )}
 
       <label className="field">

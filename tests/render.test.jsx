@@ -532,3 +532,39 @@ describe('דרכי כניסה למסכי התקציב', () => {
     expect(queryByText('מחיקה')).toBeNull()
   })
 })
+
+describe('מסך ניקוי הרשומות', () => {
+  /**
+   * הכפתור היה מושבת לנצח: מסמכי התקציב מגיעים אחרי רשימת החברויות,
+   * ולכן מזהה שנשמר ב-state בטעינה הראשונה נתפס ריק. עם תקציב אחד
+   * אין בורר, ולא הייתה שום דרך לתקן את זה מהמסך.
+   */
+  const budget = { id: 'household_x', name: 'משק בית' }
+
+  it('הכפתור פעיל כשהתקציב הגיע, גם בלי בורר', async () => {
+    const { default: Cleanup } = await import('../src/components/Cleanup')
+    const { getByText } = render(<Cleanup budgets={[budget]} />)
+    expect(getByText('מה יימחק').disabled).toBe(false)
+  })
+
+  it('ורואים על איזה תקציב זה עומד לפעול', async () => {
+    const { default: Cleanup } = await import('../src/components/Cleanup')
+    const { container } = render(<Cleanup budgets={[budget]} />)
+    expect(container.textContent).toContain('משק בית')
+  })
+
+  it('כשהתקציבים עוד לא הגיעו הכפתור מושבת ונאמר שטוענים', async () => {
+    const { default: Cleanup } = await import('../src/components/Cleanup')
+    const { getByText, container } = render(<Cleanup budgets={[]} />)
+    expect(getByText('מה יימחק').disabled).toBe(true)
+    expect(container.textContent).toContain('טוען תקציבים')
+  })
+
+  it('תקציב שנבחר ואינו קיים יותר חוזר לראשון', async () => {
+    const { default: Cleanup } = await import('../src/components/Cleanup')
+    const other = { id: 'household_y', name: 'תקציב שני' }
+    const { container, rerender } = render(<Cleanup budgets={[budget, other]} />)
+    rerender(<Cleanup budgets={[other]} />)
+    expect(container.textContent).toContain('תקציב שני')
+  })
+})
