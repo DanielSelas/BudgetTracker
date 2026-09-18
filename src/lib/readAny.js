@@ -31,7 +31,7 @@ export async function readAnyFile(file) {
 
   if (kind === 'xlsx') {
     const { readXlsx } = await import('./xlsx')
-    return { kind, rows: await readXlsx(file) }
+    return { kind, ...(await readXlsx(file)) }
   }
 
   if (kind === 'html') {

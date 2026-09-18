@@ -69,8 +69,45 @@ function dateStyles(stylesXml) {
 }
 
 /**
+ * המטבע של כל סגנון תא, מתוך קוד עיצוב המספר.
+ *
+ * זו האמת ולא השערה: דוח שמחייב בכמה מטבעות מגדיר פורמט לכל אחד
+ * מהם, כמו "$"#,##0.00 לצד "₪"#,##0.00, וכל תא מצביע על הפורמט
+ * שלו. עד שקראנו את זה, המטבע שוחזר מסיומת שם בית העסק.
+ */
+const SYMBOL_CURRENCY = { '₪': 'ILS', $: 'USD', '€': 'EUR', '£': 'GBP' }
+
+export function currencyStyles(source) {
+  const byStyle = new Map()
+  if (!source) return byStyle
+
+  const doc = parseXml(source)
+  const custom = new Map()
+  for (const format of tags(doc, 'numFmt')) {
+    const id = Number(format.getAttribute('numFmtId'))
+    const code = format.getAttribute('formatCode') || ''
+    // הסימן יושב בתוך מרכאות או בסוגריים מרובעים, לפי הכלי שייצא
+    const symbol = Object.keys(SYMBOL_CURRENCY).find((sign) => code.includes(sign))
+    if (symbol) custom.set(id, SYMBOL_CURRENCY[symbol])
+  }
+  if (custom.size === 0) return byStyle
+
+  const cellXfs = tags(doc, 'cellXfs')[0]
+  if (!cellXfs) return byStyle
+  tags(cellXfs, 'xf').forEach((xf, index) => {
+    const currency = custom.get(Number(xf.getAttribute('numFmtId') || 0))
+    if (currency) byStyle.set(index, currency)
+  })
+  return byStyle
+}
+
+/**
  * שורות הגיליון הראשון, כמערך מערכים של מחרוזות, באותו מבנה שמחזיר
  * פענוח CSV. כך שאר הזרימה אינה יודעת מאיזה סוג קובץ הגיע המידע.
+ *
+ * לצדן מוחזר מבנה מקביל עם המטבע של כל תא, כשעיצוב המספר מציין
+ * אותו. בדוח שמחייב בכמה מטבעות זה הנתון היחיד שאומר בוודאות מה
+ * ירד בפועל.
  */
 export async function readXlsx(file) {
   const { unzipSync } = await import('fflate')
@@ -84,13 +121,19 @@ export async function readXlsx(file) {
   const shared = zip['xl/sharedStrings.xml']
     ? tags(parseXml(text(zip['xl/sharedStrings.xml'])), 'si').map(cellText)
     : []
-  const styles = dateStyles(zip['xl/styles.xml'] ? text(zip['xl/styles.xml']) : null)
+  const styleXml = zip['xl/styles.xml'] ? text(zip['xl/styles.xml']) : null
+  const styles = dateStyles(styleXml)
+  const currencies = currencyStyles(styleXml)
 
   const sheet = parseXml(text(zip[sheetName]))
   const rows = []
+  // מטבע לכל תא, במבנה מקביל לשורות, כדי ששאר הזרימה תמשיך לקבל
+  // מערך מחרוזות פשוט כמו מ-CSV
+  const cellCurrency = []
 
   for (const row of tags(sheet, 'row')) {
     const cells = []
+    const marks = []
     for (const cell of tags(row, 'c')) {
       const at = columnIndex(cell.getAttribute('r') || 'A')
       const type = cell.getAttribute('t')
@@ -108,9 +151,16 @@ export async function readXlsx(file) {
       while (cells.length < at) cells.push('')
       // כותרות מרובות שורות נפוצות בייצוא, והרווח הלבן רק מפריע
       cells[at] = String(out).replace(/\s+/g, ' ').trim()
+      marks[at] = currencies.get(style) || ''
     }
     rows.push(cells)
+    cellCurrency.push(marks)
   }
 
-  return rows.filter((row) => row.some((cell) => cell))
+  // שתי הרשימות מסוננות יחד, אחרת המטבעות מתפרקים מהשורות שלהם
+  const keep = rows.map((row) => row.some((cell) => cell))
+  return {
+    rows: rows.filter((_, index) => keep[index]),
+    currencies: cellCurrency.filter((_, index) => keep[index]),
+  }
 }

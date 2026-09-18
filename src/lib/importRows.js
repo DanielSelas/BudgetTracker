@@ -197,12 +197,15 @@ export function detectColumns(rows, headerRow = findHeaderRow(rows)) {
 }
 
 /** השורות שאפשר להזין, אחרי שהוחלט מה כל עמודה. */
-export function extractRows(rows, mapping) {
+export function extractRows(rows, mapping, { currencies = [] } = {}) {
   const { headerRow, date, amount, name, sector, type, note, gross } = mapping
   const out = []
   let skipped = 0
 
-  for (const row of rows.slice(headerRow + 1)) {
+  for (const [offset, row] of rows.slice(headerRow + 1).entries()) {
+    // המטבע שעיצוב התא מצהיר עליו. זה נתון ולא השערה, ולכן הוא
+    // גובר על כל זיהוי אחר
+    const marked = currencies[headerRow + 1 + offset]?.[amount] || ''
     const when = parseDate(row[date])
     const value = parseAmount(row[amount])
     const label = String(row[name] ?? '').trim()
@@ -224,6 +227,7 @@ export function extractRows(rows, mapping) {
       type: type >= 0 ? String(row[type] ?? '').trim() : '',
       note: text,
       gross: gross >= 0 ? parseAmount(row[gross]) : null,
+      ...(marked ? { marked } : {}),
       installment: parseInstallment(text),
     })
   }

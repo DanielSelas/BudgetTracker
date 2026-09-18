@@ -50,7 +50,7 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
 
   const extracted = useMemo(() => {
     const perFile = files.map((file) => {
-      const raw = extractRows(file.rows, file.mapping)
+      const raw = extractRows(file.rows, file.mapping, { currencies: file.currencies })
       // המרת מטבע נעשית לכל קובץ בנפרד, כי שורת הסיכום שמאמתת
       // אותה שייכת לקובץ שלו
       const money = applyCurrency(raw.rows, { totalsLine: file.totalsLine, skipForeign: true })
@@ -111,11 +111,12 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
     const failed = []
     for (const file of picked) {
       try {
-        const { rows: parsed } = await readAnyFile(file)
+        const { rows: parsed, currencies } = await readAnyFile(file)
         if (parsed.length === 0) throw new Error('לא נמצאו שורות')
         read.push({
           name: file.name,
           rows: parsed,
+          currencies,
           mapping: detectColumns(parsed),
           // שורת הסיכום שבראש הקובץ היא הנתון היחיד שאומר כמה חויב
           // בכל מטבע, ולכן היא נשמרת לצד השורות

@@ -68,8 +68,10 @@ export function byCurrency(terms = []) {
  * הסיומת בשם בית העסק היא הרמז היחיד, ולכן היא הבסיס. הדוח מסמן
  * במפורש עסקת חו"ל שחויבה בשקלים, וזה גובר על הסיומת.
  */
-export function guessCurrency({ name, type, note, forced, gross, amount }) {
+export function guessCurrency({ name, type, note, forced, gross, amount, marked }) {
   if (forced) return forced
+  // הסימן שבעיצוב התא הוא הצהרה של הקובץ עצמו, ולכן אין מעליו
+  if (marked) return marked
   if (!/חו"?ל|חו״ל/.test(String(type || ''))) return 'ILS'
   if (/בש"?ח|בש״ח/.test(String(note || ''))) return 'ILS'
 
