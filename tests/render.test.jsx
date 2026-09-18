@@ -568,3 +568,12 @@ describe('מסך ניקוי הרשומות', () => {
     expect(container.textContent).toContain('תקציב שני')
   })
 })
+
+describe('מסך הייבוא', () => {
+  it('בורר הקבצים מקבל כמה קבצים יחד', async () => {
+    const { default: ImportSheet } = await import('../src/components/ImportSheet')
+    const { container } = render(<ImportSheet onImport={() => {}} onClose={() => {}} />)
+    const input = container.querySelector('input[type="file"]')
+    expect(input.multiple).toBe(true)
+  })
+})

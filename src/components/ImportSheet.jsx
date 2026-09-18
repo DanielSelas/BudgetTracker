@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import Sheet from './Sheet'
 import { monthLabel, shekels } from '../lib/format'
 import { readAnyFile } from '../lib/readAny'
-import { byMerchant, detectColumns, extractRows, installmentPlan, monthsIn } from '../lib/importRows'
+import {
+  byMerchant, detectColumns, extractRows, installmentPlan, mergeFiles, monthsIn,
+} from '../lib/importRows'
 import { EXPENSE_PILLS } from '../lib/pills'
 import { isStanding, suggestCategory } from '../lib/sectors'
 
@@ -25,17 +27,24 @@ const SOURCE_NOTE = {
 
 export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
   const [step, setStep] = useState(STEPS.file)
-  const [rows, setRows] = useState([])
-  const [mapping, setMapping] = useState(null)
+  // רשימה ולא קובץ בודד: דוח אשראי מכסה תקופת חיוב ולא חודש, ולכן
+  // שנה שלמה היא תריסר קבצים ולא אחד
+  const [files, setFiles] = useState([])
+  const single = files.length === 1
   const [choices, setChoices] = useState({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [report, setReport] = useState(null)
 
-  const extracted = useMemo(
-    () => (mapping ? extractRows(rows, mapping) : { rows: [], skipped: 0 }),
-    [rows, mapping],
-  )
+  const extracted = useMemo(() => {
+    const perFile = files.map((file) => extractRows(file.rows, file.mapping))
+    const merged = mergeFiles(perFile.map((item) => item.rows))
+    return {
+      rows: merged.rows,
+      duplicates: merged.duplicates,
+      skipped: perFile.reduce((sum, item) => sum + item.skipped, 0),
+    }
+  }, [files])
   const merchants = useMemo(() => byMerchant(extracted.rows), [extracted.rows])
 
   /**
@@ -58,28 +67,43 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
   )
   const chosenTotal = chosen.reduce((total, group) => total + group.total, 0)
 
-  const header = mapping?.headerRow >= 0 ? rows[mapping.headerRow] : null
-  const columnCount = Math.max(...rows.slice(0, 20).map((row) => row.length), 0)
+  const mapping = single ? files[0].mapping : null
+  const header = mapping?.headerRow >= 0 ? files[0].rows[mapping.headerRow] : null
+  const columnCount = single
+    ? Math.max(...files[0].rows.slice(0, 20).map((row) => row.length), 0)
+    : 0
 
-  async function pickFile(event) {
-    const file = event.target.files?.[0]
-    if (!file) return
+  async function pickFiles(event) {
+    const picked = [...(event.target.files || [])]
+    if (picked.length === 0) return
     setError('')
-    try {
-      const { rows: parsed } = await readAnyFile(file)
-      if (parsed.length === 0) throw new Error('הקובץ נקרא אבל לא נמצאו בו שורות')
-      setRows(parsed)
-      setMapping(detectColumns(parsed))
-      setStep(STEPS.map)
-    } catch (failure) {
-      // הסיבה האמיתית ולא הודעה כללית: בלי זה אי אפשר לדעת אם הקובץ
-      // בפורמט אחר, פגום, או פשוט ריק
-      setError(failure?.message || 'לא הצלחתי לקרוא את הקובץ')
+    setBusy(true)
+    const read = []
+    const failed = []
+    for (const file of picked) {
+      try {
+        const { rows: parsed } = await readAnyFile(file)
+        if (parsed.length === 0) throw new Error('לא נמצאו שורות')
+        read.push({ name: file.name, rows: parsed, mapping: detectColumns(parsed) })
+      } catch (failure) {
+        // קובץ אחד פגום לא אמור להפיל העלאה של תריסר. הוא מדווח בשמו
+        failed.push(`${file.name}: ${failure?.message || 'לא ניתן לקריאה'}`)
+      }
     }
+    setBusy(false)
+    if (read.length === 0) {
+      setError(failed.join(' | ') || 'לא הצלחתי לקרוא את הקבצים')
+      return
+    }
+    setFiles(read)
+    setError(failed.length > 0 ? `דולגו ${failed.length} קבצים. ${failed.join(' | ')}` : '')
+    setStep(STEPS.map)
   }
 
+  // תיקון ידני של עמודה קיים רק בקובץ בודד: בערימת קבצים אין עמודה
+  // אחת לתקן, וכל קובץ זוהה בנפרד
   const setColumn = (field, value) =>
-    setMapping((current) => ({ ...current, [field]: Number(value) }))
+    setFiles(([file]) => [{ ...file, mapping: { ...file.mapping, [field]: Number(value) } }])
 
   async function write() {
     setBusy(true)
@@ -124,21 +148,45 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
         {step === STEPS.file && (
           <>
             <p className="hint">
-              קובץ מחברת האשראי או מהבנק: CSV, XLSX, או קובץ שנקרא
-              אקסל ובתוכו טבלה. הקריאה נעשית במכשיר שלכם, והקובץ לא
-              נשלח לשום מקום.
+              קבצים מחברת האשראי או מהבנק: CSV, XLSX, או קובץ שנקרא
+              אקסל ובתוכו טבלה. אפשר לבחור כמה קבצים יחד, והקריאה
+              נעשית במכשיר שלכם בלי לשלוח אותם לשום מקום.
             </p>
-            <input className="input" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={pickFile} />
+            <input
+              className="input" type="file" multiple
+              accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              onChange={pickFiles}
+            />
+            {busy && <p className="hint">קורא את הקבצים...</p>}
           </>
         )}
 
-        {step === STEPS.map && mapping && (
+        {step === STEPS.map && files.length > 0 && (
           <>
-            <p className="hint">
-              ככה הבנתי את הקובץ. אם עמודה זוהתה לא נכון, תקנו כאן.
-            </p>
+            {single ? (
+              <p className="hint">
+                ככה הבנתי את הקובץ. אם עמודה זוהתה לא נכון, תקנו כאן.
+              </p>
+            ) : (
+              <>
+                <p className="hint">
+                  נקראו <strong>{files.length}</strong> קבצים, וכל אחד זוהה
+                  בנפרד. עמודות מתקנים ידנית רק בקובץ בודד.
+                </p>
+                <ul className="timeline">
+                  {files.map((file) => (
+                    <li className="timeline-row" key={file.name}>
+                      <span className="entry-name">{file.name}</span>
+                      <span className="entry-amount num">
+                        {extractRows(file.rows, file.mapping).rows.length}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
 
-            {[
+            {single && [
               { field: 'date', label: 'תאריך' },
               { field: 'name', label: 'בית עסק' },
               { field: 'amount', label: 'סכום' },
@@ -163,6 +211,7 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
             <p className="hint">
               נקראו <strong>{extracted.rows.length}</strong> שורות
               {extracted.skipped > 0 && `, ו-${extracted.skipped} דולגו`}.
+              {extracted.duplicates > 0 && ` ${extracted.duplicates} שורות הופיעו ביותר מקובץ אחד ואוחדו.`}
               {extracted.skipped > 0 && ' שורות בלי תאריך או בלי סכום, כמו שורות סיכום.'}
               {' '}זיכויים נכללים כסכום שלילי ומקזזים את בית העסק שלהם.
             </p>
@@ -171,8 +220,8 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
               <p className="hint">
                 {months.length === 1
                   ? `הכל ייכנס ל${monthLabel(months[0])}.`
-                  : `הקובץ חוצה חודשים, וכל שורה תיכנס לחודש שלה: ${
-                    months.map(monthLabel).join(', ')}.`}
+                  : `כל שורה תיכנס לחודש שלה, מ${monthLabel(months[0])} עד ${
+                    monthLabel(months[months.length - 1])}, ${months.length} חודשים.`}
               </p>
             )}
 
@@ -185,7 +234,7 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
                 המשך
               </button>
               <button type="button" className="btn-secondary" onClick={() => setStep(STEPS.file)}>
-                קובץ אחר
+                {single ? 'קובץ אחר' : 'קבצים אחרים'}
               </button>
             </div>
           </>

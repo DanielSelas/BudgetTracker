@@ -548,3 +548,49 @@ describe('חיובים חריגים', () => {
     expect(groups.every((group) => group.unusual.length === 0)).toBe(true)
   })
 })
+
+describe('איחוד כמה קבצים', () => {
+  /**
+   * דוחות אשראי חופפים: תקופת החיוב חוצה חודשים, ולכן אותה עסקה
+   * מופיעה בשני דוחות עוקבים.
+   */
+  const row = (date, name, amount) => ({ date, name, amount, month: date.slice(0, 7) })
+
+  it('שורה שמופיעה בשני קבצים נספרת פעם אחת', async () => {
+    const { mergeFiles } = await import('../src/lib/importRows')
+    const first = [row('2025-03-31', 'שופרסל', 100), row('2025-04-01', 'WOLT', 50)]
+    const second = [row('2025-04-01', 'WOLT', 50), row('2025-04-05', 'קפה', 20)]
+    const { rows, duplicates } = mergeFiles([first, second])
+    expect(rows).toHaveLength(3)
+    expect(duplicates).toBe(1)
+  })
+
+  it('שתי קניות זהות באותו יום נשמרות, כי הן אמיתיות', async () => {
+    const { mergeFiles } = await import('../src/lib/importRows')
+    const twice = [row('2025-04-01', 'קפה', 20), row('2025-04-01', 'קפה', 20)]
+    // אותו קובץ בדיוק, שהועלה פעמיים
+    const { rows, duplicates } = mergeFiles([twice, twice])
+    expect(rows).toHaveLength(2)
+    expect(duplicates).toBe(2)
+  })
+
+  it('קובץ שמכיל יותר מופעים מנצח את זה שמכיל פחות', async () => {
+    const { mergeFiles } = await import('../src/lib/importRows')
+    const one = [row('2025-04-01', 'קפה', 20)]
+    const two = [row('2025-04-01', 'קפה', 20), row('2025-04-01', 'קפה', 20)]
+    expect(mergeFiles([one, two]).rows).toHaveLength(2)
+    expect(mergeFiles([two, one]).rows).toHaveLength(2)
+  })
+
+  it('התוצאה ממוינת לפי תאריך', async () => {
+    const { mergeFiles } = await import('../src/lib/importRows')
+    const { rows } = mergeFiles([[row('2025-05-01', 'ב', 1)], [row('2025-04-01', 'א', 1)]])
+    expect(rows.map((item) => item.name)).toEqual(['א', 'ב'])
+  })
+
+  it('קובץ אחד עובר כמו שהוא', async () => {
+    const { mergeFiles } = await import('../src/lib/importRows')
+    const only = [row('2025-04-01', 'קפה', 20)]
+    expect(mergeFiles([only])).toEqual({ rows: only, duplicates: 0 })
+  })
+})

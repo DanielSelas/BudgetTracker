@@ -290,6 +290,36 @@ export function installmentPlan(rows) {
 }
 
 /**
+ * איחוד כמה קבצים לרשימה אחת.
+ *
+ * דוחות אשראי חופפים: תקופת החיוב חוצה חודשים, ולכן אותה עסקה
+ * מופיעה בשני דוחות עוקבים. שרשור פשוט היה יוצר ממנה שתי רשומות.
+ *
+ * המספר הנכון לכל עסקה הוא המקסימום בין הקבצים ולא הסכום: שתי
+ * קניות זהות באותו יום בתוך קובץ אחד הן שתי עסקאות אמיתיות, ואותה
+ * שורה בשני קבצים היא אותה עסקה פעמיים.
+ */
+export function mergeFiles(lists = []) {
+  const best = new Map()
+
+  for (const rows of lists) {
+    const local = new Map()
+    for (const row of rows) {
+      const key = `${row.date}|${row.amount}|${row.name}`
+      if (!local.has(key)) local.set(key, [])
+      local.get(key).push(row)
+    }
+    for (const [key, list] of local) {
+      if (!best.has(key) || list.length > best.get(key).length) best.set(key, list)
+    }
+  }
+
+  const rows = [...best.values()].flat().sort((a, b) => a.date.localeCompare(b.date))
+  const total = lists.reduce((sum, list) => sum + list.length, 0)
+  return { rows, duplicates: total - rows.length }
+}
+
+/**
  * חיוב חריג ביחס לחודש עצמו.
  *
  * ענף לבדו לא מספיק: ניתוח דחוף לכלב וקופסת אקמול הם אותה "רפואה
