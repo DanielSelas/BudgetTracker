@@ -208,3 +208,39 @@ describe('שיוך שורה שהמטבע שלה לא זוהה', () => {
     expect(result.dropped).toBe(1)
   })
 })
+
+describe('דילוג על מט״ח', () => {
+  const rows = [
+    { name: 'מאפיית סניורה', type: 'רגיל-ישראל', amount: 130 },
+    { name: '3 BOCA RATON US', type: 'רגיל-חו"ל', amount: 20 },
+  ]
+
+  it('שורות שאינן שקליות לא נכנסות, וגם לא מומרות', async () => {
+    const { applyCurrency } = await import('../src/lib/currency')
+    const result = applyCurrency(rows, {
+      totalsLine: '₪130 + $20', rates: { USD: 3.7 }, skipForeign: true,
+    })
+    expect(result.rows).toEqual([rows[0]])
+    expect(result.dropped).toBe(1)
+    // ההצלבה עדיין הסכימה, וזה מה שמאפשר לדעת על מה דילגנו
+    expect(result.agrees).toBe(true)
+  })
+
+  /**
+   * הזיהוי נחוץ גם כשמדלגים: באוקטובר האמיתי כל בתי העסק
+   * האמריקאיים חויבו בשקלים, ודילוג לפי הניחוש לבדו היה זורק
+   * הוצאות אמיתיות.
+   */
+  it('הסכום שדולג מדווח לפי מטבע', async () => {
+    const { applyCurrency } = await import('../src/lib/currency')
+    const result = applyCurrency(rows, { totalsLine: '₪130 + $20', skipForeign: true })
+    expect([...result.foreign]).toEqual([['USD', 20]])
+  })
+
+  it('קובץ שקלי לגמרי עובר שלם', async () => {
+    const { applyCurrency } = await import('../src/lib/currency')
+    const result = applyCurrency([rows[0]], { totalsLine: '₪130', skipForeign: true })
+    expect(result.rows).toHaveLength(1)
+    expect(result.dropped).toBe(0)
+  })
+})

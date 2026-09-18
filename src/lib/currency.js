@@ -138,8 +138,12 @@ export const toShekels = (amount, currency, rates = {}) =>
  * ממירים רק כשההצלבה מול שורת הסיכום הסכימה. בלי הסכמה הפיצול בין
  * המטבעות שגוי, ולכן השורות שאינן שקליות מדולגות במקום להיכנס
  * בסכום מומצא: חוסר עדיף על מספר שנראה אמין ואינו נכון.
+ *
+ * skipForeign מדלג עליהן תמיד. הזיהוי עדיין נחוץ כדי לדעת על אילו
+ * שורות לדלג: הניחוש לבדו סימן באוקטובר את כל בתי העסק האמריקאיים
+ * כדולרים, ושורת הסיכום הראתה שהם חויבו בשקלים.
  */
-export function applyCurrency(rows = [], { totalsLine, rates = {} } = {}) {
+export function applyCurrency(rows = [], { totalsLine, rates = {}, skipForeign = false } = {}) {
   const rowTotal = Math.round(rows.reduce((sum, row) => sum + row.amount, 0) * 100) / 100
   const totals = totalsForFile(parseChargeTotals(totalsLine), rowTotal)
   const check = reconcile(rows, totals)
@@ -163,9 +167,15 @@ export function applyCurrency(rows = [], { totalsLine, rates = {} } = {}) {
     return { rows, foreign, agrees: true, dropped: 0, needsRates: [] }
   }
 
-  if (!settled.agrees) {
+  if (skipForeign || !settled.agrees) {
     const kept = rows.filter((row) => currencyOf(row) === 'ILS')
-    return { rows: kept, foreign, agrees: false, dropped: rows.length - kept.length, needsRates: [] }
+    return {
+      rows: kept,
+      foreign,
+      agrees: settled.agrees,
+      dropped: rows.length - kept.length,
+      needsRates: [],
+    }
   }
 
   // שער חסר אינו סיבה לדלג: בלעדיו פשוט אין עדיין מה להמיר, והמסך

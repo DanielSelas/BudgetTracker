@@ -44,7 +44,6 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
   const [files, setFiles] = useState([])
   const single = files.length === 1
   const [choices, setChoices] = useState({})
-  const [rates, setRates] = useState({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [report, setReport] = useState(null)
@@ -54,18 +53,16 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
       const raw = extractRows(file.rows, file.mapping)
       // המרת מטבע נעשית לכל קובץ בנפרד, כי שורת הסיכום שמאמתת
       // אותה שייכת לקובץ שלו
-      const money = applyCurrency(raw.rows, { totalsLine: file.totalsLine, rates })
+      const money = applyCurrency(raw.rows, { totalsLine: file.totalsLine, skipForeign: true })
       return { ...raw, ...money, name: file.name }
     })
     const merged = mergeFiles(perFile.map((item) => item.rows))
 
     const foreign = new Map()
-    const needsRates = new Set()
     for (const file of perFile) {
       for (const [currency, amount] of file.foreign) {
         foreign.set(currency, Math.round(((foreign.get(currency) || 0) + amount) * 100) / 100)
       }
-      for (const currency of file.needsRates) needsRates.add(currency)
     }
 
     return {
@@ -75,9 +72,8 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
       dropped: perFile.reduce((sum, item) => sum + item.dropped, 0),
       unreconciled: perFile.filter((item) => !item.agrees).map((item) => item.name),
       foreign,
-      needsRates: [...needsRates],
     }
-  }, [files, rates])
+  }, [files])
   const merchants = useMemo(() => byMerchant(extracted.rows), [extracted.rows])
 
   /**
@@ -272,64 +268,35 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
             {extracted.foreign.size > 0 && (
               <div className="notice block">
                 <p>
-                  בקובץ יש חיובים שאינם בשקלים. עמודת המטבע ריקה, ולכן
-                  המטבע נגזר משם בית העסק ונבדק מול שורת הסיכום שבראש
-                  הקובץ.
-                </p>
-                <p>
-                  החיובים האלה שולמו מיתרת המט״ח, ולכן השער שצריך כאן
-                  הוא <strong>השער שבו המרתם את הכסף</strong> ולא שער
-                  היום. זה מה שהעסקה באמת עלתה לכם בשקלים.
+                  חיובים במטבע חוץ אינם מיובאים. הם שולמו מיתרת המט״ח,
+                  ולכן מה שהם עלו בשקלים תלוי בשער שבו הכסף הומר
+                  מראש, ולא בשער של יום החיוב.
                 </p>
 
                 <ul className="timeline">
                   {[...extracted.foreign].map(([currency, amount]) => (
                     <li className="timeline-row" key={currency}>
                       <span className="entry-name">
-                        {CURRENCY_LABEL[currency] || currency}
+                        {CURRENCY_LABEL[currency] || 'מטבע שלא זוהה'}
                       </span>
                       <span className="entry-amount num">{amount.toLocaleString('he-IL')}</span>
                     </li>
                   ))}
                 </ul>
 
-                {[...extracted.foreign.keys()]
-                  .filter((currency) => currency !== '?')
-                  .map((currency) => (
-                    <label className="field" key={currency}>
-                      {`כמה שקלים שילמתם על ${CURRENCY_LABEL[currency] || currency} אחד`}
-                      <input
-                        className="input num" type="number" inputMode="decimal"
-                        min="0" step="0.01" placeholder={currency === 'USD' ? '3.7' : '4'}
-                        value={rates[currency] ?? ''}
-                        onChange={(event) => setRates((current) => ({
-                          ...current, [currency]: event.target.value,
-                        }))}
-                      />
-                    </label>
-                  ))}
-
-                {extracted.needsRates.length > 0 && (
-                  <p className="hint">
-                    בלי שער אי אפשר להמיר, והשורות האלה ייכנסו כאפס.
-                    עדיף להזין שער או לחזור בלי הקבצים האלה.
-                  </p>
-                )}
-
                 <p className="hint">
-                  ההמרה עצמה אינה הוצאה אלא העברה בין חשבונות, ולכן אין
-                  להזין אותה בנפרד: מה שיוצא בפועל נרשם כאן, בשורות של
-                  בתי העסק.
+                  {extracted.dropped === 1
+                    ? 'שורה אחת דולגה.'
+                    : `${extracted.dropped} שורות דולגו.`}
+                  {' '}הסכומים כאן הם במטבע שלהם ולא בשקלים.
                 </p>
 
                 {extracted.unreconciled.length > 0 && (
                   <p className="hint">
                     ב{extracted.unreconciled.length === 1 ? 'קובץ אחד' : `-${
                       extracted.unreconciled.length} קבצים`} החלוקה בין
-                    המטבעות לא הסתדרה מול שורת הסיכום, ולכן
-                    {' '}<strong>{extracted.dropped}</strong> שורות חו״ל מדולגות.
-                    המרה לפי ניחוש שגוי הייתה מכניסה סכומים שנראים אמינים
-                    ואינם נכונים.
+                    המטבעות לא הסתדרה מול שורת הסיכום שבראש הקובץ, ולכן
+                    ייתכן שדולגו שם גם שורות שקליות.
                   </p>
                 )}
               </div>
