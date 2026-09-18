@@ -32,7 +32,10 @@ export default function UnplannedCard({
           <span className="dot" />
           <h2>{CATEGORIES.unplanned.label}</h2>
         </span>
-        <span className="cat-total num">{shekels(remaining)}</span>
+        {/* בלי יתרה אין מה לספור ממנה, ואז מה שהכרטיס מדווח עליו הוא
+            ההוצאה עצמה. הצגת "נשאר" במצב הזה הפכה את ההוצאה הגדולה
+            של החודש למספר שלילי בכרטיס שכתוב בו שהוא עוד לא נפתח */}
+        <span className="cat-total num">{shekels(reserve > 0 ? remaining : spent)}</span>
       </div>
 
       {reserve > 0 ? (
@@ -51,9 +54,11 @@ export default function UnplannedCard({
         </div>
       ) : (
         <p className="note">
-          {summary.usesFixedBase
-            ? 'מה שייכנס מעבר לסכום הבסיס יופיע כאן.'
-            : 'המרווח הנזיל שלא חולק לקטגוריות. הוא ייפתח ברגע שתהיה הכנסה.'}
+          {spent > 0
+            ? `יצאו ${shekels(spent)} בבלת״ם, ואין יתרה שתכסה אותם: לחודש הזה לא הוזנה הכנסה.`
+            : summary.usesFixedBase
+              ? 'מה שייכנס מעבר לסכום הבסיס יופיע כאן.'
+              : 'המרווח הנזיל שלא חולק לקטגוריות. הוא ייפתח ברגע שתהיה הכנסה.'}
         </p>
       )}
 

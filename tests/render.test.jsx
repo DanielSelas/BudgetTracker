@@ -737,3 +737,50 @@ describe('הפסקת חיוב קבוע', () => {
     expect(container.textContent).toContain('בודק כמה שורות')
   })
 })
+
+describe('כרטיס הבלת״ם', () => {
+  /**
+   * חודש מיובא בלי הכנסה: היתרה היא אפס, ולכן "כמה נשאר" הוא מספר
+   * שלילי. ההוצאה הגדולה של החודש הוצגה כמינוס בכרטיס שכתוב בו
+   * שהוא עוד לא נפתח, והסכומים של החודש לא הסתדרו למי שהסתכל.
+   */
+  const summary = (unplanned) => ({
+    usesFixedBase: false,
+    unplanned: { reserve: 0, spent: 0, remaining: 0, deposited: 0, planned: 0, ...unplanned },
+  })
+
+  it('בלי יתרה מוצגת ההוצאה עצמה, ולא מינוס', async () => {
+    const { default: UnplannedCard } = await import('../src/components/UnplannedCard')
+    const { container } = render(
+      <UnplannedCard
+        summary={summary({ spent: 15216, remaining: -15216 })}
+        entries={[]} actions={{}} onAdd={() => {}} onDeposit={() => {}}
+      />,
+    )
+    const total = container.querySelector('.cat-total').textContent
+    expect(total).toContain('15,216')
+    expect(total).not.toContain('-')
+  })
+
+  it('ונאמר במפורש שאין יתרה שתכסה אותה', async () => {
+    const { default: UnplannedCard } = await import('../src/components/UnplannedCard')
+    const { container } = render(
+      <UnplannedCard
+        summary={summary({ spent: 15216, remaining: -15216 })}
+        entries={[]} actions={{}} onAdd={() => {}} onDeposit={() => {}}
+      />,
+    )
+    expect(container.textContent).toContain('לא הוזנה הכנסה')
+  })
+
+  it('כשיש יתרה חוזרים להציג כמה נשאר', async () => {
+    const { default: UnplannedCard } = await import('../src/components/UnplannedCard')
+    const { container } = render(
+      <UnplannedCard
+        summary={summary({ reserve: 5000, spent: 1000, remaining: 4000 })}
+        entries={[]} actions={{}} onAdd={() => {}} onDeposit={() => {}}
+      />,
+    )
+    expect(container.querySelector('.cat-total').textContent).toContain('4,000')
+  })
+})
