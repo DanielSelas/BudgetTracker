@@ -68,10 +68,19 @@ export function byCurrency(terms = []) {
  * הסיומת בשם בית העסק היא הרמז היחיד, ולכן היא הבסיס. הדוח מסמן
  * במפורש עסקת חו"ל שחויבה בשקלים, וזה גובר על הסיומת.
  */
-export function guessCurrency({ name, type, note, forced }) {
+export function guessCurrency({ name, type, note, forced, gross, amount }) {
   if (forced) return forced
   if (!/חו"?ל|חו״ל/.test(String(type || ''))) return 'ILS'
   if (/בש"?ח|בש״ח/.test(String(note || ''))) return 'ILS'
+
+  // שתי עמודות הסכום הן הראיה הישירה: סכום חיוב ששונה מסכום העסקה
+  // פירושו שבוצעה המרה, כלומר החיוב יצא בשקלים. כשהם זהים לא הייתה
+  // המרה, והחיוב יצא במטבע המקור. זה גובר על הסיומת בשם, שהיא
+  // ניחוש: באוקטובר כל בתי העסק האמריקאיים נראו כדולרים ובפועל
+  // כרטיסי הטיסה חויבו בשקלים לפי שער 3.88
+  if (Number.isFinite(gross) && Number.isFinite(amount) && gross !== 0) {
+    if (Math.abs(Math.abs(amount) - Math.abs(gross)) > 0.005) return 'ILS'
+  }
   const country = String(name || '').trim().match(/\b([A-Z]{2})$/)?.[1]
   if (!country || country === 'IL') return 'ILS'
   if (country === 'US') return 'USD'

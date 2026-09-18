@@ -184,13 +184,21 @@ export function detectColumns(rows, headerRow = findHeaderRow(rows)) {
   const sector = pick(SECTOR_WORDS, isLabel, [date, amount, name], true)
   const type = pick(TYPE_WORDS, isLabel, [date, amount, name, sector], true)
   const note = pick(NOTE_WORDS, isLabel, [date, amount, name, sector, type], true)
+  // עמודת הסכום השנייה: "סכום העסקה" לצד "סכום החיוב". ההבדל ביניהן
+  // הוא מה שמסגיר שהעסקה עברה המרה, ולכן היא נשמרת
+  const gross = pick(
+    AMOUNT_WORDS,
+    (value) => parseAmount(value) !== null,
+    [date, amount, name, sector, type, note],
+    true,
+  )
 
-  return { headerRow, date, amount, name, sector, type, note }
+  return { headerRow, date, amount, name, sector, type, note, gross }
 }
 
 /** השורות שאפשר להזין, אחרי שהוחלט מה כל עמודה. */
 export function extractRows(rows, mapping) {
-  const { headerRow, date, amount, name, sector, type, note } = mapping
+  const { headerRow, date, amount, name, sector, type, note, gross } = mapping
   const out = []
   let skipped = 0
 
@@ -215,6 +223,7 @@ export function extractRows(rows, mapping) {
       sector: sector >= 0 ? String(row[sector] ?? '').trim() : '',
       type: type >= 0 ? String(row[type] ?? '').trim() : '',
       note: text,
+      gross: gross >= 0 ? parseAmount(row[gross]) : null,
       installment: parseInstallment(text),
     })
   }

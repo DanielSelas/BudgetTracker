@@ -705,3 +705,28 @@ describe('כללים לפי שם בית עסק', () => {
     expect(groups.find((item) => item.name === 'עלי אקספרס').ruleCategory).toBe('leisure')
   })
 })
+
+describe('עמודת הסכום השנייה', () => {
+  it('שתי עמודות סכום נשמרות שתיהן', () => {
+    const rows = [
+      ['תאריך עסקה', 'שם בית עסק', 'סכום העסקה', 'סוג העסקה', 'סכום החיוב'],
+      ['09/10/2025', 'WWW.AA.COM US', '446.61', 'רגיל-חו"ל', '1733.26'],
+    ]
+    const mapping = detectColumns(rows)
+    expect(rows[mapping.headerRow][mapping.amount]).toBe('סכום החיוב')
+    expect(rows[mapping.headerRow][mapping.gross]).toBe('סכום העסקה')
+    const [row] = extractRows(rows, mapping).rows
+    expect(row.amount).toBe(1733.26)
+    expect(row.gross).toBe(446.61)
+  })
+
+  it('קובץ עם עמודת סכום אחת לא ממציא שנייה', () => {
+    const rows = [
+      ['תאריך', 'שם בית עסק', 'סכום'],
+      ['09/10/2025', 'שופרסל', '120'],
+    ]
+    const mapping = detectColumns(rows)
+    expect(mapping.gross).toBe(-1)
+    expect(extractRows(rows, mapping).rows[0].gross).toBe(null)
+  })
+})

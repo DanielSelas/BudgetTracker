@@ -244,3 +244,44 @@ describe('דילוג על מט״ח', () => {
     expect(result.dropped).toBe(0)
   })
 })
+
+describe('שתי עמודות הסכום כראיה למטבע', () => {
+  /**
+   * סכום חיוב ששונה מסכום העסקה פירושו שבוצעה המרה, כלומר החיוב
+   * יצא בשקלים. זהים פירושו שלא הייתה המרה והחיוב יצא במטבע המקור.
+   *
+   * זו ראיה ישירה, בניגוד לסיומת בשם בית העסק שהיא ניחוש. באוקטובר
+   * האמיתי כל בתי העסק האמריקאיים נראו כדולרים, ובפועל כרטיסי
+   * הטיסה חויבו בשקלים: 446.61 הפכו ל-1733.26, שער 3.88.
+   */
+  it('סכומים שונים פירושם שהחיוב יצא בשקלים', () => {
+    expect(guessCurrency({
+      name: '12281427 WWW.AA.COM US', type: 'רגיל-חו"ל', gross: 446.61, amount: 1733.26,
+    })).toBe('ILS')
+  })
+
+  it('סכומים זהים פירושם חיוב במטבע המקור', () => {
+    expect(guessCurrency({
+      name: 'T SUBSCR OPENAI.COM US', type: 'רגיל-חו"ל', gross: 20, amount: 20,
+    })).toBe('USD')
+  })
+
+  it('הראיה גוברת על הסיומת בשם', () => {
+    // אותו בית עסק, אותה מדינה, ושתי תשובות שונות
+    const merchant = { name: 'SHOP US', type: 'רגיל-חו"ל' }
+    expect(guessCurrency({ ...merchant, gross: 100, amount: 100 })).toBe('USD')
+    expect(guessCurrency({ ...merchant, gross: 100, amount: 388 })).toBe('ILS')
+  })
+
+  it('גם על סכומים שליליים, כי זיכוי הוא אותה עסקה בכיוון ההפוך', () => {
+    expect(guessCurrency({
+      name: 'SHOP US', type: 'רגיל-חו"ל', gross: 100, amount: -100,
+    })).toBe('USD')
+  })
+
+  it('בלי עמודת סכום שנייה חוזרים לסיומת', () => {
+    expect(guessCurrency({ name: 'SHOP US', type: 'רגיל-חו"ל' })).toBe('USD')
+    expect(guessCurrency({ name: 'SHOP US', type: 'רגיל-חו"ל', gross: null, amount: 100 }))
+      .toBe('USD')
+  })
+})
