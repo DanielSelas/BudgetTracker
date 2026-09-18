@@ -114,6 +114,12 @@ export function stopTemplate(budgetId, recurringId) {
  */
 export async function deleteTemplateEverywhere(budgetId, recurringId) {
   if (!recurringId) throw new Error('חסר מזהה של החיוב הקבוע')
+
+  // התבנית נמחקת ראשונה, ובכוונה. בסדר ההפוך יש חלון שבו התבנית
+  // עדיין פעילה ושורת החודש כבר נמחקה, וזה בדיוק התנאי שגורם
+  // ליצירה אוטומטית מחדש: השורה חוזרת והמחיקה נראית כאילו לא קרתה
+  await deleteDoc(doc(templatesRef(budgetId), recurringId))
+
   const snapshot = await getDocs(
     query(entriesRef(budgetId), where('recurringId', '==', recurringId)),
   )
@@ -129,8 +135,17 @@ export async function deleteTemplateEverywhere(budgetId, recurringId) {
     await batch.commit()
   }
 
-  await deleteDoc(doc(templatesRef(budgetId), recurringId))
   return { removed }
+}
+
+/** כמה שורות ובאילו חודשים תלויות בתבנית הזאת. */
+export async function countTemplateEntries(budgetId, recurringId) {
+  if (!recurringId) return { rows: 0, months: 0 }
+  const snapshot = await getDocs(
+    query(entriesRef(budgetId), where('recurringId', '==', recurringId)),
+  )
+  const months = new Set(snapshot.docs.map((item) => item.data().month))
+  return { rows: snapshot.size, months: months.size }
 }
 
 /**

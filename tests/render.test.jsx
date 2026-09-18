@@ -719,7 +719,7 @@ describe('הפסקת חיוב קבוע', () => {
       const { getByText } = render(
         <StopRecurring template={template} budgetId="b1" onDone={() => {}} />,
       )
-      fireEvent.click(getByText('הפסקה מהחודש הבא'))
+      fireEvent.click(getByText('הפסקה, בלי למחוק היסטוריה'))
       await new Promise((resolve) => setTimeout(resolve, 0))
       expect(stop).toHaveBeenLastCalledWith('b1', expected)
       cleanup()
@@ -727,11 +727,13 @@ describe('הפסקת חיוב קבוע', () => {
     stop.mockRestore()
   })
 
-  it('מציע גם מחיקה מכל החודשים', async () => {
+  it('מציע גם מחיקה מלאה, ואומר כמה שורות היא נוגעת בהן', async () => {
     const { default: StopRecurring } = await import('../src/components/StopRecurring')
-    const { getByText } = render(
+    const { container } = render(
       <StopRecurring template={{ id: 'x', name: 'שכר דירה' }} budgetId="b1" onDone={() => {}} />,
     )
-    expect(getByText('מחיקה מכל החודשים')).toBeTruthy()
+    // בלי מספר השורות אי אפשר לדעת מה ההבדל בפועל בין שתי האפשרויות
+    expect(container.querySelector('.btn-danger')).toBeTruthy()
+    expect(container.textContent).toContain('בודק כמה שורות')
   })
 })
