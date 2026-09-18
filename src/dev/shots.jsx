@@ -356,7 +356,7 @@ const SCREENS = {
   import: (
     <>
       <Month />
-      <ImportSheet month="2026-09" onImport={async () => ({ written: 0 })} onClose={noop} />
+      <ImportSheet onImport={async () => ({ written: 0 })} onClose={noop} />
     </>
   ),
   profile: (

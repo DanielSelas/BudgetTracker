@@ -131,3 +131,18 @@ describe('מזהי שורות מיובאות', () => {
     expect(id.startsWith('imp_2026-09-03_שופרסל-דיל_')).toBe(true)
   })
 })
+
+describe('לאיזה חודש הקובץ נכנס', () => {
+  it('מדווח על כל החודשים שהקובץ נוגע בהם', async () => {
+    const { monthsIn } = await import('../src/lib/importRows')
+    expect(monthsIn([
+      { month: '2026-09' }, { month: '2026-10' }, { month: '2026-09' },
+    ])).toEqual(['2026-09', '2026-10'])
+  })
+
+  it('קובץ שכולו חודש אחד מדווח חודש אחד', async () => {
+    const { monthsIn } = await import('../src/lib/importRows')
+    expect(monthsIn([{ month: '2026-09' }, { month: '2026-09' }])).toEqual(['2026-09'])
+    expect(monthsIn([])).toEqual([])
+  })
+})

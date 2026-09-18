@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import Sheet from './Sheet'
-import { shekels } from '../lib/format'
+import { monthLabel, shekels } from '../lib/format'
 import { parseCsv, readText } from '../lib/csv'
-import { byMerchant, detectColumns, extractRows } from '../lib/importRows'
+import { byMerchant, detectColumns, extractRows, monthsIn } from '../lib/importRows'
 import { EXPENSE_PILLS } from '../lib/pills'
 
 /**
@@ -15,7 +15,7 @@ import { EXPENSE_PILLS } from '../lib/pills'
  */
 const STEPS = { file: 'file', map: 'map', classify: 'classify', done: 'done' }
 
-export default function ImportSheet({ month, onImport, onClose }) {
+export default function ImportSheet({ onImport, onClose }) {
   const [step, setStep] = useState(STEPS.file)
   const [rows, setRows] = useState([])
   const [mapping, setMapping] = useState(null)
@@ -29,6 +29,7 @@ export default function ImportSheet({ month, onImport, onClose }) {
     [rows, mapping],
   )
   const merchants = useMemo(() => byMerchant(extracted.rows), [extracted.rows])
+  const months = useMemo(() => monthsIn(extracted.rows), [extracted.rows])
   const chosen = merchants.filter((group) => choices[group.name])
   const chosenTotal = chosen.reduce((total, group) => total + group.total, 0)
 
@@ -118,6 +119,15 @@ export default function ImportSheet({ month, onImport, onClose }) {
               {extracted.skipped > 0 && ' שורות בלי תאריך או בלי סכום, כמו שורות סיכום.'}
               {' '}זיכויים נכללים כסכום שלילי ומקזזים את בית העסק שלהם.
             </p>
+
+            {months.length > 0 && (
+              <p className="hint">
+                {months.length === 1
+                  ? `הכל ייכנס ל${monthLabel(months[0])}.`
+                  : `הקובץ חוצה חודשים, וכל שורה תיכנס לחודש שלה: ${
+                    months.map(monthLabel).join(', ')}.`}
+              </p>
+            )}
 
             <div className="sheet-actions">
               <button
@@ -213,8 +223,8 @@ export default function ImportSheet({ month, onImport, onClose }) {
         )}
 
         <p className="hint">
-          החודש שאליו ייכנסו השורות נקבע לפי התאריך שבקובץ, ולא לפי
-          החודש שפתוח עכשיו ({month}).
+          החודש של כל שורה נקבע לפי התאריך שבקובץ, ולא לפי החודש
+          שפתוח עכשיו.
         </p>
       </div>
     </Sheet>

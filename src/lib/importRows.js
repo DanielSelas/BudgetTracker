@@ -168,3 +168,7 @@ export function byMerchant(rows) {
   }
   return [...groups.values()].sort((a, b) => b.total - a.total)
 }
+
+/** אילו חודשים הקובץ נוגע בהם, לפי סדר. */
+export const monthsIn = (rows = []) =>
+  [...new Set(rows.map((row) => row.month))].sort()

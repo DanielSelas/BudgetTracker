@@ -11,7 +11,7 @@ An installable PWA. No developer account, no app store, no native build.
 ![React](https://img.shields.io/badge/React-19-2a78d6?style=flat-square&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-7a8a5e?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-eb6834?style=flat-square&logo=firebase&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-196%20%2B%20108%20rules-1baf7a?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-198%20%2B%20108%20rules-1baf7a?style=flat-square)
 
 The interface is in Hebrew and right to left throughout.
 

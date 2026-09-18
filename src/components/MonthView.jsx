@@ -256,7 +256,6 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
 
       {importing && (
         <ImportSheet
-          month={month}
           onImport={(entries) => importEntries({ budgetId, uid, rows: entries })}
           onClose={() => setImporting(false)}
         />
