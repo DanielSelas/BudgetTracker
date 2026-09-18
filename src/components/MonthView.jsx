@@ -5,6 +5,7 @@ import MonthVerdict from './MonthVerdict'
 import EndingSoon from './EndingSoon'
 import UpcomingCharges from './UpcomingCharges'
 import Commitments from './Commitments'
+import ImportSheet from './ImportSheet'
 import UnplannedCard from './UnplannedCard'
 import MonthPicker from './MonthPicker'
 import BackToBudgets from './BackToBudgets'
@@ -23,6 +24,7 @@ import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
 import { useProfiles } from '../hooks/useProfiles'
 import { deleteBudget, renameBudget, setBaseAmount, setBillingDay } from '../lib/budgets'
+import { importEntries } from '../lib/importEntries'
 
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
 
@@ -51,6 +53,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
   const [editingBilling, setEditingBilling] = useState(false)
   const [editingBase, setEditingBase] = useState(false)
   const [showCommitments, setShowCommitments] = useState(false)
+  const [importing, setImporting] = useState(false)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
 
   const base = useMemo(() => entryActions({ budgetId, month, uid }), [budgetId, month, uid])
@@ -199,6 +202,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
               <button type="button" className="btn-text" onClick={() => setShowCommitments(true)}>
                 חיובים קבועים
               </button>
+              <button type="button" className="btn-text" onClick={() => setImporting(true)}>
+                ייבוא CSV
+              </button>
               <button type="button" className="btn-text" onClick={() => setSharing(true)}>
                 הזמנת שותף
               </button>
@@ -245,6 +251,14 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
           partner={partner ? displayName(partner) : ''}
           onSubmit={actions.add}
           onClose={() => { setSheet(null); setPrefill(0) }}
+        />
+      )}
+
+      {importing && (
+        <ImportSheet
+          month={month}
+          onImport={(entries) => importEntries({ budgetId, uid, rows: entries })}
+          onClose={() => setImporting(false)}
         />
       )}
 

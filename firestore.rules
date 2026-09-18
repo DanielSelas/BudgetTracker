@@ -154,7 +154,9 @@ service cloud.firestore {
                     && data.date[0:7] == data.month))
             && data.addedBy is string
             && validGroupKey(data)
-            && (!('fromRemainder' in data) || data.fromRemainder == true);
+            && (!('fromRemainder' in data) || data.fromRemainder == true)
+            // סימון שהשורה הגיעה מייבוא ולא הוזנה ידנית
+            && (!('imported' in data) || data.imported == true);
         }
 
         allow read, delete: if isMember(budgetId);

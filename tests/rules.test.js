@@ -1029,3 +1029,31 @@ describe('חיוב שיורד ישירות מהחשבון', () => {
       template({ offCard: 'yes' })))
   })
 })
+
+describe('שורה מיובאת', () => {
+  const imported = (extra = {}) => {
+    const base = entry({ date: '2026-09-03', groupKey: 'שופרסל דיל', imported: true, ...extra })
+    delete base.budgetId
+    return base
+  }
+
+  it('נכתבת כמו כל שורה, עם תאריך שמתיישב עם החודש', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'imp_1'), imported()),
+    )
+  })
+
+  it('תאריך שאינו מתיישב עם החודש נדחה גם בייבוא', async () => {
+    await assertFails(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'imp_2'),
+        imported({ date: '2026-08-03' })),
+    )
+  })
+
+  it('הדגל חייב להיות אמת אם הוא קיים', async () => {
+    await assertFails(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'imp_3'),
+        imported({ imported: false })),
+    )
+  })
+})

@@ -31,7 +31,7 @@ const HEIGHT = 1900
 
 const SCREENS = [
   'login', 'home', 'types', 'month', 'reserve', 'trip', 'goal', 'sheet', 'intro',
-  'profile', 'commitments',
+  'profile', 'commitments', 'import',
 ]
 
 await mkdir(OUT, { recursive: true })

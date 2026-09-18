@@ -8,6 +8,7 @@ import BackToBudgets from '../components/BackToBudgets'
 import { upcomingCharge } from '../lib/recurring'
 import UpcomingCharges from '../components/UpcomingCharges'
 import Commitments from '../components/Commitments'
+import ImportSheet from '../components/ImportSheet'
 import BottomNav from '../components/BottomNav'
 import CategoryCard from '../components/CategoryCard'
 import UnplannedCard from '../components/UnplannedCard'
@@ -350,6 +351,12 @@ const SCREENS = {
         onAdd={noop}
         onClose={noop}
       />
+    </>
+  ),
+  import: (
+    <>
+      <Month />
+      <ImportSheet month="2026-09" onImport={async () => ({ written: 0 })} onClose={noop} />
     </>
   ),
   profile: (
