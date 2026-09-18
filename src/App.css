@@ -837,6 +837,26 @@ button:disabled {
 .inline-edit .mini.remove { color: var(--color-danger); }
 .inline-edit .mini.remove:hover { background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
 
+/* מחיקה במסך התחזוקה: פעולה שאין ממנה דרך חזרה, ולכן היא לא נראית
+   כמו כפתור אישור רגיל */
+.btn-danger {
+  appearance: none;
+  border: 1px solid var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
+  font: inherit;
+  font-weight: 600;
+  border-radius: var(--radius-pill, 999px);
+  padding: 12px 20px;
+  cursor: pointer;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
+.btn-danger:disabled { opacity: 0.5; cursor: default; }
+
 /* ========== כפתור צף ========== */
 
 .fab {

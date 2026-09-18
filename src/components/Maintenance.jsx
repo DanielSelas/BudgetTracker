@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Rekey from './Rekey'
+import Cleanup from './Cleanup'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
 import { backupAll } from '../lib/rekey'
@@ -98,6 +99,8 @@ export default function Maintenance() {
 
               {error && <p className="notice block" role="alert">{error}</p>}
             </section>
+
+            <Cleanup budgets={budgets} />
 
             <Rekey />
           </>
