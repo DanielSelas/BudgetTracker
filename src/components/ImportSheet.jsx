@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import Sheet from './Sheet'
 import { monthLabel, shekels } from '../lib/format'
-import { parseCsv, readText } from '../lib/csv'
+import { readAnyFile } from '../lib/readAny'
 import { byMerchant, detectColumns, extractRows, monthsIn } from '../lib/importRows'
 import { EXPENSE_PILLS } from '../lib/pills'
 
@@ -41,18 +41,15 @@ export default function ImportSheet({ onImport, onClose }) {
     if (!file) return
     setError('')
     try {
-      // הקורא של xlsx נטען רק כשצריך אותו, כדי שהוא לא ייכנס
-      // לחבילה הראשית של מי שמזין ידנית ולא מייבא לעולם.
-      // הבדיקה כאן ולא במודול, אחרת הייבוא הסטטי היה מבטל את העצל
-      const parsed = /\.xlsx$/i.test(file.name)
-        ? await (await import('../lib/xlsx')).readXlsx(file)
-        : parseCsv(await readText(file))
-      if (parsed.length === 0) throw new Error('הקובץ ריק')
+      const { rows: parsed } = await readAnyFile(file)
+      if (parsed.length === 0) throw new Error('הקובץ נקרא אבל לא נמצאו בו שורות')
       setRows(parsed)
       setMapping(detectColumns(parsed))
       setStep(STEPS.map)
-    } catch {
-      setError('לא הצלחתי לקרוא את הקובץ. נתמכים CSV ו-XLSX')
+    } catch (failure) {
+      // הסיבה האמיתית ולא הודעה כללית: בלי זה אי אפשר לדעת אם הקובץ
+      // בפורמט אחר, פגום, או פשוט ריק
+      setError(failure?.message || 'לא הצלחתי לקרוא את הקובץ')
     }
   }
 
@@ -83,8 +80,9 @@ export default function ImportSheet({ onImport, onClose }) {
         {step === STEPS.file && (
           <>
             <p className="hint">
-              קובץ CSV או XLSX מחברת האשראי או מהבנק. הקריאה נעשית
-              במכשיר שלכם, והקובץ לא נשלח לשום מקום.
+              קובץ מחברת האשראי או מהבנק: CSV, XLSX, או קובץ שנקרא
+              אקסל ובתוכו טבלה. הקריאה נעשית במכשיר שלכם, והקובץ לא
+              נשלח לשום מקום.
             </p>
             <input className="input" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={pickFile} />
           </>

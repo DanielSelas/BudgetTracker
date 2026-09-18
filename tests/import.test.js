@@ -172,3 +172,53 @@ describe('קריאת xlsx', () => {
     expect(columnIndex('BC12')).toBe(54)
   })
 })
+
+describe('זיהוי הפורמט לפי התוכן', () => {
+  const asFile = (bytes, name) => {
+    const data = typeof bytes === 'string' ? new TextEncoder().encode(bytes) : bytes
+    return new File([data], name)
+  }
+
+  it('ZIP הוא xlsx, גם כשהסיומת אומרת אחרת', async () => {
+    const { sniff } = await import('../src/lib/readAny')
+    const zip = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0])
+    expect(await sniff(asFile(zip, 'report.xls'))).toBe('xlsx')
+  })
+
+  it('טבלת HTML מזוהה גם כשהקובץ נקרא xlsx', async () => {
+    const { sniff } = await import('../src/lib/readAny')
+    const html = '<html><body><table><tr><td>a</td></tr></table></body></html>'
+    expect(await sniff(asFile(html, 'bank.xlsx'))).toBe('html')
+  })
+
+  it('פורמט אקסל בינארי ישן מזוהה ולא מתפרש כטקסט', async () => {
+    const { sniff } = await import('../src/lib/readAny')
+    const old = new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 0, 0, 0, 0])
+    expect(await sniff(asFile(old, 'report.xls'))).toBe('xls')
+  })
+
+  it('כל השאר נקרא כ-CSV', async () => {
+    const { sniff } = await import('../src/lib/readAny')
+    expect(await sniff(asFile('a,b,c\n1,2,3', 'data.txt'))).toBe('csv')
+  })
+})
+
+describe('טבלת HTML', () => {
+  it('בוחרת את הטבלה הגדולה, כי קבצים כאלה עוטפים בטבלאות פריסה', async () => {
+    const { readHtmlTable } = await import('../src/lib/htmlTable')
+    const html = `<table><tr><td>כותרת עליונה</td></tr></table>
+      <table>
+        <tr><th>תאריך</th><th>עסק</th><th>סכום</th></tr>
+        <tr><td>03/09/2026</td><td>שופרסל</td><td>1,240</td></tr>
+        <tr><td>05/09/2026</td><td>פז</td><td>320</td></tr>
+      </table>`
+    const rows = readHtmlTable(html)
+    expect(rows).toHaveLength(3)
+    expect(rows[1]).toEqual(['03/09/2026', 'שופרסל', '1,240'])
+  })
+
+  it('בלי טבלה מחזירה ריק במקום לזרוק', async () => {
+    const { readHtmlTable } = await import('../src/lib/htmlTable')
+    expect(readHtmlTable('<html><body>שלום</body></html>')).toEqual([])
+  })
+})
