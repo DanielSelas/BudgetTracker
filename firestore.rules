@@ -146,7 +146,10 @@ service cloud.firestore {
             && data.budgetGroup in ['fixed', 'leisure', 'savings', 'none']
             && data.name is string && data.name.size() > 0 && data.name.size() <= 100
             && data.plannedAmount is number && data.plannedAmount >= 0
-            && data.actualAmount is number && data.actualAmount >= 0
+            // סכום שלילי מותר: זיכוי הוא הוצאה שקוזזה, והדרך הנכונה
+            // לייצג אותו היא הקטנה של הקטגוריה שבה היא הייתה.
+            // מתוכנן נשאר אי שלילי, כי תכנון שלילי חסר משמעות.
+            && data.actualAmount is number
             && data.month is string && data.month.matches('^[0-9]{4}-[0-9]{2}$')
             && (!('date' in data)
                 || (data.date is string

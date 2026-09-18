@@ -138,9 +138,9 @@ export function extractRows(rows, mapping) {
     const value = parseAmount(row[amount])
     const label = String(row[name] ?? '').trim()
 
-    // זיכוי או שורת סיכום. רשומה דורשת סכום חיובי, ולכן אלה מדווחים
-    // ולא נכתבים בשקט
-    if (!when || value === null || value <= 0) {
+    // זיכוי נשמר כסכום שלילי ומקזז את הקטגוריה שלו. מה שאין לו
+    // תאריך או סכום הוא שורת סיכום או פתיח, וזה מה שמדולג
+    if (!when || value === null || value === 0) {
       skipped += 1
       continue
     }

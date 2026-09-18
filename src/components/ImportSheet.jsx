@@ -115,7 +115,8 @@ export default function ImportSheet({ month, onImport, onClose }) {
             <p className="hint">
               נקראו <strong>{extracted.rows.length}</strong> שורות
               {extracted.skipped > 0 && `, ו-${extracted.skipped} דולגו`}.
-              {extracted.skipped > 0 && ' שורות ללא תאריך, ללא סכום, או זיכויים.'}
+              {extracted.skipped > 0 && ' שורות בלי תאריך או בלי סכום, כמו שורות סיכום.'}
+              {' '}זיכויים נכללים כסכום שלילי ומקזזים את בית העסק שלהם.
             </p>
 
             <div className="sheet-actions">

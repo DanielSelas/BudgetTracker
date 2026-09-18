@@ -76,22 +76,25 @@ describe('הבנת הקובץ', () => {
     expect(rows[mapping.headerRow][mapping.name]).toBe('שם בית העסק')
   })
 
-  it('מוציא את השורות, ומדווח על מה שדולג', () => {
+  it('מוציא את השורות, כולל זיכוי כסכום שלילי', () => {
     const { rows: out, skipped } = extractRows(rows, detectColumns(rows))
-    expect(out).toHaveLength(3)
-    // הזיכוי אינו רשומה, כי רשומה דורשת סכום חיובי
-    expect(skipped).toBe(1)
+    expect(out).toHaveLength(4)
+    expect(skipped).toBe(0)
     expect(out[0]).toMatchObject({
       date: '2026-09-03', month: '2026-09', amount: 1240.5, name: 'שופרסל דיל',
     })
+    // זיכוי הוא הוצאה שקוזזה, ולכן הוא נכנס ומקזז
+    expect(out[3]).toMatchObject({ amount: -150, name: 'זיכוי' })
   })
 
   it('מקבץ לפי בית עסק, מהגדול לקטן', () => {
     const { rows: out } = extractRows(rows, detectColumns(rows))
     const groups = byMerchant(out)
-    expect(groups.map((group) => group.name)).toEqual(['שופרסל דיל', 'פז יעלים'])
+    expect(groups.map((group) => group.name)).toEqual(['שופרסל דיל', 'פז יעלים', 'זיכוי'])
     expect(groups[0].total).toBe(1278.5)
     expect(groups[0].rows).toHaveLength(2)
+    // הזיכוי מופיע כקבוצה עם סכום שלילי, ולכן הוא אחרון בדירוג
+    expect(groups[2].total).toBe(-150)
   })
 })
 

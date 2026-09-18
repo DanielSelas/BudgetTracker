@@ -252,8 +252,16 @@ describe('entries', () => {
     await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e4'), entry({ category: 'crypto' })))
   })
 
-  it('דוחה סכום שלילי', async () => {
-    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e5'), entry({ actualAmount: -1 })))
+  it('מקבל סכום שלילי, כי זיכוי הוא הוצאה שקוזזה', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e5'), entry({ actualAmount: -150 })),
+    )
+  })
+
+  it('אבל מתוכנן שלילי עדיין נדחה, כי תכנון שלילי חסר משמעות', async () => {
+    await assertFails(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'e5b'), entry({ plannedAmount: -1 })),
+    )
   })
 
   it('דוחה פורמט חודש שגוי', async () => {
@@ -758,7 +766,7 @@ describe('רשומות כתת אוסף של התקציב', () => {
 
   it('הולידציה נשמרה', async () => {
     await assertFails(setDoc(nested('n3'), item({ category: 'crypto' })))
-    await assertFails(setDoc(nested('n4'), item({ actualAmount: -1 })))
+    await assertFails(setDoc(nested('n4'), item({ plannedAmount: -1 })))
     await assertFails(setDoc(nested('n5'), item({ month: 'ספטמבר' })))
     await assertFails(setDoc(nested('n6'), item({ date: '2026-08-02' })))
     await assertFails(setDoc(nested('n7'), item({ groupKey: '' })))

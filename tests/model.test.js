@@ -556,3 +556,30 @@ describe('תווית חבר לרשימה', () => {
     expect(memberLabel(null)).toBe('')
   })
 })
+
+describe('זיכוי כהוצאה שקוזזה', () => {
+  const income = (actualAmount) => ({ category: 'income', budgetGroup: 'none', actualAmount })
+  const spend = (actualAmount) => ({ category: 'fixed', budgetGroup: 'fixed', actualAmount })
+
+  it('מקטין את הקטגוריה שבה הוא היה', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    const s = summarizeMonth([income(20000), spend(5000), spend(-300)], { fixedBase: 20000 })
+    expect(s.groups.fixed.actual).toBe(4700)
+    expect(s.totalExpenses).toBe(4700)
+  })
+
+  it('מגדיל את היתרה, כי פחות כסף באמת יצא', async () => {
+    const { summarizeMonth } = await import('../src/lib/model')
+    const withRefund = summarizeMonth([income(20000), spend(5000), spend(-300)])
+    const without = summarizeMonth([income(20000), spend(5000)])
+    expect(withRefund.balance - without.balance).toBe(300)
+  })
+
+  it('קטגוריה שירדה מתחת לאפס אינה מייצרת פס בעל רוחב שלילי', async () => {
+    const { summarizeMonth, groupTarget } = await import('../src/lib/model')
+    const s = summarizeMonth([income(20000), spend(100), spend(-500)], { fixedBase: 20000 })
+    expect(s.groups.fixed.actual).toBe(-400)
+    const progress = Math.max(0, Math.min(100, (s.groups.fixed.actual / groupTarget(20000, 'fixed')) * 100))
+    expect(progress).toBe(0)
+  })
+})

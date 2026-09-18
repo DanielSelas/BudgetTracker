@@ -21,7 +21,7 @@ export default function UnplannedCard({
 }) {
   const { reserve, spent, remaining, deposited } = summary.unplanned
   const over = remaining < 0
-  const progress = reserve > 0 ? Math.min(100, (spent / reserve) * 100) : 0
+  const progress = reserve > 0 ? Math.max(0, Math.min(100, (spent / reserve) * 100)) : 0
   // הצעה להפקיד רק כשיש ממש מה להפקיד, ולא על שאריות של שקלים בודדים
   const worthDepositing = summary.usesFixedBase && remaining >= 500
 

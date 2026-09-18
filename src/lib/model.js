@@ -247,7 +247,7 @@ export function summarizeTrip(entries, frame = 0) {
     frame,
     spent,
     remaining: frame - spent,
-    progress: frame > 0 ? Math.min(100, (spent / frame) * 100) : 0,
+    progress: frame > 0 ? Math.max(0, Math.min(100, (spent / frame) * 100)) : 0,
     byCategory,
     totals,
   }

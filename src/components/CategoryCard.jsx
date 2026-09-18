@@ -21,7 +21,10 @@ export default function CategoryCard({ category, entries, group, authorOf, actio
   const exceeded = hasTarget && group.remaining < 0
   const goodToExceed = isOverageGood(budgetGroup)
   const danger = exceeded && !goodToExceed
-  const progress = hasTarget ? Math.min(100, (group.actual / group.target) * 100) : 0
+  // קיזוז יכול להוריד קטגוריה מתחת לאפס, ורוחב שלילי אינו רוחב
+  const progress = hasTarget
+    ? Math.max(0, Math.min(100, (group.actual / group.target) * 100))
+    : 0
 
   return (
     <section className="cat-card" data-category={category}>
