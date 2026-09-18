@@ -6,7 +6,7 @@ const currency = new Intl.NumberFormat('he-IL', {
 
 export const shekels = (value) => currency.format(Math.round(value || 0))
 
-const MONTH_NAMES = [
+export const MONTH_NAMES = [
   'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
   'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר',
 ]

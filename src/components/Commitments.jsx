@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Sheet from './Sheet'
 import MonthSelect from './MonthSelect'
 import { shekels, monthLabel } from '../lib/format'
-import { CATEGORIES, intervalLabel, shiftMonth } from '../lib/model'
+import { CATEGORIES, intervalLabel } from '../lib/model'
 import { isEnded, updateTemplate } from '../lib/recurring'
 
 /**
@@ -118,16 +118,15 @@ function Row({ budgetId, template, onStop }) {
           <label className="field">
             מאיזה חודש
             <MonthSelect
-              value={startMonth} onChange={setStartMonth}
-              from={shiftMonth(startMonth || template.startMonth, -24)} months={48}
+              value={startMonth} onChange={setStartMonth} label="חודש ההתחלה"
             />
           </label>
 
           <label className="field">
             עד מתי
             <MonthSelect
-              value={endMonth} onChange={setEndMonth}
-              from={template.startMonth} allowEmpty
+              value={endMonth} onChange={setEndMonth} label="חודש הסיום"
+              from={startMonth || template.startMonth} allowEmpty
             />
           </label>
 

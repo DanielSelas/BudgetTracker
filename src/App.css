@@ -857,6 +857,71 @@ button:disabled {
 
 .btn-danger:disabled { opacity: 0.5; cursor: default; }
 
+/* בורר חודשים: לוח של שנה אחת, בלי ימים. הבחירה כאן היא חודש,
+   ולוח ימים היה מבקש מידע שאין לו משמעות */
+.month-select { position: relative; }
+
+.month-trigger {
+  text-align: start;
+  cursor: pointer;
+  font: inherit;
+}
+
+.month-pop {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: calc(100% + 6px);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(320px, 92vw);
+  padding: 12px;
+  border: 1px solid var(--color-divider);
+  border-radius: 16px;
+  background: var(--color-neutral-100);
+  box-shadow: var(--shadow-lg);
+}
+
+.month-pop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.month-cell {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--color-neutral-200);
+  color: var(--color-text);
+  font: inherit;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+
+.month-cell:hover:not(:disabled) { background: var(--color-neutral-300); }
+
+.month-cell[aria-pressed='true'] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+.month-cell:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* ========== כפתור צף ========== */
 
 .fab {

@@ -4,7 +4,7 @@ import { entriesRef } from '../lib/paths'
 import { cleanupPlan, runCleanup } from '../lib/cleanup'
 import { monthLabel, shekels } from '../lib/format'
 import MonthSelect from './MonthSelect'
-import { monthKey, shiftMonth } from '../lib/model'
+import { monthKey } from '../lib/model'
 
 /**
  * מחיקת היסטוריה שכבר לא נכונה.
@@ -90,7 +90,7 @@ export default function Cleanup({ budgets = [] }) {
       <label className="field">
         למחוק את כל מה שלפני
         <MonthSelect
-          value={before} from={shiftMonth(monthKey(), -36)} months={48}
+          value={before} label="בחירת חודש הגבול"
           onChange={(next) => { setBefore(next); setPlan(null) }}
         />
       </label>

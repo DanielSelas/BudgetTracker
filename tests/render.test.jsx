@@ -633,32 +633,70 @@ describe('בחירת חודש', () => {
     }
   })
 
-  it('הרשימה מציגה חודשים בעברית ומחזירה מפתח', async () => {
+  const openPicker = async (props = {}) => {
     const { default: MonthSelect } = await import('../src/components/MonthSelect')
-    const onChange = vi.fn()
-    const { container, getByText } = render(
-      <MonthSelect value="2026-09" from="2026-09" months={3} onChange={onChange} />,
-    )
-    expect(getByText('ספטמבר 2026')).toBeTruthy()
-    expect(getByText('נובמבר 2026')).toBeTruthy()
-    fireEvent.change(container.querySelector('select'), { target: { value: '2026-10' } })
-    expect(onChange).toHaveBeenCalledWith('2026-10')
+    const view = render(<MonthSelect onChange={() => {}} {...props} />)
+    fireEvent.click(view.container.querySelector('.month-trigger'))
+    return view
+  }
+
+  it('נפתח על השנה של החודש שנבחר, ומראה לוח של שנים עשר חודשים', async () => {
+    const { getByText, container } = await openPicker({ value: '2026-09' })
+    expect(getByText('2026')).toBeTruthy()
+    expect(container.querySelectorAll('.month-cell')).toHaveLength(12)
+    expect(getByText('ספטמבר').getAttribute('aria-pressed')).toBe('true')
   })
 
-  it('חודש שמור שמחוץ לטווח עדיין מופיע, כדי שהבחירה לא תימחק', async () => {
-    const { default: MonthSelect } = await import('../src/components/MonthSelect')
-    const { getByText } = render(
-      <MonthSelect value="2024-01" from="2026-09" months={3} onChange={() => {}} />,
-    )
-    expect(getByText('ינואר 2024')).toBeTruthy()
+  it('החצים מזיזים שנה, ולכן שנתיים אחורה הן שתי לחיצות', async () => {
+    const { getByText, getByLabelText } = await openPicker({ value: '2026-09' })
+    fireEvent.click(getByLabelText('שנה קודמת'))
+    fireEvent.click(getByLabelText('שנה קודמת'))
+    expect(getByText('2024')).toBeTruthy()
+  })
+
+  it('בחירה מחזירה מפתח חודש וסוגרת', async () => {
+    const onChange = vi.fn()
+    const { getByText, container } = await openPicker({ value: '2026-09', onChange })
+    fireEvent.click(getByText('דצמבר'))
+    expect(onChange).toHaveBeenCalledWith('2026-12')
+    expect(container.querySelector('.month-pop')).toBeNull()
+  })
+
+  it('חודש לפני הגבול חסום', async () => {
+    const { getByText } = await openPicker({ value: '2026-09', from: '2026-05' })
+    expect(getByText('אפריל').disabled).toBe(true)
+    expect(getByText('מאי').disabled).toBe(false)
+  })
+
+  it('אבל חודש ששמור כבר נשאר בר בחירה, כדי שהוא לא יימחק', async () => {
+    // נפתח על 2024 כי זו השנה של הערך השמור, והוא מחוץ לטווח
+    const { getByText } = await openPicker({ value: '2024-01', from: '2026-05' })
+    expect(getByText('2024')).toBeTruthy()
+    expect(getByText('ינואר').disabled).toBe(false)
+    expect(getByText('פברואר').disabled).toBe(true)
   })
 
   it('אפשר לבחור בלי תאריך סיום', async () => {
+    const onChange = vi.fn()
+    const { getByText } = await openPicker({ value: '2026-09', allowEmpty: true, onChange })
+    fireEvent.click(getByText('בלי תאריך סיום'))
+    expect(onChange).toHaveBeenCalledWith('')
+  })
+
+  it('Escape סוגר בלי לשנות', async () => {
+    const onChange = vi.fn()
+    const { container } = await openPicker({ value: '2026-09', onChange })
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(container.querySelector('.month-pop')).toBeNull()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('בלי ערך מוצג הטקסט הריק על הכפתור', async () => {
     const { default: MonthSelect } = await import('../src/components/MonthSelect')
-    const { getByText } = render(
-      <MonthSelect value="" from="2026-09" months={2} allowEmpty onChange={() => {}} />,
+    const { container } = render(
+      <MonthSelect value="" emptyLabel="בלי תאריך סיום" onChange={() => {}} />,
     )
-    expect(getByText('בלי תאריך סיום')).toBeTruthy()
+    expect(container.querySelector('.month-trigger').textContent).toBe('בלי תאריך סיום')
   })
 })
 
