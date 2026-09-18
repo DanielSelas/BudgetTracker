@@ -17,5 +17,48 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      /*
+       * מנגנון חילוץ ממסך לבן.
+       *
+       * האפליקציה מותקנת כ-PWA, ולכן service worker ישן יכול להגיש
+       * index.html שמצביע על קבצים שפריסה חדשה כבר מחקה. אז הקוד
+       * הראשי אינו נטען כלל, ושום טיפול בשגיאות בתוך האפליקציה לא
+       * יכול לעזור, כי האפליקציה עצמה לא רצה.
+       *
+       * הסקריפט הזה רגיל ולא מודול, ולכן הוא רץ גם כשהמודול נכשל.
+       * אם לא עלה כלום תוך שמונה שניות, הוא מנקה את ה-service worker
+       * ואת המטמון וטוען מחדש פעם אחת. חותמת הזמן מונעת לולאה.
+       */
+      (function () {
+        var KEY = 'bt:rescued-at'
+        var QUIET = 60000
+
+        setTimeout(function () {
+          var root = document.getElementById('root')
+          if (root && root.children.length > 0) return
+
+          try {
+            if (Date.now() - Number(sessionStorage.getItem(KEY) || 0) < QUIET) return
+            sessionStorage.setItem(KEY, String(Date.now()))
+          } catch (error) {
+            /* גלישה פרטית חוסמת אחסון. עדיף חילוץ אחד מלא לנסות */
+          }
+
+          var reload = function () { window.location.reload() }
+          if (!navigator.serviceWorker) return reload()
+
+          navigator.serviceWorker.getRegistrations()
+            .then(function (all) {
+              return Promise.all(all.map(function (one) { return one.unregister() }))
+            })
+            .then(function () { return window.caches ? caches.keys() : [] })
+            .then(function (names) {
+              return Promise.all(names.map(function (name) { return caches.delete(name) }))
+            })
+            .then(reload, reload)
+        }, 8000)
+      })()
+    </script>
   </body>
 </html>
