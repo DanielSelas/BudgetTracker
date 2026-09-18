@@ -4,6 +4,7 @@ import { monthLabel, shekels } from '../lib/format'
 import { readAnyFile } from '../lib/readAny'
 import { byMerchant, detectColumns, extractRows, monthsIn } from '../lib/importRows'
 import { EXPENSE_PILLS } from '../lib/pills'
+import { isStanding, suggestCategory } from '../lib/sectors'
 
 /**
  * ייבוא הוצאות מקובץ.
@@ -15,7 +16,14 @@ import { EXPENSE_PILLS } from '../lib/pills'
  */
 const STEPS = { file: 'file', map: 'map', classify: 'classify', done: 'done' }
 
-export default function ImportSheet({ onImport, onClose }) {
+// למה זה מסומן: הצעה בלי הסבר נראית כמו החלטה שרירותית
+const SOURCE_NOTE = {
+  standing: 'מסווג כקבוע כי זו הוראת קבע',
+  rule: 'מוצע לפי מה שנלמד על הענף',
+  seed: 'מוצע לפי הענף',
+}
+
+export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
   const [step, setStep] = useState(STEPS.file)
   const [rows, setRows] = useState([])
   const [mapping, setMapping] = useState(null)
@@ -29,8 +37,18 @@ export default function ImportSheet({ onImport, onClose }) {
     [rows, mapping],
   )
   const merchants = useMemo(() => byMerchant(extracted.rows), [extracted.rows])
+
+  /**
+   * ההצעה מגיעה מסוג העסקה ומהענף, והבחירה הידנית גוברת עליה. שמירת
+   * ההצעה כבחירה מראש הייתה מונעת הבחנה בין "בחרתי" ל"ניחשו בשבילי",
+   * וזו בדיוק ההבחנה שקובעת מה נלמד.
+   */
+  const suggestionOf = (group) => suggestCategory(group, sectorRules)
+  const categoryOf = (group) =>
+    choices[group.name] ?? suggestionOf(group).category
   const months = useMemo(() => monthsIn(extracted.rows), [extracted.rows])
-  const chosen = merchants.filter((group) => choices[group.name])
+  const chosen = merchants.filter((group) => categoryOf(group))
+  const standingGroups = merchants.filter((group) => isStanding(group.type))
   const chosenTotal = chosen.reduce((total, group) => total + group.total, 0)
 
   const header = mapping?.headerRow >= 0 ? rows[mapping.headerRow] : null
@@ -61,10 +79,25 @@ export default function ImportSheet({ onImport, onClose }) {
     setError('')
     try {
       const entries = chosen.flatMap((group) =>
-        group.rows.map((row) => ({ ...row, category: choices[group.name], groupKey: group.name })),
+        group.rows.map((row) => ({ ...row, category: categoryOf(group), groupKey: group.name })),
       )
-      const result = await onImport(entries)
-      setReport({ written: result?.written ?? entries.length, merchants: chosen.length })
+      // מה שנבחר בפועל נשמר לפי ענף, כך שהקובץ הבא מגיע מסווג.
+      // מה שסווג כקבוע רק בגלל שהוא הוראת קבע לא מלמד את הענף: מנוי
+      // חדר כושר בהוראת קבע היה מלמד ששורת הפנאי כולה קבועה
+      const learned = {}
+      for (const group of chosen) {
+        if (!group.sector) continue
+        if (!choices[group.name] && suggestionOf(group).source === 'standing') continue
+        learned[group.sector] = categoryOf(group)
+      }
+
+      const result = await onImport(entries, learned)
+      setReport({
+        written: result?.written ?? entries.length,
+        merchants: chosen.length,
+        learned: Object.keys(learned).length,
+        standing: standingGroups.length,
+      })
       setStep(STEPS.done)
     } catch {
       setError('הכתיבה נכשלה. אף שורה לא נשמרה')
@@ -150,9 +183,18 @@ export default function ImportSheet({ onImport, onClose }) {
         {step === STEPS.classify && (
           <>
             <p className="hint">
-              בחרו קטגוריה לכל בית עסק, מהגדול לקטן. מה שלא תבחרו פשוט
-              לא ייובא, ואפשר לחזור לזה בפעם אחרת.
+              מה שסווג לפי סוג העסקה ולפי הענף כבר מסומן. תקנו מה שלא
+              מתאים, ומה שנשאר בלי קטגוריה פשוט לא ייובא.
             </p>
+
+            {standingGroups.length > 0 && (
+              <p className="hint">
+                {standingGroups.length === 1
+                  ? 'עסק אחד בקובץ מחויב בהוראת קבע'
+                  : `${standingGroups.length} עסקים בקובץ מחויבים בהוראת קבע`}
+                , ולכן הם מסומנים כהוצאה קבועה גם אם הענף שלהם אומר אחרת.
+              </p>
+            )}
 
             <ul className="entry-list">
               {merchants.map((group) => (
@@ -164,6 +206,17 @@ export default function ImportSheet({ onImport, onClose }) {
                     </span>
                     <span className="entry-amount num">{shekels(group.total)}</span>
                   </div>
+                  {(group.sector || isStanding(group.type)) && (
+                    <span className="type-hint">
+                      {[
+                        group.sector,
+                        isStanding(group.type) ? 'הוראת קבע' : '',
+                        !choices[group.name] && suggestionOf(group).category
+                          ? SOURCE_NOTE[suggestionOf(group).source]
+                          : '',
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
                   <div className="cat-pills tight">
                     {EXPENSE_PILLS.map((pill) => (
                       <button
@@ -171,7 +224,7 @@ export default function ImportSheet({ onImport, onClose }) {
                         type="button"
                         className="cat-pill"
                         data-category={pill.category}
-                        aria-pressed={choices[group.name] === pill.category}
+                        aria-pressed={categoryOf(group) === pill.category}
                         onClick={() => setChoices((current) => ({
                           ...current,
                           [group.name]: current[group.name] === pill.category
@@ -211,6 +264,19 @@ export default function ImportSheet({ onImport, onClose }) {
               מ-<strong>{report.merchants}</strong> בתי עסק. כל בית עסק מופיע
               בכרטיס שלו כשורה אחת מכווצת, ואפשר לפתוח אותה לפירוט.
             </p>
+            {report.learned > 0 && (
+              <p className="hint">
+                נלמדו <strong>{report.learned}</strong> ענפים. בקובץ הבא
+                הם יגיעו מסווגים מראש, גם בעסקים שלא ראיתם עדיין.
+              </p>
+            )}
+            {report.standing > 0 && (
+              <p className="hint">
+                <strong>{report.standing}</strong> מהעסקים מחויבים בהוראת קבע.
+                אלה מועמדים טבעיים לחיוב קבוע עם תאריך, וכך הם ייכנסו גם
+                לציר החיובים הקרובים ולא רק לסיכום החודש.
+              </p>
+            )}
             <p className="hint">
               שורות שכבר קיימות מייבוא קודם נכתבו מחדש ולא שוכפלו, אז
               אפשר לייבא שוב את אותו קובץ בלי חשש.

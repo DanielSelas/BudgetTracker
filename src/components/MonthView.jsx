@@ -23,8 +23,10 @@ import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth } from '../lib/m
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
 import { useProfiles } from '../hooks/useProfiles'
+import { useSectorRules } from '../hooks/useSectorRules'
 import { deleteBudget, renameBudget, setBaseAmount, setBillingDay } from '../lib/budgets'
 import { importEntries } from '../lib/importEntries'
+import { rememberSectors } from '../lib/sectors'
 
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
 
@@ -61,6 +63,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
     budgetId, month, uid, entries, entriesLoaded: !loading,
   })
   const ending = useMemo(() => endingSoon(templates, month), [templates, month])
+  const sectorRules = useSectorRules(budgetId)
 
   const actions = useMemo(() => ({
     ...base,
@@ -256,7 +259,16 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
 
       {importing && (
         <ImportSheet
-          onImport={(entries) => importEntries({ budgetId, uid, rows: entries })}
+          sectorRules={sectorRules}
+          onImport={async (entries, learned) => {
+            const result = await importEntries({ budgetId, uid, rows: entries })
+            // הלמידה נשמרת אחרי הכתיבה ובנפרד ממנה: כלל ענף שלא נשמר
+            // הוא אי נוחות בקובץ הבא, ולא סיבה להיכשל על שורות שכבר נכתבו
+            try {
+              await rememberSectors({ budgetId, uid, choices: learned })
+            } catch { /* אין מה לעשות כאן */ }
+            return result
+          }}
           onClose={() => setImporting(false)}
         />
       )}

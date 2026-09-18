@@ -10,6 +10,12 @@ const DATE_WORDS = ['תאריך', 'date', 'יום']
 // וב"סכום עסקה", ולכן הוא מסמן הכל ואינו מסמן כלום
 const AMOUNT_WORDS = ['סכום', 'חיוב', 'amount', 'debit', 'sum']
 const NAME_WORDS = ['בית עסק', 'תיאור', 'שם', 'merchant', 'description', 'פירוט', 'עסק']
+// ענף הוא הסיווג של חברת האשראי עצמה, והוא מפתח חזק בהרבה משם בית
+// עסק: יש אלפי עסקים אבל עשרות ענפים, ולכן למידה עליו מתכנסת מהר
+const SECTOR_WORDS = ['ענף', 'קטגוריה', 'תחום', 'sector', 'category', 'סיווג']
+// סוג העסקה מבחין בין רגילה, הוראת קבע ותשלומים. הוראת קבע היא
+// הוצאה קבועה מבחינה מבנית, בלי קשר לענף שלה
+const TYPE_WORDS = ['סוג עסקה', 'סוג', 'type']
 
 const DATE_PATTERNS = [
   // 01/09/2026 או 1.9.26
@@ -105,13 +111,19 @@ export function detectColumns(rows, headerRow = findHeaderRow(rows)) {
   const body = rows.slice(headerRow + 1, headerRow + 40)
   const columns = Math.max(header.length, ...body.map((row) => row.length), 0)
 
-  const pick = (words, test, exclude = []) => {
+  /**
+   * עמודה אופציונלית נבחרת רק אם הכותרת מסכימה. בלי זה עמודת "הערות"
+   * מלאת טקסט הייתה נבחרת כענף, וממנה גם היינו לומדים כללים.
+   */
+  const pick = (words, test, exclude = [], needHeader = false) => {
     let best = -1
     let bestScore = 0
     for (let index = 0; index < columns; index += 1) {
       if (exclude.includes(index)) continue
+      const named = headerScore(header[index], words)
+      if (needHeader && named === 0) continue
       const values = body.map((row) => row[index])
-      const score = headerScore(header[index], words) * 2 + scoreColumn(values, test)
+      const score = named * 2 + scoreColumn(values, test)
       if (score > bestScore) {
         bestScore = score
         best = index
@@ -132,12 +144,21 @@ export function detectColumns(rows, headerRow = findHeaderRow(rows)) {
     [date, amount],
   )
 
-  return { headerRow, date, amount, name }
+  const isLabel = (value) => {
+    const text = String(value || '').trim()
+    return text.length > 1 && !parseDate(text) && parseAmount(text) === null
+  }
+
+  // הענף אופציונלי: לא כל קובץ מכיל אותו, ובלעדיו פשוט אין הצעה
+  const sector = pick(SECTOR_WORDS, isLabel, [date, amount, name], true)
+  const type = pick(TYPE_WORDS, isLabel, [date, amount, name, sector], true)
+
+  return { headerRow, date, amount, name, sector, type }
 }
 
 /** השורות שאפשר להזין, אחרי שהוחלט מה כל עמודה. */
 export function extractRows(rows, mapping) {
-  const { headerRow, date, amount, name } = mapping
+  const { headerRow, date, amount, name, sector, type } = mapping
   const out = []
   let skipped = 0
 
@@ -158,6 +179,8 @@ export function extractRows(rows, mapping) {
       month: when.slice(0, 7),
       amount: Math.round(value * 100) / 100,
       name: label || 'הוצאה',
+      sector: sector >= 0 ? String(row[sector] ?? '').trim() : '',
+      type: type >= 0 ? String(row[type] ?? '').trim() : '',
     })
   }
 
@@ -169,12 +192,24 @@ export function byMerchant(rows) {
   const groups = new Map()
   for (const row of rows) {
     const key = row.name
-    if (!groups.has(key)) groups.set(key, { name: key, rows: [], total: 0 })
+    if (!groups.has(key)) {
+      groups.set(key, { name: key, rows: [], total: 0, sectors: new Map(), types: new Map() })
+    }
     const group = groups.get(key)
     group.rows.push(row)
     group.total += row.amount
+    if (row.sector) group.sectors.set(row.sector, (group.sectors.get(row.sector) || 0) + 1)
+    if (row.type) group.types.set(row.type, (group.types.get(row.type) || 0) + 1)
   }
-  return [...groups.values()].sort((a, b) => b.total - a.total)
+
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      // אותו עסק יכול להופיע בשני ענפים, והשכיח הוא הנכון
+      sector: [...group.sectors.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '',
+      type: [...group.types.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '',
+    }))
+    .sort((a, b) => b.total - a.total)
 }
 
 /** אילו חודשים הקובץ נוגע בהם, לפי סדר. */

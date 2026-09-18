@@ -251,3 +251,74 @@ describe('שתי עמודות סכום', () => {
     expect(out.map((row) => row.amount)).toEqual([244.9, 153.9, 14])
   })
 })
+
+describe('סוג עסקה', () => {
+  /**
+   * בקובץ האמיתי יש עמודת "סוג עסקה" עם ערכים כמו "רגילה" או
+   * "הוראת קבע". הוראת קבע היא הוצאה קבועה מבחינה מבנית, בלי קשר
+   * לענף שלה, ולכן היא גוברת על ההצעה לפי הענף.
+   */
+  const rows = [
+    ['תאריך עסקה', 'שם בית עסק', 'סכום עסקה', 'סכום חיוב', 'סוג עסקה', 'ענף'],
+    ['08/04/2025', 'מנו וינו', '60', '244.9', 'רגילה', 'מסעדות'],
+    ['07/04/2025', 'חדר כושר', '199', '199', 'הוראת קבע', 'ספורט ופנאי'],
+    ['06/04/2025', 'חדר כושר', '199', '199', 'הוראת קבע', 'ספורט ופנאי'],
+  ]
+  const mapping = detectColumns(rows)
+
+  it('מזוהה כעמודה נפרדת מהסכום ומהענף', () => {
+    expect(rows[mapping.headerRow][mapping.type]).toBe('סוג עסקה')
+    expect(rows[mapping.headerRow][mapping.amount]).toBe('סכום חיוב')
+    expect(rows[mapping.headerRow][mapping.sector]).toBe('ענף')
+  })
+
+  it('הסוג נשמר על כל שורה ועל הקבוצה', () => {
+    const { rows: out } = extractRows(rows, mapping)
+    expect(out.map((row) => row.type)).toEqual(['רגילה', 'הוראת קבע', 'הוראת קבע'])
+    const gym = byMerchant(out).find((group) => group.name === 'חדר כושר')
+    expect(gym.type).toBe('הוראת קבע')
+  })
+
+  it('הוראת קבע מסווגת כקבועה גם כשהענף הוא פנאי', async () => {
+    const { suggestCategory, isStanding } = await import('../src/lib/sectors')
+    expect(isStanding('הוראת קבע')).toBe(true)
+    expect(isStanding('רגילה')).toBe(false)
+
+    expect(suggestCategory({ sector: 'ספורט ופנאי', type: 'הוראת קבע' }))
+      .toEqual({ category: 'fixed', source: 'standing' })
+    expect(suggestCategory({ sector: 'ספורט ופנאי', type: 'רגילה' }))
+      .toEqual({ category: 'leisure', source: 'seed' })
+  })
+
+  it('מה שנלמד על הענף גובר על ניחוש הפתיחה אבל לא על הוראת קבע', async () => {
+    const { suggestCategory } = await import('../src/lib/sectors')
+    const rules = { 'ספורט ופנאי': 'fund' }
+    expect(suggestCategory({ sector: 'ספורט ופנאי', type: 'רגילה' }, rules))
+      .toEqual({ category: 'fund', source: 'rule' })
+    expect(suggestCategory({ sector: 'ספורט ופנאי', type: 'הוראת קבע' }, rules).source)
+      .toBe('standing')
+  })
+
+  it('קובץ בלי עמודת סוג ממשיך לעבוד', () => {
+    const plain = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'ענף'],
+      ['08/04/2025', 'מנו וינו', '244.9', 'מסעדות'],
+    ]
+    const map = detectColumns(plain)
+    expect(map.type).toBe(-1)
+    expect(extractRows(plain, map).rows[0].type).toBe('')
+  })
+})
+
+describe('עמודות אופציונליות', () => {
+  it('עמודת הערות לא נתפסת כענף או כסוג', () => {
+    const rows = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'הערות'],
+      ['08/04/2025', 'מנו וינו', '244.9', 'שולם במזומן'],
+      ['07/04/2025', 'WOLT', '153.9', 'הזמנה לבית'],
+    ]
+    const mapping = detectColumns(rows)
+    expect(mapping.sector).toBe(-1)
+    expect(mapping.type).toBe(-1)
+  })
+})

@@ -180,6 +180,17 @@ service cloud.firestore {
           && request.resource.data.addedBy == resource.data.addedBy;
       }
 
+      // מה שנלמד על ענפים: איזו קטגוריה מתאימה לכל ענף של חברת
+      // האשראי. נלמד מהבחירות בייבוא, ומשותף לחברי התקציב.
+      match /sectorRules/{sectorId} {
+        allow read, delete: if isMember(budgetId);
+        allow write: if isMember(budgetId)
+          && request.resource.data.sector is string
+          && request.resource.data.sector.size() > 0
+          && request.resource.data.sector.size() <= 80
+          && request.resource.data.category in ['fixed', 'leisure', 'fund', 'unplanned'];
+      }
+
       match /members/{uid} {
         allow read: if isMember(budgetId);
 
