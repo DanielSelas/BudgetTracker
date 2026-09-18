@@ -62,7 +62,8 @@ export async function importEntries({ budgetId, uid, rows }) {
         name: String(row.name).slice(0, 100),
         plannedAmount: 0,
         actualAmount: row.amount,
-        note: '',
+        // ההערה מהקובץ נשמרת כי היא נושאת מידע, למשל "תשלום 1 מתוך 3"
+        note: String(row.note || '').slice(0, 100),
         addedBy: uid,
         // בית העסק הוא הקיבוץ, ולכן ייבוא של חודש שלם מופיע כשורה
         // אחת מכווצת לכל חנות ולא כמאתיים שורות שמציפות את הכרטיס

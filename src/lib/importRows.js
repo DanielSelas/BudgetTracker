@@ -16,6 +16,26 @@ const SECTOR_WORDS = ['ענף', 'קטגוריה', 'תחום', 'sector', 'categor
 // סוג העסקה מבחין בין רגילה, הוראת קבע ותשלומים. הוראת קבע היא
 // הוצאה קבועה מבחינה מבנית, בלי קשר לענף שלה
 const TYPE_WORDS = ['סוג עסקה', 'סוג', 'type']
+// "פירוט" נמצא כבר ב-NAME_WORDS, ולכן הוא לא כאן: הוא היה מושך את
+// עמודת שם בית העסק לתפקיד ההערות
+const NOTE_WORDS = ['הערות', 'הערה', 'note', 'notes', 'remarks']
+
+/**
+ * "תשלום 1 מתוך 3" בהערות.
+ *
+ * זו לא הערה אלא נתון: הסכום בשורה הוא התשלום החודשי ולא המחיר,
+ * ויש עוד תשלומים שכבר התחייבנו אליהם ושלא מופיעים בשום מקום.
+ */
+export function parseInstallment(note) {
+  const text = String(note || '')
+  const match = text.match(/(\d{1,2})\s*(?:מתוך|מ־|מ-|out of|\/)\s*(\d{1,2})/)
+  if (!match) return null
+  const index = Number(match[1])
+  const total = Number(match[2])
+  // תשלום 0 או "1 מתוך 1" אינם עסקת תשלומים, והפוך מזה חסר משמעות
+  if (!index || total < 2 || index > total) return null
+  return { index, total }
+}
 
 const DATE_PATTERNS = [
   // 01/09/2026 או 1.9.26
@@ -152,13 +172,14 @@ export function detectColumns(rows, headerRow = findHeaderRow(rows)) {
   // הענף אופציונלי: לא כל קובץ מכיל אותו, ובלעדיו פשוט אין הצעה
   const sector = pick(SECTOR_WORDS, isLabel, [date, amount, name], true)
   const type = pick(TYPE_WORDS, isLabel, [date, amount, name, sector], true)
+  const note = pick(NOTE_WORDS, isLabel, [date, amount, name, sector, type], true)
 
-  return { headerRow, date, amount, name, sector, type }
+  return { headerRow, date, amount, name, sector, type, note }
 }
 
 /** השורות שאפשר להזין, אחרי שהוחלט מה כל עמודה. */
 export function extractRows(rows, mapping) {
-  const { headerRow, date, amount, name, sector, type } = mapping
+  const { headerRow, date, amount, name, sector, type, note } = mapping
   const out = []
   let skipped = 0
 
@@ -166,6 +187,7 @@ export function extractRows(rows, mapping) {
     const when = parseDate(row[date])
     const value = parseAmount(row[amount])
     const label = String(row[name] ?? '').trim()
+    const text = note >= 0 ? String(row[note] ?? '').trim() : ''
 
     // זיכוי נשמר כסכום שלילי ומקזז את הקטגוריה שלו. מה שאין לו
     // תאריך או סכום הוא שורת סיכום או פתיח, וזה מה שמדולג
@@ -181,6 +203,8 @@ export function extractRows(rows, mapping) {
       name: label || 'הוצאה',
       sector: sector >= 0 ? String(row[sector] ?? '').trim() : '',
       type: type >= 0 ? String(row[type] ?? '').trim() : '',
+      note: text,
+      installment: parseInstallment(text),
     })
   }
 
@@ -188,6 +212,56 @@ export function extractRows(rows, mapping) {
 }
 
 /** קיבוץ לפי בית עסק, כי סיווג לפי עסקה אינו בר ביצוע. */
+/** מה שעוד צפוי לרדת מהעסקה הזאת אחרי החיוב שבקובץ. */
+export const remainingOf = (row) =>
+  row.installment && row.amount > 0
+    ? row.amount * (row.installment.total - row.installment.index)
+    : 0
+
+const addMonths = (month, count) => {
+  const [year, index] = month.split('-').map(Number)
+  const moved = new Date(Date.UTC(year, index - 1 + count, 1))
+  return moved.toISOString().slice(0, 7)
+}
+
+/**
+ * מה שכבר התחייבנו אליו ועוד לא ירד.
+ *
+ * עסקת תשלומים היא הוצאה של החודשים הבאים שנחתמה החודש, ובלי הפירוק
+ * הזה היא פשוט לא קיימת בתקציב עד שהיא מפתיעה.
+ */
+export function installmentPlan(rows) {
+  // אותה עסקה מופיעה שוב בכל חודש שהיא ירדה בו. קובץ שחוצה חודשים
+  // מכיל גם "1 מתוך 3" וגם "2 מתוך 3" של אותה קנייה, ורק התשלום
+  // המתקדם ביותר מלמד מה באמת נשאר. בלי זה החודשים המשותפים
+  // נספרים פעמיים
+  const latest = new Map()
+  for (const row of rows) {
+    if (!row.installment || row.amount <= 0) continue
+    const key = `${row.name}|${row.amount}|${row.installment.total}`
+    const known = latest.get(key)
+    if (!known || row.installment.index > known.installment.index) latest.set(key, row)
+  }
+
+  const months = new Map()
+  for (const row of latest.values()) {
+    for (let step = 1; step <= row.installment.total - row.installment.index; step += 1) {
+      const month = addMonths(row.month, step)
+      months.set(month, (months.get(month) || 0) + row.amount)
+    }
+  }
+
+  const byMonth = [...months.entries()]
+    .map(([month, amount]) => ({ month, amount: Math.round(amount * 100) / 100 }))
+    .sort((a, b) => a.month.localeCompare(b.month))
+
+  return {
+    count: latest.size,
+    total: Math.round(byMonth.reduce((sum, item) => sum + item.amount, 0) * 100) / 100,
+    byMonth,
+  }
+}
+
 export function byMerchant(rows) {
   const groups = new Map()
   for (const row of rows) {
@@ -208,6 +282,9 @@ export function byMerchant(rows) {
       // אותו עסק יכול להופיע בשני ענפים, והשכיח הוא הנכון
       sector: [...group.sectors.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '',
       type: [...group.types.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '',
+      // התשלום האחרון בקבוצה הוא המצב העדכני של העסקה
+      installment: group.rows.filter((row) => row.installment).at(-1)?.installment || null,
+      remaining: group.rows.reduce((sum, row) => sum + remainingOf(row), 0),
     }))
     .sort((a, b) => b.total - a.total)
 }

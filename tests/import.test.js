@@ -9,7 +9,8 @@ vi.mock('firebase/firestore', () => ({
 vi.mock('../src/lib/firebase', () => ({ db: {} }))
 import { detectDelimiter, parseCsv, splitLine } from '../src/lib/csv'
 import {
-  byMerchant, detectColumns, extractRows, findHeaderRow, parseAmount, parseDate,
+  byMerchant, detectColumns, extractRows, findHeaderRow, installmentPlan,
+  parseAmount, parseDate, parseInstallment,
 } from '../src/lib/importRows'
 
 /**
@@ -320,5 +321,98 @@ describe('עמודות אופציונליות', () => {
     const mapping = detectColumns(rows)
     expect(mapping.sector).toBe(-1)
     expect(mapping.type).toBe(-1)
+  })
+})
+
+describe('תשלומים', () => {
+  /**
+   * בעמודת ההערות מופיע לפעמים "תשלום 1 מתוך 3". זה לא טקסט חופשי
+   * אלא נתון: הסכום בשורה הוא התשלום החודשי ולא המחיר, ויש עוד
+   * תשלומים שכבר התחייבנו אליהם.
+   */
+  it('קורא את מספר התשלום מתוך ההערה', () => {
+    expect(parseInstallment('תשלום 1 מתוך 3')).toEqual({ index: 1, total: 3 })
+    expect(parseInstallment('תשלום 02 מתוך 12')).toEqual({ index: 2, total: 12 })
+    expect(parseInstallment('תשלום 3/3')).toEqual({ index: 3, total: 3 })
+  })
+
+  it('מתעלם ממה שאינו עסקת תשלומים', () => {
+    expect(parseInstallment('')).toBe(null)
+    expect(parseInstallment('שולם במזומן')).toBe(null)
+    // תשלום יחיד אינו עסקת תשלומים, והפוך מזה הוא שיבוש
+    expect(parseInstallment('תשלום 1 מתוך 1')).toBe(null)
+    expect(parseInstallment('תשלום 4 מתוך 3')).toBe(null)
+  })
+
+  const rows = [
+    ['תאריך עסקה', 'שם בית עסק', 'סכום חיוב', 'ענף', 'הערות'],
+    ['08/04/2025', 'מכשירי חשמל', '500', 'חשמל', 'תשלום 1 מתוך 3'],
+    ['08/04/2025', 'מנו וינו', '244.9', 'מסעדות', ''],
+    ['09/05/2025', 'רהיטים', '300', 'ריהוט', 'תשלום 2 מתוך 3'],
+  ]
+
+  it('עמודת ההערות מזוהה ונשמרת על השורה', () => {
+    const mapping = detectColumns(rows)
+    expect(rows[mapping.headerRow][mapping.note]).toBe('הערות')
+    const { rows: out } = extractRows(rows, mapping)
+    expect(out[0].note).toBe('תשלום 1 מתוך 3')
+    expect(out[0].installment).toEqual({ index: 1, total: 3 })
+    expect(out[1].installment).toBe(null)
+  })
+
+  it('התשלומים הבאים מתפרסים על החודשים שאחרי', () => {
+    const { rows: out } = extractRows(rows, detectColumns(rows))
+    const plan = installmentPlan(out)
+    expect(plan.count).toBe(2)
+    // שניים שנותרו מהחשמל, ואחד שנותר מהרהיטים
+    expect(plan.total).toBe(1300)
+    expect(plan.byMonth).toEqual([
+      { month: '2025-05', amount: 500 },
+      { month: '2025-06', amount: 800 },
+    ])
+  })
+
+  it('התשלום האחרון לא מוסיף התחייבות', () => {
+    const last = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'הערות'],
+      ['08/04/2025', 'רהיטים', '300', 'תשלום 3 מתוך 3'],
+    ]
+    const { rows: out } = extractRows(last, detectColumns(last))
+    expect(installmentPlan(out)).toEqual({ count: 1, total: 0, byMonth: [] })
+  })
+
+  it('זיכוי בתשלומים לא נספר כהתחייבות עתידית', () => {
+    const refund = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'הערות'],
+      ['08/04/2025', 'רהיטים', '-300', 'תשלום 1 מתוך 3'],
+    ]
+    const { rows: out } = extractRows(refund, detectColumns(refund))
+    expect(installmentPlan(out).total).toBe(0)
+  })
+
+  it('עסקה שמופיעה בכמה חודשים נספרת פעם אחת בלבד', () => {
+    // אותה קנייה ירדה באפריל ובמאי, ולכן נשאר רק יוני. ספירה של כל
+    // שורה בנפרד הייתה מכפילה את יוני
+    const many = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'הערות'],
+      ['08/04/2025', 'רהיטים', '300', 'תשלום 1 מתוך 3'],
+      ['08/05/2025', 'רהיטים', '300', 'תשלום 2 מתוך 3'],
+    ]
+    const { rows: out } = extractRows(many, detectColumns(many))
+    const plan = installmentPlan(out)
+    expect(plan.count).toBe(1)
+    expect(plan.byMonth).toEqual([{ month: '2025-06', amount: 300 }])
+  })
+
+  it('הקבוצה מציגה את מצב התשלומים העדכני', () => {
+    const many = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'הערות'],
+      ['08/04/2025', 'רהיטים', '300', 'תשלום 1 מתוך 3'],
+      ['08/05/2025', 'רהיטים', '300', 'תשלום 2 מתוך 3'],
+    ]
+    const { rows: out } = extractRows(many, detectColumns(many))
+    const group = byMerchant(out)[0]
+    expect(group.installment).toEqual({ index: 2, total: 3 })
+    expect(group.remaining).toBe(900)
   })
 })

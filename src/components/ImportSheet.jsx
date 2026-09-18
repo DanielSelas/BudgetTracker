@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import Sheet from './Sheet'
 import { monthLabel, shekels } from '../lib/format'
 import { readAnyFile } from '../lib/readAny'
-import { byMerchant, detectColumns, extractRows, monthsIn } from '../lib/importRows'
+import { byMerchant, detectColumns, extractRows, installmentPlan, monthsIn } from '../lib/importRows'
 import { EXPENSE_PILLS } from '../lib/pills'
 import { isStanding, suggestCategory } from '../lib/sectors'
 
@@ -49,6 +49,12 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
   const months = useMemo(() => monthsIn(extracted.rows), [extracted.rows])
   const chosen = merchants.filter((group) => categoryOf(group))
   const standingGroups = merchants.filter((group) => isStanding(group.type))
+  // התשלומים הבאים מחושבים על מה שנבחר בפועל, כי מה שלא ייובא גם
+  // לא אמור להופיע כהתחייבות
+  const plan = useMemo(
+    () => installmentPlan(chosen.flatMap((group) => group.rows)),
+    [chosen],
+  )
   const chosenTotal = chosen.reduce((total, group) => total + group.total, 0)
 
   const header = mapping?.headerRow >= 0 ? rows[mapping.headerRow] : null
@@ -97,6 +103,7 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
         merchants: chosen.length,
         learned: Object.keys(learned).length,
         standing: standingGroups.length,
+        committed: plan.total,
       })
       setStep(STEPS.done)
     } catch {
@@ -196,6 +203,24 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
               </p>
             )}
 
+            {plan.count > 0 && (
+              <div className="notice block">
+                <p>
+                  <strong>{plan.count}</strong> מהעסקאות הן בתשלומים. הסכום
+                  שבקובץ הוא התשלום החודשי, ועוד <strong>{shekels(plan.total)}</strong>
+                  {' '}יירדו בחודשים הבאים:
+                </p>
+                <ul className="timeline">
+                  {plan.byMonth.map((item) => (
+                    <li className="timeline-row" key={item.month}>
+                      <span className="entry-name">{monthLabel(item.month)}</span>
+                      <span className="entry-amount num">{shekels(item.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <ul className="entry-list">
               {merchants.map((group) => (
                 <li className="merchant" key={group.name}>
@@ -206,11 +231,14 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
                     </span>
                     <span className="entry-amount num">{shekels(group.total)}</span>
                   </div>
-                  {(group.sector || isStanding(group.type)) && (
+                  {(group.sector || isStanding(group.type) || group.installment) && (
                     <span className="type-hint">
                       {[
                         group.sector,
                         isStanding(group.type) ? 'הוראת קבע' : '',
+                        group.installment
+                          ? `תשלום ${group.installment.index} מתוך ${group.installment.total}`
+                          : '',
                         !choices[group.name] && suggestionOf(group).category
                           ? SOURCE_NOTE[suggestionOf(group).source]
                           : '',
@@ -275,6 +303,13 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
                 <strong>{report.standing}</strong> מהעסקים מחויבים בהוראת קבע.
                 אלה מועמדים טבעיים לחיוב קבוע עם תאריך, וכך הם ייכנסו גם
                 לציר החיובים הקרובים ולא רק לסיכום החודש.
+              </p>
+            )}
+            {report.committed > 0 && (
+              <p className="hint">
+                <strong>{shekels(report.committed)}</strong> מתוך מה שיובא הם
+                תשלומים שעוד לא ירדו. הם לא בתקציב של החודש הזה, אבל הם כבר
+                התחייבות, וכדאי לזכור אותם כשמתכננים את החודשים הבאים.
               </p>
             )}
             <p className="hint">
