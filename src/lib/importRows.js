@@ -18,9 +18,18 @@ const SECTOR_WORDS = ['ענף', 'קטגוריה', 'תחום', 'sector', 'categor
 // סוג העסקה מבחין בין רגילה, הוראת קבע ותשלומים. הוראת קבע היא
 // הוצאה קבועה מבחינה מבנית, בלי קשר לענף שלה
 const TYPE_WORDS = ['סוג עסקה', 'סוג', 'type']
-// "פירוט" נמצא כבר ב-NAME_WORDS, ולכן הוא לא כאן: הוא היה מושך את
-// עמודת שם בית העסק לתפקיד ההערות
-const NOTE_WORDS = ['הערות', 'הערה', 'note', 'notes', 'remarks']
+// "פירוט" נמצא גם ב-NAME_WORDS, אבל עמודת השם כבר נבחרה ומוחרגת
+// מהמועמדים כאן. בדוח הבנקאי זו העמודה שנושאת את הסימון "חיוב
+// עסקת חו״ל בש״ח", את "הוראת קבע" ואת פירוט התשלומים, ובלעדיה
+// שלושתם אובדים
+const NOTE_WORDS = ['הערות', 'הערה', 'פירוט', 'note', 'notes', 'remarks']
+
+/**
+ * האם השורה מעידה על חיוב קבוע ולא על קנייה.
+ * הסימון יושב בעמודת הסוג אצל חברה אחת ובעמודת הפירוט אצל אחרת.
+ */
+export const isStanding = (text) =>
+  /הוראת ?קבע|הו"?ק|standing|direct ?debit/i.test(String(text || ''))
 
 /**
  * "תשלום 1 מתוך 3" בהערות.
@@ -359,7 +368,9 @@ export function byMerchant(rows) {
     group.total += row.amount
     if (row.amount >= limit) group.unusual.push(row)
     if (row.sector) group.sectors.set(row.sector, (group.sectors.get(row.sector) || 0) + 1)
-    if (row.type) group.types.set(row.type, (group.types.get(row.type) || 0) + 1)
+    // הוראת קבע שמסומנת בעמודת הפירוט שקולה לסוג עסקה של הוראת קבע
+    const type = isStanding(row.note) ? 'הוראת קבע' : row.type
+    if (type) group.types.set(type, (group.types.get(type) || 0) + 1)
   }
 
   return [...groups.values()]

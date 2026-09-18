@@ -8,6 +8,7 @@ import {
 } from '../lib/importRows'
 import { EXPENSE_PILLS } from '../lib/pills'
 import { isStanding, suggestCategory } from '../lib/sectors'
+import { CURRENCY_LABEL, applyCurrency } from '../lib/currency'
 
 /**
  * ייבוא הוצאות מקובץ.
@@ -43,19 +44,40 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
   const [files, setFiles] = useState([])
   const single = files.length === 1
   const [choices, setChoices] = useState({})
+  const [rates, setRates] = useState({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [report, setReport] = useState(null)
 
   const extracted = useMemo(() => {
-    const perFile = files.map((file) => extractRows(file.rows, file.mapping))
+    const perFile = files.map((file) => {
+      const raw = extractRows(file.rows, file.mapping)
+      // המרת מטבע נעשית לכל קובץ בנפרד, כי שורת הסיכום שמאמתת
+      // אותה שייכת לקובץ שלו
+      const money = applyCurrency(raw.rows, { totalsLine: file.totalsLine, rates })
+      return { ...raw, ...money, name: file.name }
+    })
     const merged = mergeFiles(perFile.map((item) => item.rows))
+
+    const foreign = new Map()
+    const needsRates = new Set()
+    for (const file of perFile) {
+      for (const [currency, amount] of file.foreign) {
+        foreign.set(currency, Math.round(((foreign.get(currency) || 0) + amount) * 100) / 100)
+      }
+      for (const currency of file.needsRates) needsRates.add(currency)
+    }
+
     return {
       rows: merged.rows,
       duplicates: merged.duplicates,
       skipped: perFile.reduce((sum, item) => sum + item.skipped, 0),
+      dropped: perFile.reduce((sum, item) => sum + item.dropped, 0),
+      unreconciled: perFile.filter((item) => !item.agrees).map((item) => item.name),
+      foreign,
+      needsRates: [...needsRates],
     }
-  }, [files])
+  }, [files, rates])
   const merchants = useMemo(() => byMerchant(extracted.rows), [extracted.rows])
 
   /**
@@ -95,7 +117,17 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
       try {
         const { rows: parsed } = await readAnyFile(file)
         if (parsed.length === 0) throw new Error('לא נמצאו שורות')
-        read.push({ name: file.name, rows: parsed, mapping: detectColumns(parsed) })
+        read.push({
+          name: file.name,
+          rows: parsed,
+          mapping: detectColumns(parsed),
+          // שורת הסיכום שבראש הקובץ היא הנתון היחיד שאומר כמה חויב
+          // בכל מטבע, ולכן היא נשמרת לצד השורות
+          totalsLine: parsed
+            .slice(0, 20)
+            .map((row) => String(row[0] ?? ''))
+            .find((text) => text.includes('סה"כ חיוב')) || '',
+        })
       } catch (failure) {
         // גרסה תקועה נכשלת על כל הקבצים באותה סיבה, וזו תקלה של
         // האפליקציה ולא של הקבצים. אין טעם לדווח עליה תשע עשרה פעם
@@ -236,6 +268,61 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
               {extracted.skipped > 0 && ' שורות בלי תאריך או בלי סכום, כמו שורות סיכום.'}
               {' '}זיכויים נכללים כסכום שלילי ומקזזים את בית העסק שלהם.
             </p>
+
+            {extracted.foreign.size > 0 && (
+              <div className="notice block">
+                <p>
+                  בקובץ יש חיובים שאינם בשקלים. עמודת המטבע ריקה, ולכן
+                  המטבע נגזר משם בית העסק ונבדק מול שורת הסיכום שבראש
+                  הקובץ.
+                </p>
+
+                <ul className="timeline">
+                  {[...extracted.foreign].map(([currency, amount]) => (
+                    <li className="timeline-row" key={currency}>
+                      <span className="entry-name">
+                        {CURRENCY_LABEL[currency] || currency}
+                      </span>
+                      <span className="entry-amount num">{amount.toLocaleString('he-IL')}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {[...extracted.foreign.keys()]
+                  .filter((currency) => currency !== '?')
+                  .map((currency) => (
+                    <label className="field" key={currency}>
+                      {`כמה שקלים ב${CURRENCY_LABEL[currency] || currency} אחד`}
+                      <input
+                        className="input num" type="number" inputMode="decimal"
+                        min="0" step="0.01" placeholder={currency === 'USD' ? '3.7' : '4'}
+                        value={rates[currency] ?? ''}
+                        onChange={(event) => setRates((current) => ({
+                          ...current, [currency]: event.target.value,
+                        }))}
+                      />
+                    </label>
+                  ))}
+
+                {extracted.needsRates.length > 0 && (
+                  <p className="hint">
+                    בלי שער אי אפשר להמיר, והשורות האלה ייכנסו כאפס.
+                    עדיף להזין שער או לחזור בלי הקבצים האלה.
+                  </p>
+                )}
+
+                {extracted.unreconciled.length > 0 && (
+                  <p className="hint">
+                    ב{extracted.unreconciled.length === 1 ? 'קובץ אחד' : `-${
+                      extracted.unreconciled.length} קבצים`} החלוקה בין
+                    המטבעות לא הסתדרה מול שורת הסיכום, ולכן
+                    {' '}<strong>{extracted.dropped}</strong> שורות חו״ל מדולגות.
+                    המרה לפי ניחוש שגוי הייתה מכניסה סכומים שנראים אמינים
+                    ואינם נכונים.
+                  </p>
+                )}
+              </div>
+            )}
 
             {months.length > 0 && (
               <p className="hint">

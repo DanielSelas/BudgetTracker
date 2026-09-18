@@ -1,5 +1,8 @@
 import { collection, doc, onSnapshot, serverTimestamp, writeBatch } from 'firebase/firestore'
 import { db } from './firebase'
+// ההגדרה חיה ב-importRows כי היא נוגעת לקריאת הקובץ, ומיוצאת גם
+// מכאן כדי שמי שמסווג לא יצטרך לדעת משני מקומות
+import { isStanding } from './importRows'
 
 /**
  * מה שנלמד על ענפים.
@@ -70,9 +73,7 @@ export function watchSectorRules(budgetId, onChange, onError) {
   )
 }
 
-/** האם סוג העסקה מעיד על חיוב קבוע ולא על קנייה. */
-export const isStanding = (type) =>
-  /הוראת ?קבע|הו"?ק|standing|direct ?debit/i.test(String(type || ''))
+export { isStanding }
 
 /**
  * הקטגוריה המוצעת, ומאיפה היא באה.
