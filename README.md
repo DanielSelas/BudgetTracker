@@ -11,7 +11,7 @@ An installable PWA. No developer account, no app store, no native build.
 ![React](https://img.shields.io/badge/React-19-2a78d6?style=flat-square&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-7a8a5e?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-eb6834?style=flat-square&logo=firebase&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-198%20%2B%20108%20rules-1baf7a?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-201%20%2B%20108%20rules-1baf7a?style=flat-square)
 
 The interface is in Hebrew and right to left throughout.
 
@@ -72,7 +72,7 @@ The interface is in Hebrew and right to left throughout.
 | **Recurring charges** | Tick a box when adding, and the row is created automatically every month. |
 | **For a term, not forever** | A lease runs a year and a loan has twelve payments. Set an end and the charge stops on time, with a warning the month before. |
 | **Commitments in one place** | Every recurring charge, editable: the amount when rent goes up, the day it leaves the account, when it ends. |
-| **Import a CSV** | Columns are detected from the file itself, and a month of spending is classified by merchant rather than row by row. |
+| **Import CSV or XLSX** | Columns are detected from the file itself, and a month of spending is classified by merchant rather than row by row. |
 | **What is about to be charged** | A dated timeline of what leaves and what arrives, and the one figure that matters: how much has to be in the account to get through it. |
 | **A base amount you choose** | Set what you plan to divide each month, so a good month does not quietly license more spending. |
 | **A real remainder** | What comes in above the base is a category you can spend from, with a prompt to deposit what is left. |

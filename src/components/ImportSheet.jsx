@@ -41,13 +41,18 @@ export default function ImportSheet({ onImport, onClose }) {
     if (!file) return
     setError('')
     try {
-      const parsed = parseCsv(await readText(file))
+      // הקורא של xlsx נטען רק כשצריך אותו, כדי שהוא לא ייכנס
+      // לחבילה הראשית של מי שמזין ידנית ולא מייבא לעולם.
+      // הבדיקה כאן ולא במודול, אחרת הייבוא הסטטי היה מבטל את העצל
+      const parsed = /\.xlsx$/i.test(file.name)
+        ? await (await import('../lib/xlsx')).readXlsx(file)
+        : parseCsv(await readText(file))
       if (parsed.length === 0) throw new Error('הקובץ ריק')
       setRows(parsed)
       setMapping(detectColumns(parsed))
       setStep(STEPS.map)
     } catch {
-      setError('לא הצלחתי לקרוא את הקובץ. ודאו שזה CSV')
+      setError('לא הצלחתי לקרוא את הקובץ. נתמכים CSV ו-XLSX')
     }
   }
 
@@ -78,10 +83,10 @@ export default function ImportSheet({ onImport, onClose }) {
         {step === STEPS.file && (
           <>
             <p className="hint">
-              קובץ CSV מחברת האשראי או מהבנק. הקריאה נעשית במכשיר שלכם,
-              והקובץ לא נשלח לשום מקום.
+              קובץ CSV או XLSX מחברת האשראי או מהבנק. הקריאה נעשית
+              במכשיר שלכם, והקובץ לא נשלח לשום מקום.
             </p>
-            <input className="input" type="file" accept=".csv,text/csv" onChange={pickFile} />
+            <input className="input" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={pickFile} />
           </>
         )}
 

@@ -146,3 +146,29 @@ describe('לאיזה חודש הקובץ נכנס', () => {
     expect(monthsIn([])).toEqual([])
   })
 })
+
+describe('קריאת xlsx', () => {
+  it('מספר סידורי של אקסל אל תאריך', async () => {
+    const { serialToDate } = await import('../src/lib/xlsx')
+    // הבסיס הוא 30.12.1899, ולא 1.1.1900, בגלל באג השנה המעוברת
+    expect(serialToDate(46268)).toBe('2026-09-03')
+    expect(serialToDate(46297)).toBe('2026-10-02')
+    expect(serialToDate(1)).toBe('1899-12-31')
+  })
+
+  it('דוחה ערך שאינו מספר סידורי', async () => {
+    const { serialToDate } = await import('../src/lib/xlsx')
+    expect(serialToDate(0)).toBe('')
+    expect(serialToDate('שופרסל')).toBe('')
+  })
+
+  it('אסמכתת תא אל אינדקס עמודה', async () => {
+    const { columnIndex } = await import('../src/lib/xlsx')
+    expect(columnIndex('A1')).toBe(0)
+    expect(columnIndex('B2')).toBe(1)
+    expect(columnIndex('Z10')).toBe(25)
+    // מעבר ל-Z, שם חישוב נאיבי נשבר
+    expect(columnIndex('AA1')).toBe(26)
+    expect(columnIndex('BC12')).toBe(54)
+  })
+})
