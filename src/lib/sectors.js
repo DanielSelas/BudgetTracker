@@ -77,11 +77,15 @@ export const isStanding = (type) =>
 /**
  * הקטגוריה המוצעת, ומאיפה היא באה.
  *
- * הוראת קבע היא הוצאה קבועה מבחינה מבנית, ולכן היא גוברת על הענף.
+ * כלל לפי שם בית העסק גובר על הכל, ואחריו הוראת קבע, שהיא הוצאה
+ * קבועה מבחינה מבנית ולכן גוברת על הענף.
  * המקור מוחזר כי הוא קובע מה נלמד: מנוי חדר כושר בהוראת קבע לא
  * אמור ללמד שענף הפנאי כולו הוא קבוע.
  */
-export function suggestCategory({ sector, type }, rules = {}) {
+export function suggestCategory({ sector, type, ruleCategory }, rules = {}) {
+  // כלל לפי שם בית העסק גובר על הכל: הוא נקבע ידנית ומכיר את העסק
+  // עצמו, בעוד שהענף מתאר רק את סוג ההוצאה
+  if (ruleCategory) return { category: ruleCategory, source: 'merchant' }
   if (isStanding(type)) return { category: 'fixed', source: 'standing' }
   if (rules[sector]) return { category: rules[sector], source: 'rule' }
   const seed = seedCategory(sector)

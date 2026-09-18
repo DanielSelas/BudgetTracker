@@ -577,3 +577,45 @@ describe('מסך הייבוא', () => {
     expect(input.multiple).toBe(true)
   })
 })
+
+describe('כלל הקיבוץ בהזנה ידנית', () => {
+  it('שם שמוכר על ידי כלל נכנס לקבוצה שלו בלי שבוחרים אותה', async () => {
+    const { default: EntrySheet } = await import('../src/components/EntrySheet')
+    const onSubmit = vi.fn(async () => {})
+    const { getByPlaceholderText, getByText } = render(
+      <EntrySheet
+        category="fixed" month="2026-09" me="דניאל"
+        onSubmit={onSubmit} onClose={() => {}}
+      />,
+    )
+    fireEvent.change(getByPlaceholderText('על מה'), {
+      target: { value: 'שופרסל שלי גבעתיים' },
+    })
+    fireEvent.change(getByPlaceholderText('₪0'), { target: { value: '200' } })
+    fireEvent.click(getByText('שמירה'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(onSubmit).toHaveBeenCalled()
+    expect(onSubmit.mock.calls[0][0].groupKey).toBe('סופר')
+  })
+
+  it('בחירה ידנית של קבוצה גוברת על הכלל', async () => {
+    const { default: EntrySheet } = await import('../src/components/EntrySheet')
+    const onSubmit = vi.fn(async () => {})
+    const { getByPlaceholderText, getByText } = render(
+      <EntrySheet
+        category="fixed" month="2026-09" me="דניאל" groups={['דלק']}
+        onSubmit={onSubmit} onClose={() => {}}
+      />,
+    )
+    fireEvent.change(getByPlaceholderText('על מה'), {
+      target: { value: 'שופרסל שלי גבעתיים' },
+    })
+    fireEvent.change(getByPlaceholderText('₪0'), { target: { value: '200' } })
+    fireEvent.click(getByText('דלק'))
+    fireEvent.click(getByText('שמירה'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(onSubmit.mock.calls[0][0].groupKey).toBe('דלק')
+  })
+})

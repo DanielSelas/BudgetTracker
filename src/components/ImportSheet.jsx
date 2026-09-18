@@ -20,6 +20,7 @@ const STEPS = { file: 'file', map: 'map', classify: 'classify', done: 'done' }
 
 // למה זה מסומן: הצעה בלי הסבר נראית כמו החלטה שרירותית
 const SOURCE_NOTE = {
+  merchant: 'כלל קבוע לבית העסק הזה',
   standing: 'מסווג כקבוע כי זו הוראת קבע',
   rule: 'מוצע לפי מה שנלמד על הענף',
   seed: 'מוצע לפי הענף',
@@ -118,7 +119,10 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
       const learned = {}
       for (const group of chosen) {
         if (!group.sector) continue
-        if (!choices[group.name] && suggestionOf(group).source === 'standing') continue
+        const source = suggestionOf(group).source
+        // כלל לפי שם והוראת קבע מלמדים על העסק ולא על הענף: עלי
+        // אקספרס מגיע תחת מזון ומשקאות, והיה מלמד שהסופר הוא משתנות
+        if (!choices[group.name] && (source === 'standing' || source === 'merchant')) continue
         // חיוב חריג מלמד על האירוע ולא על הענף: ניתוח לכלב היה מלמד
         // שכל "רפואה ובריאות" הוא בלת"ם, וכל בית מרקחת אחריו
         if (group.unusual.length > 0) continue

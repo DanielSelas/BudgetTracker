@@ -5,6 +5,8 @@
  * עובדת, ומשתמש שרואה ניחוש שגוי יכול לתקן אותו במקום להיתקע.
  */
 
+import { merchantCategory, merchantGroup } from './merchants'
+
 const DATE_WORDS = ['תאריך', 'date', 'יום']
 // "עסקה" הוסר בכוונה: הוא מופיע גם ב"תאריך עסקה", ב"סוג עסקה"
 // וב"סכום עסקה", ולכן הוא מסמן הכל ואינו מסמן כלום
@@ -344,7 +346,9 @@ export function byMerchant(rows) {
   const limit = unusualLimit(rows)
   const groups = new Map()
   for (const row of rows) {
-    const key = row.name
+    // כלל קיבוץ מאחד עשרות סניפים לשורה אחת שנפתחת. בלי זה "סופר"
+    // הוא עשרים בתי עסק שונים שכל אחד מהם צריך סיווג משלו
+    const key = merchantGroup(row.name) || row.name
     if (!groups.has(key)) {
       groups.set(key, {
         name: key, rows: [], total: 0, unusual: [], sectors: new Map(), types: new Map(),
@@ -361,6 +365,8 @@ export function byMerchant(rows) {
   return [...groups.values()]
     .map((group) => ({
       ...group,
+      // כלל לפי שם גובר על הענף, ולכן הוא נשמר בנפרד
+      ruleCategory: merchantCategory(group.rows[0]?.name) || merchantCategory(group.name),
       // אותו עסק יכול להופיע בשני ענפים, והשכיח הוא הנכון
       sector: [...group.sectors.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '',
       type: [...group.types.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '',

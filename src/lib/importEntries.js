@@ -65,9 +65,11 @@ export async function importEntries({ budgetId, uid, rows }) {
         // ההערה מהקובץ נשמרת כי היא נושאת מידע, למשל "תשלום 1 מתוך 3"
         note: String(row.note || '').slice(0, 100),
         addedBy: uid,
-        // בית העסק הוא הקיבוץ, ולכן ייבוא של חודש שלם מופיע כשורה
-        // אחת מכווצת לכל חנות ולא כמאתיים שורות שמציפות את הכרטיס
-        groupKey: normalizeGroup(String(row.name).slice(0, MAX_GROUP_LENGTH)),
+        // הקיבוץ נקבע במסך הסיווג, שם כלל לפי שם כבר אוחד: כל
+        // הסופרים הם "סופר" אחד. גזירה מהשם כאן הייתה מבטלת את זה
+        groupKey: normalizeGroup(
+          String(row.groupKey || row.name).slice(0, MAX_GROUP_LENGTH),
+        ),
         imported: true,
       })
       written += 1

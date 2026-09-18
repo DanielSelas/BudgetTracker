@@ -91,7 +91,8 @@ describe('הבנת הקובץ', () => {
   it('מקבץ לפי בית עסק, מהגדול לקטן', () => {
     const { rows: out } = extractRows(rows, detectColumns(rows))
     const groups = byMerchant(out)
-    expect(groups.map((group) => group.name)).toEqual(['שופרסל דיל', 'פז יעלים', 'זיכוי'])
+    // שופרסל ופז נכנסים לקבוצות הקבועות שלהם, ולכן אלה השמות
+    expect(groups.map((group) => group.name)).toEqual(['סופר', 'דלק', 'זיכוי'])
     expect(groups[0].total).toBe(1278.5)
     expect(groups[0].rows).toHaveLength(2)
     // הזיכוי מופיע כקבוצה עם סכום שלילי, ולכן הוא אחרון בדירוג
@@ -592,5 +593,93 @@ describe('איחוד כמה קבצים', () => {
     const { mergeFiles } = await import('../src/lib/importRows')
     const only = [row('2025-04-01', 'קפה', 20)]
     expect(mergeFiles([only])).toEqual({ rows: only, duplicates: 0 })
+  })
+})
+
+describe('כללים לפי שם בית עסק', () => {
+  /**
+   * הענף עונה על "איזה מין הוצאה זו", והשם עונה על "איזה עסק זה".
+   * הכללים כאן נכתבו מול השמות כפי שהם באמת מופיעים בדוחות, ולא
+   * כפי שהיינו מנחשים אותם.
+   */
+  const group = async (name) => {
+    const { merchantGroup } = await import('../src/lib/merchants')
+    return merchantGroup(name)
+  }
+  const category = async (name) => {
+    const { merchantCategory } = await import('../src/lib/merchants')
+    return merchantCategory(name)
+  }
+
+  it('כל הסופרים הם קבוצה אחת', async () => {
+    for (const name of [
+      'שופרסל שלי גבעתיים', 'שופרסל דיל מצפה רמון', 'אטליז גבעתיים',
+      'קשת טעמים סניף עפולה', 'טיב טעם בן יהודה תל אביב', 'סופר יודה בע"מ',
+      'מנו וינו רמב"ם', 'נאטסטיישן בע"מ', 'מ יוחננוף ובניו בעמ',
+      'בי דראגסטור בלוך גבעתיים', 'AM PM אחד העם',
+    ]) expect(await group(name)).toBe('סופר')
+  })
+
+  it('גם "אלמה מקרט", שכתוב בדוח בשגיאת כתיב', async () => {
+    // התאמה על "אלמה מרקט" הייתה מחטיאה את כל השורות האלה
+    expect(await group('אלמה מקרט')).toBe('סופר')
+  })
+
+  it('בית מרקחת הולך לסופר פארם ולא לסופר', async () => {
+    expect(await group('סופר פארם גורדון תל אביב')).toBe('סופר פארם')
+    expect(await group('בית מרקחת גן- העיר בע?מ')).toBe('סופר פארם')
+  })
+
+  it('דלק, מנטה ופז הם קבוצה אחת', async () => {
+    expect(await group('דלק מנטה מחלף זיכרון יעקו')).toBe('דלק')
+    expect(await group('דלק גל זרזיז')).toBe('דלק')
+    expect(await group('פז YELLOW חופית')).toBe('דלק')
+  })
+
+  it('"פז" נבדק כמילה שלמה ולא כתת מחרוזת', async () => {
+    // אחרת כל שם שיש בו את שני התווים האלה היה הופך לתחנת דלק
+    expect(await group('חנות פזגז')).toBe('')
+    expect(await group('מפזרים ותאורה')).toBe('')
+  })
+
+  it('עסק בלי כלל נשאר בשם שלו', async () => {
+    expect(await group('קפה בליך')).toBe('')
+    expect(await group('')).toBe('')
+  })
+
+  it('עלי אקספרס, ליים וטוקי הם הוצאה משתנה', async () => {
+    expect(await category('aliexpress')).toBe('leisure')
+    expect(await category('ALIEXPRESS.COM')).toBe('leisure')
+    expect(await category('LIME*PASS BONP')).toBe('leisure')
+    expect(await category('TUKI האיסים שלך בחו"ל')).toBe('leisure')
+  })
+
+  it('סקוט אייר הוא תמיד בלת״ם', async () => {
+    expect(await category('סקוט אייר')).toBe('unplanned')
+  })
+
+  it('הכלל לפי השם גובר על הענף ועל הוראת קבע', async () => {
+    const { suggestCategory } = await import('../src/lib/sectors')
+    // עלי אקספרס מגיע תחת "מזון ומשקאות", שהוא קבועות
+    expect(suggestCategory({ sector: 'מזון ומשקאות', ruleCategory: 'leisure' }))
+      .toEqual({ category: 'leisure', source: 'merchant' })
+    expect(suggestCategory({ sector: 'רכב ותחבורה', type: 'הוראת קבע', ruleCategory: 'unplanned' }))
+      .toEqual({ category: 'unplanned', source: 'merchant' })
+  })
+
+  it('הקיבוץ מגיע עד הקבוצה עצמה', () => {
+    const rows = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'ענף'],
+      ['01/09/2026', 'שופרסל שלי גבעתיים', '200', 'מזון ומשקאות'],
+      ['02/09/2026', 'טיב טעם גבעתיים', '150', 'מזון ומשקאות'],
+      ['03/09/2026', 'aliexpress', '30', 'מזון ומשקאות'],
+    ]
+    const groups = byMerchant(extractRows(rows, detectColumns(rows)).rows)
+    const soup = groups.find((item) => item.name === 'סופר')
+    expect(soup.rows).toHaveLength(2)
+    expect(soup.total).toBe(350)
+    // השם המקורי נשמר על השורה, כדי שהפתיחה תראה את הסניף
+    expect(soup.rows.map((row) => row.name)).toEqual(['שופרסל שלי גבעתיים', 'טיב טעם גבעתיים'])
+    expect(groups.find((item) => item.name === 'aliexpress').ruleCategory).toBe('leisure')
   })
 })

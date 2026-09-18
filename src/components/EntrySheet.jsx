@@ -3,6 +3,7 @@ import Avatar from './Avatar'
 import Sheet from './Sheet'
 import { monthLabel, shekels } from '../lib/format'
 import { MAX_GROUP_LENGTH, SUGGESTED_GROUPS, normalizeGroup } from '../lib/groups'
+import { merchantGroup } from '../lib/merchants'
 import { endAfterPayments } from '../lib/recurring'
 import { EXPENSE_PILLS, GOAL_PILLS, TRIP_PILLS } from '../lib/pills'
 import { CATEGORIES, calcBaseAmount, groupTarget, incomeOverage, todayDate } from '../lib/model'
@@ -154,7 +155,9 @@ export default function EntrySheet({
             endMonth,
             offCard,
             dueDay: needsDay ? Number(dueDay) || 0 : 0,
-            groupKey: normalizeGroup(group),
+            // כלל הקיבוץ חל גם על הזנה ידנית, אחרת "שופרסל" שהוקלד
+            // ביד היה יוצא מהקבוצה שאליה אותו סניף נכנס בייבוא
+            groupKey: normalizeGroup(group || merchantGroup(name)),
             fromRemainder,
           })
       onClose()
