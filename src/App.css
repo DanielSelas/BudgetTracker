@@ -1868,12 +1868,44 @@ input[type='date']::-webkit-calendar-picker-indicator {
   background: color-mix(in srgb, var(--color-text) 6%, transparent);
 }
 
-/* שתי פעולות של בעלים בשורה אחת, המסוכנת שבהן אחרונה */
-.owner-actions {
+/* פעולות התקציב.
+   הן נראו כמו טקסט ולא כמו כפתורים, ולכן קיבלו מסגרת ורקע: אותו
+   מילון צורות של הצ׳יפים שכבר קיימים במגירת ההזנה. */
+.budget-actions {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding-top: 4px;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+.budget-actions .btn-text {
+  align-self: auto;
+  padding: 7px 14px;
+  min-height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 1px solid var(--color-neutral-300);
+  font-size: 14px;
+  color: var(--color-neutral-800);
+  white-space: nowrap;
+}
+
+.budget-actions .btn-text:hover:not(:disabled) {
+  opacity: 1;
+  border-color: var(--color-neutral-400);
+  background: var(--color-neutral-200);
+}
+
+/* המסוכנת אחרונה, ונבדלת בצבע ולא רק במיקום */
+.budget-actions .danger-text {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
+  background: transparent;
+}
+
+.budget-actions .danger-text:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  border-color: var(--color-danger);
 }
 
 /* גיבוי להעתקה ידנית, כשהורדת קובץ לא עובדת במכשיר */

@@ -195,7 +195,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
               onStopRecurring={setPendingStop}
             />
 
-            <div className="owner-actions">
+            <div className="budget-actions">
               <button type="button" className="btn-text" onClick={() => setShowCommitments(true)}>
                 חיובים קבועים
               </button>
@@ -211,10 +211,10 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
                     מועד חיוב
                   </button>
                   <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
-                    שינוי שם התקציב
+                    שינוי שם
                   </button>
                   <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
-                    מחיקת התקציב
+                    מחיקה
                   </button>
                 </>
               )}

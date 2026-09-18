@@ -172,17 +172,17 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
                 onAdd={setSheet}
               />
             ))}
-            <div className="owner-actions">
+            <div className="budget-actions">
               <button type="button" className="btn-text" onClick={() => setSharing(true)}>
                 הזמנת שותף
               </button>
               {isOwner && (
                 <>
                   <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
-                    שינוי שם הטיול
+                    שינוי שם
                   </button>
                   <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
-                    מחיקת הטיול
+                    מחיקה
                   </button>
                 </>
               )}

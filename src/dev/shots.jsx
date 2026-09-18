@@ -84,6 +84,15 @@ function Month() {
         ))}
         <UnplannedCard summary={summary} entries={byCategory.unplanned}
           authorOf={authorOf} actions={actions} onAdd={noop} onStopRecurring={noop} />
+
+        <div className="budget-actions">
+          <button type="button" className="btn-text">חיובים קבועים</button>
+          <button type="button" className="btn-text">הזמנת שותף</button>
+          <button type="button" className="btn-text">סכום הבסיס</button>
+          <button type="button" className="btn-text">מועד חיוב</button>
+          <button type="button" className="btn-text">שינוי שם</button>
+          <button type="button" className="btn-text danger-text">מחיקה</button>
+        </div>
       </div>
       <button type="button" className="fab"><span className="plus">+</span> הוצאה</button>
       <BottomNav active="month" onChange={noop} />

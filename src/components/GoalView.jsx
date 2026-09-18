@@ -158,17 +158,17 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
               </section>
             ))}
 
-            <div className="owner-actions">
+            <div className="budget-actions">
               <button type="button" className="btn-text" onClick={() => setSharing(true)}>
                 הזמנת שותף
               </button>
               {isOwner && (
                 <>
                   <button type="button" className="btn-text" onClick={() => setRenaming(true)}>
-                    שינוי שם המטרה
+                    שינוי שם
                   </button>
                   <button type="button" className="btn-text danger-text" onClick={() => setConfirmDelete(true)}>
-                    מחיקת המטרה
+                    מחיקה
                   </button>
                 </>
               )}
