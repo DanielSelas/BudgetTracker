@@ -654,6 +654,28 @@ describe('כללים לפי שם בית עסק', () => {
     expect(await category('TUKI האיסים שלך בחו"ל')).toBe('leisure')
   })
 
+  it('ליים ועלי אקספרס מתאחדים למרות השמות השונים', async () => {
+    // קוד ההזמנה נכנס לשם בית העסק ומפצל אותו לשורות נפרדות
+    for (const name of ['LIME*PASS BONP', 'LIME*RIDE BONP', 'LIME*2 RIDES BONP']) {
+      expect(await group(name)).toBe('ליים')
+    }
+    expect(await group('aliexpress')).toBe('עלי אקספרס')
+    expect(await group('ALIEXPRESS.COM')).toBe('עלי אקספרס')
+  })
+
+  it('והם נשארים הוצאה משתנה גם אחרי האיחוד', async () => {
+    const { suggestCategory } = await import('../src/lib/sectors')
+    const rows = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'ענף'],
+      ['01/09/2026', 'LIME*PASS BONP', '45', 'רכב ותחבורה'],
+      ['02/09/2026', 'LIME*RIDE BONP', '25', 'רכב ותחבורה'],
+    ]
+    const lime = byMerchant(extractRows(rows, detectColumns(rows)).rows)[0]
+    expect(lime.name).toBe('ליים')
+    expect(lime.rows).toHaveLength(2)
+    expect(suggestCategory(lime).category).toBe('leisure')
+  })
+
   it('סקוט אייר הוא תמיד בלת״ם', async () => {
     expect(await category('סקוט אייר')).toBe('unplanned')
   })
@@ -680,6 +702,6 @@ describe('כללים לפי שם בית עסק', () => {
     expect(soup.total).toBe(350)
     // השם המקורי נשמר על השורה, כדי שהפתיחה תראה את הסניף
     expect(soup.rows.map((row) => row.name)).toEqual(['שופרסל שלי גבעתיים', 'טיב טעם גבעתיים'])
-    expect(groups.find((item) => item.name === 'aliexpress').ruleCategory).toBe('leisure')
+    expect(groups.find((item) => item.name === 'עלי אקספרס').ruleCategory).toBe('leisure')
   })
 })
