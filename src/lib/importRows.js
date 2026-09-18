@@ -289,16 +289,41 @@ export function installmentPlan(rows) {
   }
 }
 
+/**
+ * חיוב חריג ביחס לחודש עצמו.
+ *
+ * ענף לבדו לא מספיק: ניתוח דחוף לכלב וקופסת אקמול הם אותה "רפואה
+ * ובריאות", אבל אחד מהם הוא בלת"ם. הגודל הוא מה שמבדיל ביניהם.
+ *
+ * המדד הוא החציון ולא הממוצע, כי ממוצע נגרר בדיוק אחרי החיוב החריג
+ * שאותו מחפשים. הרצפה קיימת כדי שחודש של קניות קטנות לא יסמן כל
+ * מילוי דלק כאירוע.
+ */
+const MIN_UNUSUAL = 1000
+const UNUSUAL_RATIO = 6
+
+export function unusualLimit(rows) {
+  const amounts = rows.filter((row) => row.amount > 0).map((row) => row.amount)
+  if (amounts.length < 5) return Infinity
+  amounts.sort((a, b) => a - b)
+  const middle = amounts[Math.floor(amounts.length / 2)]
+  return Math.max(MIN_UNUSUAL, middle * UNUSUAL_RATIO)
+}
+
 export function byMerchant(rows) {
+  const limit = unusualLimit(rows)
   const groups = new Map()
   for (const row of rows) {
     const key = row.name
     if (!groups.has(key)) {
-      groups.set(key, { name: key, rows: [], total: 0, sectors: new Map(), types: new Map() })
+      groups.set(key, {
+        name: key, rows: [], total: 0, unusual: [], sectors: new Map(), types: new Map(),
+      })
     }
     const group = groups.get(key)
     group.rows.push(row)
     group.total += row.amount
+    if (row.amount >= limit) group.unusual.push(row)
     if (row.sector) group.sectors.set(row.sector, (group.sectors.get(row.sector) || 0) + 1)
     if (row.type) group.types.set(row.type, (group.types.get(row.type) || 0) + 1)
   }

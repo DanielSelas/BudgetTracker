@@ -2265,6 +2265,16 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 .merchant:last-child { border-bottom: none; padding-bottom: 0; }
 
+/* חיוב חריג: סימון שמושך את העין בלי לצבוע את השורה כשגיאה, כי
+   חריג אינו טעות אלא שאלה */
+.merchant[data-unusual] {
+  border-inline-start: 3px solid var(--color-accent);
+  padding-inline-start: 10px;
+  margin-inline-start: -13px;
+}
+
+.merchant[data-unusual] > .type-hint { color: var(--color-accent); }
+
 .merchant-head {
   display: flex;
   align-items: center;

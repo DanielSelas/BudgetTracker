@@ -49,6 +49,7 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
   const months = useMemo(() => monthsIn(extracted.rows), [extracted.rows])
   const chosen = merchants.filter((group) => categoryOf(group))
   const standingGroups = merchants.filter((group) => isStanding(group.type))
+  const unusualGroups = merchants.filter((group) => group.unusual.length > 0)
   // התשלומים הבאים מחושבים על מה שנבחר בפועל, כי מה שלא ייובא גם
   // לא אמור להופיע כהתחייבות
   const plan = useMemo(
@@ -94,6 +95,9 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
       for (const group of chosen) {
         if (!group.sector) continue
         if (!choices[group.name] && suggestionOf(group).source === 'standing') continue
+        // חיוב חריג מלמד על האירוע ולא על הענף: ניתוח לכלב היה מלמד
+        // שכל "רפואה ובריאות" הוא בלת"ם, וכל בית מרקחת אחריו
+        if (group.unusual.length > 0) continue
         learned[group.sector] = categoryOf(group)
       }
 
@@ -203,6 +207,16 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
               </p>
             )}
 
+            {unusualGroups.length > 0 && (
+              <p className="hint">
+                {unusualGroups.length === 1
+                  ? 'חיוב אחד גבוה בהרבה מהרגיל בחודש הזה'
+                  : `${unusualGroups.length} חיובים גבוהים בהרבה מהרגיל בחודש הזה`}
+                . הם מסומנים, ואולי מקומם בבלת״ם ולא בקטגוריה הרגילה של הענף.
+                מה שתבחרו להם לא ישנה את מה שנלמד על הענף.
+              </p>
+            )}
+
             {plan.count > 0 && (
               <div className="notice block">
                 <p>
@@ -223,7 +237,11 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
 
             <ul className="entry-list">
               {merchants.map((group) => (
-                <li className="merchant" key={group.name}>
+                <li
+                  className="merchant"
+                  key={group.name}
+                  data-unusual={group.unusual.length > 0 || undefined}
+                >
                   <div className="merchant-head">
                     <span className="entry-name">{group.name}</span>
                     <span className="recurring-tag as-tag">
@@ -231,13 +249,18 @@ export default function ImportSheet({ sectorRules = {}, onImport, onClose }) {
                     </span>
                     <span className="entry-amount num">{shekels(group.total)}</span>
                   </div>
-                  {(group.sector || isStanding(group.type) || group.installment) && (
+                  {(group.sector || isStanding(group.type) || group.installment
+                    || group.unusual.length > 0) && (
                     <span className="type-hint">
                       {[
                         group.sector,
                         isStanding(group.type) ? 'הוראת קבע' : '',
                         group.installment
                           ? `תשלום ${group.installment.index} מתוך ${group.installment.total}`
+                          : '',
+                        group.unusual.length > 0
+                          ? `חיוב חריג לחודש: ${shekels(Math.max(
+                            ...group.unusual.map((row) => row.amount)))}`
                           : '',
                         !choices[group.name] && suggestionOf(group).category
                           ? SOURCE_NOTE[suggestionOf(group).source]

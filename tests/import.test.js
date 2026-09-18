@@ -494,3 +494,57 @@ describe('ניחוש לפי ענף', () => {
     expect(await guess('ענף שלא מוכר')).toBe('')
   })
 })
+
+describe('חיובים חריגים', () => {
+  /**
+   * ענף לבדו לא מספיק: ניתוח דחוף לכלב וקופסת אקמול הם אותה "רפואה
+   * ובריאות". הגודל ביחס לחודש הוא מה שמבדיל ביניהם.
+   */
+  const month = (extra = []) => {
+    const small = Array.from({ length: 10 }, (_, index) => [
+      `0${(index % 9) + 1}/04/2025`, `חנות ${index}`, '80', 'מזון ומשקאות',
+    ])
+    return [['תאריך', 'שם בית עסק', 'סכום', 'ענף'], ...small, ...extra]
+  }
+
+  it('חיוב גדול פי כמה מהחציון מסומן', () => {
+    const rows = month([['21/04/2025', 'וט המומחים', '11178', 'רפואה ובריאות']])
+    const groups = byMerchant(extractRows(rows, detectColumns(rows)).rows)
+    const vet = groups.find((group) => group.name === 'וט המומחים')
+    expect(vet.unusual).toHaveLength(1)
+    expect(groups.filter((group) => group.unusual.length > 0)).toHaveLength(1)
+  })
+
+  it('החציון ולא הממוצע, אחרת החריג גורר את הסף אחריו', () => {
+    // ממוצע של החודש הזה מעל 1000, וחיוב של 1200 היה נבלע בו
+    const rows = month([
+      ['21/04/2025', 'וט המומחים', '11178', 'רפואה ובריאות'],
+      ['22/04/2025', 'עירית גבעתיים', '1312', 'מוסדות'],
+    ])
+    const groups = byMerchant(extractRows(rows, detectColumns(rows)).rows)
+    expect(groups.filter((group) => group.unusual.length > 0)).toHaveLength(2)
+  })
+
+  it('יש רצפה, כדי שחודש של קניות קטנות לא יסמן הכל', () => {
+    // חציון 80, ופי שישה הם 480, אבל 600 אינו אירוע חריג
+    const rows = month([['21/04/2025', 'הום סנטר', '600', 'ריהוט ובית']])
+    const groups = byMerchant(extractRows(rows, detectColumns(rows)).rows)
+    expect(groups.every((group) => group.unusual.length === 0)).toBe(true)
+  })
+
+  it('קובץ קטן מדי לא מסמן כלום, כי אין ממה להסיק מה רגיל', () => {
+    const rows = [
+      ['תאריך', 'שם בית עסק', 'סכום', 'ענף'],
+      ['21/04/2025', 'וט המומחים', '11178', 'רפואה ובריאות'],
+      ['22/04/2025', 'שופרסל', '80', 'מזון ומשקאות'],
+    ]
+    const groups = byMerchant(extractRows(rows, detectColumns(rows)).rows)
+    expect(groups.every((group) => group.unusual.length === 0)).toBe(true)
+  })
+
+  it('זיכוי אינו חיוב חריג', () => {
+    const rows = month([['21/04/2025', 'AIRBNB', '-5493', 'תיירות']])
+    const groups = byMerchant(extractRows(rows, detectColumns(rows)).rows)
+    expect(groups.every((group) => group.unusual.length === 0)).toBe(true)
+  })
+})
