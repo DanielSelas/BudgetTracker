@@ -1874,6 +1874,9 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .budget-actions {
   display: flex;
   flex-wrap: wrap;
+  /* ממורכז, אחרת השורה השנייה נצמדת לצד ומשאירה חלל שנראה כמו
+     טעות ולא כמו סידור */
+  justify-content: center;
   gap: 8px;
   padding-top: 6px;
 }
