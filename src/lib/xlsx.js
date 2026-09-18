@@ -15,6 +15,15 @@ const BUILTIN_DATE_FORMATS = new Set([14, 15, 16, 17, 22, 27, 30, 36, 45, 46, 47
 const text = (bytes) => new TextDecoder('utf-8').decode(bytes)
 const parseXml = (source) => new DOMParser().parseFromString(source, 'application/xml')
 
+/**
+ * חיפוש תגית בלי קשר למרחב השמות.
+ *
+ * חלק מהמייצאים כותבים <row> וחלק כותבים <x:row>, ושניהם תקינים.
+ * חיפוש לפי שם התגית המלא מוצא רק אחד מהם, ולכן קובץ אמיתי מחברת
+ * אשראי נקרא כריק בלי שום שגיאה.
+ */
+const tags = (node, name) => [...node.getElementsByTagNameNS('*', name)]
+
 /** מספר סידורי של אקסל אל YYYY-MM-DD. הבסיס הוא 30.12.1899. */
 export function serialToDate(serial) {
   const days = Math.floor(Number(serial))
@@ -31,11 +40,9 @@ export function columnIndex(ref) {
   return index - 1
 }
 
-const cellText = (node) => {
+const cellText = (node) =>
   // טקסט עשיר מפוצל לכמה רצפים, וכולם יחד הם הערך
-  const parts = [...node.getElementsByTagName('t')].map((item) => item.textContent)
-  return parts.join('')
-}
+  tags(node, 't').map((item) => item.textContent).join('')
 
 /** אילו אינדקסים של סגנון מייצגים תאריך. */
 function dateStyles(stylesXml) {
@@ -43,7 +50,7 @@ function dateStyles(stylesXml) {
   const doc = parseXml(stylesXml)
 
   const custom = new Map()
-  for (const format of doc.getElementsByTagName('numFmt')) {
+  for (const format of tags(doc, 'numFmt')) {
     const id = Number(format.getAttribute('numFmtId'))
     const code = format.getAttribute('formatCode') || ''
     // קוד תאריך מכיל y, m או d מחוץ למחרוזות. הסרת המחרוזות קודם
@@ -52,9 +59,9 @@ function dateStyles(stylesXml) {
   }
 
   const styles = new Set()
-  const cellXfs = doc.getElementsByTagName('cellXfs')[0]
+  const cellXfs = tags(doc, 'cellXfs')[0]
   if (!cellXfs) return styles
-  ;[...cellXfs.getElementsByTagName('xf')].forEach((xf, index) => {
+  tags(cellXfs, 'xf').forEach((xf, index) => {
     const id = Number(xf.getAttribute('numFmtId') || 0)
     if (BUILTIN_DATE_FORMATS.has(id) || custom.get(id)) styles.add(index)
   })
@@ -75,28 +82,32 @@ export async function readXlsx(file) {
   if (!sheetName) throw new Error('לא נמצא גיליון בקובץ')
 
   const shared = zip['xl/sharedStrings.xml']
-    ? [...parseXml(text(zip['xl/sharedStrings.xml'])).getElementsByTagName('si')].map(cellText)
+    ? tags(parseXml(text(zip['xl/sharedStrings.xml'])), 'si').map(cellText)
     : []
   const styles = dateStyles(zip['xl/styles.xml'] ? text(zip['xl/styles.xml']) : null)
 
   const sheet = parseXml(text(zip[sheetName]))
   const rows = []
 
-  for (const row of sheet.getElementsByTagName('row')) {
+  for (const row of tags(sheet, 'row')) {
     const cells = []
-    for (const cell of row.getElementsByTagName('c')) {
+    for (const cell of tags(row, 'c')) {
       const at = columnIndex(cell.getAttribute('r') || 'A')
       const type = cell.getAttribute('t')
       const style = Number(cell.getAttribute('s') || -1)
-      const value = cell.getElementsByTagName('v')[0]?.textContent ?? ''
+      const value = tags(cell, 'v')[0]?.textContent ?? ''
 
       let out = ''
-      if (type === 's') out = shared[Number(value)] ?? ''
-      else if (type === 'inlineStr') out = cellText(cell)
-      else if (value !== '') out = styles.has(style) ? serialToDate(value) : value
+      // תא ריק נכתב לפעמים כ-t="s" בלי ערך, ו-Number('') הוא אפס,
+      // ולכן בלי הבדיקה הזו כל תא ריק מקבל את המחרוזת הראשונה בקובץ
+      if (type === 'inlineStr') out = cellText(cell)
+      else if (value === '') out = ''
+      else if (type === 's') out = shared[Number(value)] ?? ''
+      else out = styles.has(style) ? serialToDate(value) : value
 
       while (cells.length < at) cells.push('')
-      cells[at] = String(out).trim()
+      // כותרות מרובות שורות נפוצות בייצוא, והרווח הלבן רק מפריע
+      cells[at] = String(out).replace(/\s+/g, ' ').trim()
     }
     rows.push(cells)
   }

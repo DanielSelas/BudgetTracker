@@ -6,7 +6,9 @@
  */
 
 const DATE_WORDS = ['תאריך', 'date', 'יום']
-const AMOUNT_WORDS = ['סכום', 'חיוב', 'amount', 'debit', 'sum', 'עסקה']
+// "עסקה" הוסר בכוונה: הוא מופיע גם ב"תאריך עסקה", ב"סוג עסקה"
+// וב"סכום עסקה", ולכן הוא מסמן הכל ואינו מסמן כלום
+const AMOUNT_WORDS = ['סכום', 'חיוב', 'amount', 'debit', 'sum']
 const NAME_WORDS = ['בית עסק', 'תיאור', 'שם', 'merchant', 'description', 'פירוט', 'עסק']
 
 const DATE_PATTERNS = [
@@ -56,9 +58,15 @@ export function parseAmount(value) {
 const scoreColumn = (values, test) =>
   values.filter((value) => test(value)).length / Math.max(values.length, 1)
 
+/**
+ * כמה מילים מהרשימה מופיעות בכותרת, ולא רק האם אחת מהן.
+ *
+ * בדוח אשראי יש "סכום עסקה" ו"סכום חיוב", ומה שצריך הוא חיוב, כי
+ * בעסקה במט״ח השתיים שונות. ספירה מבדילה ביניהן, והאם יש התאמה לא.
+ */
 const headerScore = (header, words) => {
   const text = String(header || '').toLowerCase()
-  return words.some((word) => text.includes(word)) ? 1 : 0
+  return words.filter((word) => text.includes(word)).length
 }
 
 /**

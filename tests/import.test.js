@@ -222,3 +222,32 @@ describe('טבלת HTML', () => {
     expect(readHtmlTable('<html><body>שלום</body></html>')).toEqual([])
   })
 })
+
+describe('שתי עמודות סכום', () => {
+  /**
+   * דוח אשראי אמיתי מכיל "סכום עסקה" ו"סכום חיוב". בעסקה במט״ח הן
+   * שונות, ומה שירד בפועל הוא החיוב.
+   */
+  const rows = [
+    ['תאריך עסקה', 'שם בית עסק', 'סכום עסקה', 'סכום חיוב', 'ענף'],
+    ['08/04/2025', 'מנו וינו', '60', '244.9', 'מזון'],
+    ['07/04/2025', 'WOLT', '40', '153.9', 'מסעדות'],
+    ['06/04/2025', 'קפה בליך', '4', '14', 'מסעדות'],
+  ]
+
+  it('בוחר את סכום החיוב ולא את סכום העסקה', () => {
+    const mapping = detectColumns(rows)
+    expect(rows[mapping.headerRow][mapping.amount]).toBe('סכום חיוב')
+  })
+
+  it('וגם את העמודות האחרות נכון', () => {
+    const mapping = detectColumns(rows)
+    expect(rows[mapping.headerRow][mapping.date]).toBe('תאריך עסקה')
+    expect(rows[mapping.headerRow][mapping.name]).toBe('שם בית עסק')
+  })
+
+  it('הסכומים שנקראים הם של החיוב', () => {
+    const { rows: out } = extractRows(rows, detectColumns(rows))
+    expect(out.map((row) => row.amount)).toEqual([244.9, 153.9, 14])
+  })
+})
