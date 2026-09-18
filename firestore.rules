@@ -121,6 +121,11 @@ service cloud.firestore {
             // היום בחודש שבו זה קורה, אם הוגדר
             && (!('dueDay' in data)
                 || (data.dueDay is int && data.dueDay >= 1 && data.dueDay <= 28))
+            // קצב שאינו חודשי, כמו ארנונה כל חודשיים. אם קיים, הוא
+            // גדול מאחד: חודשי נשמר כהיעדר שדה
+            && (!('everyMonths' in data)
+                || (data.everyMonths is int
+                    && data.everyMonths >= 2 && data.everyMonths <= 12))
             && validGroupKey(data);
         }
 

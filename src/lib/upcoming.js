@@ -1,4 +1,4 @@
-import { isBillingDay } from './model'
+import { isBillingDay, runsInMonth } from './model'
 
 /**
  * ציר הזמן של החודש הקרוב: מה יורד, מתי, ומה נכנס.
@@ -18,6 +18,9 @@ export function nextOccurrence(day, today = new Date()) {
   if (candidate < startOfDay(today)) candidate.setMonth(candidate.getMonth() + 1)
   return candidate
 }
+
+const monthKey = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 
 const startOfDay = (date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -41,6 +44,10 @@ export function buildTimeline({
     if (template.category !== 'income' && !template.offCard) continue
     const when = nextOccurrence(template.dueDay, today)
     if (!when) continue
+    // חיוב שאינו חודשי לא בהכרח חל בחודש שאליו נפל התאריך הקרוב.
+    // הבדיקה מותנית בקצב כדי שתבנית חודשית תישאר כפי שהייתה, גם
+    // כשאין לה חודש פתיחה
+    if (Number(template.everyMonths) > 1 && !runsInMonth(template, monthKey(when))) continue
     events.push({
       id: template.id,
       name: template.name,

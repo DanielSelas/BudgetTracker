@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { entryRef } from './paths'
-import { CATEGORIES, shiftMonth } from './model'
+import { CATEGORIES, runsInMonth, shiftMonth } from './model'
 import { recurringId as readableRecurringId } from './paths'
 
 const templatesRef = (budgetId) => collection(db, 'budgets', budgetId, 'recurring')
@@ -33,7 +33,7 @@ export function watchTemplates(budgetId, onChange, onError) {
 
 export function createTemplate({
   budgetId, uid, month, category, name, plannedAmount, actualAmount,
-  groupKey = '', endMonth = '', offCard = false, dueDay = 0,
+  groupKey = '', endMonth = '', offCard = false, dueDay = 0, everyMonths = 1,
 }) {
   const ref = doc(templatesRef(budgetId), readableRecurringId({ category, name }))
   return setDoc(ref, {
@@ -53,6 +53,9 @@ export function createTemplate({
     // היום בחודש שבו זה קורה. רלוונטי להכנסה ולחיוב שיורד ישירות
     // מהחשבון; מה שעובר בכרטיס נגבה במועד החיוב של הכרטיס
     ...(dueDay ? { dueDay: Number(dueDay) } : {}),
+    // קצב שאינו חודשי, כמו ארנונה שיורדת כל חודשיים. נשמר רק כשהוא
+    // אינו חודשי, כדי שתבנית רגילה תישאר כפי שהייתה
+    ...(Number(everyMonths) > 1 ? { everyMonths: Number(everyMonths) } : {}),
     active: true,
     skipMonths: [],
     createdBy: uid,
@@ -78,6 +81,10 @@ export function updateTemplate(budgetId, recurringId, changes) {
   for (const key of ['endMonth', 'dueDay', 'offCard']) {
     if (key in clean && !clean[key]) clean[key] = deleteField()
   }
+  // חודשי הוא ברירת המחדל, ולכן הוא נשמר כהיעדר שדה ולא כ-1
+  if ('everyMonths' in clean && Number(clean.everyMonths) <= 1) {
+    clean.everyMonths = deleteField()
+  }
   return updateDoc(doc(templatesRef(budgetId), recurringId), clean)
 }
 
@@ -101,7 +108,7 @@ export function pendingTemplates(templates, entries, month) {
   const existing = new Set(entries.map((entry) => entry.recurringId).filter(Boolean))
   return templates.filter((template) =>
     template.active &&
-    template.startMonth <= month &&
+    runsInMonth(template, month) &&
     !isEnded(template, month) &&
     !(template.skipMonths || []).includes(month) &&
     !existing.has(template.id),

@@ -143,6 +143,35 @@ export function shiftMonth(key, delta) {
   return monthKey(date)
 }
 
+/** כמה חודשים מפרידים בין שני מפתחות חודש. */
+export function monthsApart(from, to) {
+  const [fromYear, fromMonth] = String(from).split('-').map(Number)
+  const [toYear, toMonth] = String(to).split('-').map(Number)
+  return (toYear - fromYear) * 12 + (toMonth - fromMonth)
+}
+
+/**
+ * האם החיוב הקבוע חל בחודש הזה.
+ *
+ * לא כל חיוב קבוע הוא חודשי: ארנונה יורדת כל חודשיים, ביטוח יכול
+ * להיות רבעוני. חודש הפתיחה הוא העוגן, וממנו נמנה הקצב, כך שאותה
+ * תבנית נותנת את אותה תשובה בכל מכשיר ובלי לשמור היסטוריה.
+ */
+export function runsInMonth(template, month) {
+  if (!template?.startMonth || month < template.startMonth) return false
+  const every = Number(template.everyMonths) || 1
+  if (every <= 1) return true
+  return monthsApart(template.startMonth, month) % every === 0
+}
+
+/** תיאור הקצב בעברית, כי "כל 2 חודשים" אינו עברית. */
+export function intervalLabel(every) {
+  const count = Number(every) || 1
+  if (count <= 1) return 'כל חודש'
+  if (count === 2) return 'כל חודשיים'
+  return `כל ${count} חודשים`
+}
+
 /**
  * האם חריגה כלפי מעלה בקבוצה הזו היא דבר טוב.
  * בחיסכון כן: הפקדה מעל היעד היא מצב תקין ורצוי, לא חריגה.

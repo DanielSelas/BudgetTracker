@@ -583,3 +583,20 @@ describe('זיכוי כהוצאה שקוזזה', () => {
     expect(progress).toBe(0)
   })
 })
+
+
+describe('ציר החיובים עם קצב שאינו חודשי', () => {
+  it('חיוב דו חודשי לא מופיע בחודש שבו אינו יורד', async () => {
+    const { buildTimeline } = await import('../src/lib/upcoming')
+    const arnona = {
+      id: 'arnona', name: 'ארנונה', active: true, category: 'fixed',
+      offCard: true, dueDay: 10, actualAmount: 1300,
+      startMonth: '2025-01', everyMonths: 2,
+    }
+    // מרץ הוא חודש שבו היא יורדת, אפריל אינו
+    const inMarch = buildTimeline({ templates: [arnona], today: new Date(2025, 2, 1) })
+    const inApril = buildTimeline({ templates: [arnona], today: new Date(2025, 3, 1) })
+    expect(inMarch.map((event) => event.name)).toEqual(['ארנונה'])
+    expect(inApril).toEqual([])
+  })
+})

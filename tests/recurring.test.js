@@ -277,3 +277,45 @@ describe('עדכון חיוב קבוע', () => {
     expect(firestore.deleteField).not.toHaveBeenCalled()
   })
 })
+
+describe('חיוב שאינו חודשי', () => {
+  /**
+   * ארנונה יורדת כל חודשיים. עד עכשיו כל חיוב קבוע היה חודשי, ולכן
+   * היא הייתה מופיעה גם בחודשים שבהם אינה יורדת.
+   */
+  const arnona = { startMonth: '2025-01', everyMonths: 2, active: true, id: 'arnona' }
+
+  it('חל בחודש הפתיחה ואחר כך לפי הקצב', async () => {
+    const { runsInMonth } = await import('../src/lib/model')
+    expect(runsInMonth(arnona, '2025-01')).toBe(true)
+    expect(runsInMonth(arnona, '2025-02')).toBe(false)
+    expect(runsInMonth(arnona, '2025-03')).toBe(true)
+    expect(runsInMonth(arnona, '2025-12')).toBe(false)
+    expect(runsInMonth(arnona, '2026-01')).toBe(true)
+  })
+
+  it('לא חל לפני חודש הפתיחה', async () => {
+    const { runsInMonth } = await import('../src/lib/model')
+    expect(runsInMonth(arnona, '2024-11')).toBe(false)
+  })
+
+  it('תבנית חודשית ממשיכה לחול בכל חודש', async () => {
+    const { runsInMonth } = await import('../src/lib/model')
+    const rent = { startMonth: '2025-01', active: true }
+    expect(runsInMonth(rent, '2025-02')).toBe(true)
+    expect(runsInMonth({ ...rent, everyMonths: 1 }, '2025-02')).toBe(true)
+  })
+
+  it('רק חודש שבו החיוב חל ממתין ליצירה', async () => {
+    const { pendingTemplates } = await import('../src/lib/recurring')
+    expect(pendingTemplates([arnona], [], '2025-03').map((t) => t.id)).toEqual(['arnona'])
+    expect(pendingTemplates([arnona], [], '2025-04')).toEqual([])
+  })
+
+  it('התיאור בעברית ולא "כל 2 חודשים"', async () => {
+    const { intervalLabel } = await import('../src/lib/model')
+    expect(intervalLabel(1)).toBe('כל חודש')
+    expect(intervalLabel(2)).toBe('כל חודשיים')
+    expect(intervalLabel(3)).toBe('כל 3 חודשים')
+  })
+})

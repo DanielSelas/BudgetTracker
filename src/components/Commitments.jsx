@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Sheet from './Sheet'
 import { shekels, monthLabel } from '../lib/format'
-import { CATEGORIES } from '../lib/model'
+import { CATEGORIES, intervalLabel } from '../lib/model'
 import { isEnded, updateTemplate } from '../lib/recurring'
 
 /**
@@ -17,6 +17,7 @@ function Row({ budgetId, template, onStop }) {
   const [dueDay, setDueDay] = useState(String(template.dueDay || ''))
   const [offCard, setOffCard] = useState(Boolean(template.offCard))
   const [endMonth, setEndMonth] = useState(template.endMonth || '')
+  const [everyMonths, setEveryMonths] = useState(String(template.everyMonths || 1))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -31,6 +32,7 @@ function Row({ budgetId, template, onStop }) {
         actualAmount: Number(amount) || 0,
         offCard: !income && offCard,
         dueDay: (income || offCard) ? Number(dueDay) || 0 : 0,
+        everyMonths: Number(everyMonths) || 1,
         endMonth,
       })
       setOpen(false)
@@ -55,8 +57,13 @@ function Row({ budgetId, template, onStop }) {
         <span className="entry-amount num">{shekels(template.actualAmount)}</span>
       </button>
 
-      {template.endMonth && !open && (
-        <span className="type-hint">אחרון ב{monthLabel(template.endMonth)}</span>
+      {!open && (template.endMonth || template.everyMonths > 1) && (
+        <span className="type-hint">
+          {[
+            template.everyMonths > 1 ? intervalLabel(template.everyMonths) : '',
+            template.endMonth ? `אחרון ב${monthLabel(template.endMonth)}` : '',
+          ].filter(Boolean).join(' · ')}
+        </span>
       )}
 
       {open && (
@@ -93,6 +100,19 @@ function Row({ budgetId, template, onStop }) {
           )}
 
           <label className="field">
+            קצב החיוב
+            <select
+              className="input rtl"
+              value={everyMonths}
+              onChange={(event) => setEveryMonths(event.target.value)}
+            >
+              {[1, 2, 3, 4, 6, 12].map((count) => (
+                <option key={count} value={count}>{intervalLabel(count)}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
             קבוע עד (לא חובה)
             <input
               className="input ltr" type="month"
@@ -117,7 +137,8 @@ function Row({ budgetId, template, onStop }) {
 
           <span className="type-hint">
             שינוי הסכום חל מהחודש הבא. חודשים שכבר נוצרו שומרים על מה
-            ששולם בהם בפועל.
+            ששולם בהם בפועל, ולכן חיוב שצמוד למדד ומשתנה מעט אפשר
+            לעדכן בשורה של אותו חודש בלי לגעת בתבנית.
           </span>
         </form>
       )}
