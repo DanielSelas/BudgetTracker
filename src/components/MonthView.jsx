@@ -5,6 +5,7 @@ import MonthVerdict from './MonthVerdict'
 import EndingSoon from './EndingSoon'
 import UpcomingCharges from './UpcomingCharges'
 import Commitments from './Commitments'
+import Capacity from './Capacity'
 import ImportSheet from './ImportSheet'
 import UnplannedCard from './UnplannedCard'
 import MonthPicker from './MonthPicker'
@@ -27,6 +28,7 @@ import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
 import { useProfiles } from '../hooks/useProfiles'
 import { useSectorRules } from '../hooks/useSectorRules'
+import { useHistory } from '../hooks/useHistory'
 import { deleteBudget, renameBudget, setBaseAmount, setBillingDay } from '../lib/budgets'
 import { importEntries } from '../lib/importEntries'
 import { rememberSectors } from '../lib/sectors'
@@ -67,6 +69,10 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
   })
   const ending = useMemo(() => endingSoon(templates, month), [templates, month])
   const sectorRules = useSectorRules(budgetId)
+  const [showCapacity, setShowCapacity] = useState(false)
+  // ההיסטוריה נטענת רק כשמסך הכושר נפתח, כי היא חלון גדול בהרבה
+  // מחודש אחד. שנים עשר חודשים כדי שהחציון יישען על שנה
+  const history = useHistory(showCapacity ? budgetId : '', 12)
 
   const actions = useMemo(() => ({
     ...base,
@@ -208,6 +214,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
               <button type="button" className="btn-text" onClick={() => setShowCommitments(true)}>
                 חיובים קבועים
               </button>
+              <button type="button" className="btn-text" onClick={() => setShowCapacity(true)}>
+                כמה פנוי לי
+              </button>
               <button type="button" className="btn-text" onClick={() => setImporting(true)}>
                 ייבוא CSV
               </button>
@@ -273,6 +282,15 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
             return result
           }}
           onClose={() => setImporting(false)}
+        />
+      )}
+
+      {showCapacity && (
+        <Capacity
+          entries={history.entries}
+          templates={templates}
+          month={month}
+          onClose={() => setShowCapacity(false)}
         />
       )}
 

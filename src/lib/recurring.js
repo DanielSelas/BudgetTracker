@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { entriesRef, entryRef } from './paths'
-import { CATEGORIES, runsInMonth, shiftMonth } from './model'
+import { CATEGORIES, isEnded, runsInMonth, shiftMonth } from './model'
 import { recurringId as readableRecurringId } from './paths'
 
 const templatesRef = (budgetId) => collection(db, 'budgets', budgetId, 'recurring')
@@ -163,9 +163,7 @@ export function pendingTemplates(templates, entries, month) {
   )
 }
 
-/** החודש האחרון שבו החיוב נוצר. חודש ריק פירושו בלי סיום. */
-export const isEnded = (template, month) =>
-  Boolean(template?.endMonth) && month > template.endMonth
+export { isEnded }
 
 /**
  * התחייבויות שנגמרות החודש או בחודש הבא.

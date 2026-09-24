@@ -164,6 +164,10 @@ export function runsInMonth(template, month) {
   return monthsApart(template.startMonth, month) % every === 0
 }
 
+/** החודש האחרון שבו החיוב נוצר. חודש ריק פירושו בלי סיום. */
+export const isEnded = (template, month) =>
+  Boolean(template?.endMonth) && month > template.endMonth
+
 /** תיאור הקצב בעברית, כי "כל 2 חודשים" אינו עברית. */
 export function intervalLabel(every) {
   const count = Number(every) || 1

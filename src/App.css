@@ -922,6 +922,63 @@ button:disabled {
   cursor: default;
 }
 
+/* מסך הכושר: פירוק שקוף של מספר אחד, וקו של חודשים אחריו */
+.capacity-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.capacity-label { color: var(--color-neutral-700); }
+.entry-amount.num.big { font-size: 1.9rem; font-weight: 700; }
+
+.capacity-breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.capacity-breakdown li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.capacity-breakdown li:last-child { border-bottom: none; }
+.capacity-breakdown .out { color: var(--color-neutral-700); }
+
+.capacity-breakdown.inner {
+  padding: 4px 14px 10px;
+  font-size: 0.92rem;
+}
+
+.capacity-line {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.capacity-month {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid var(--color-divider);
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
 /* ========== כפתור צף ========== */
 
 .fab {

@@ -497,6 +497,7 @@ describe('דרכי כניסה למסכי התקציב', () => {
    * ולא הייתה ממנו דרך להיכנס. בדיקה אחת על כל כפתור מונעת את זה.
    */
   const ACTIONS = [
+    'כמה פנוי לי',
     'חיובים קבועים',
     'הזמנת שותף',
     'סכום הבסיס',
@@ -897,5 +898,51 @@ describe('סימון הוצאה חד פעמית', () => {
     fireEvent.click(getByText('שמור'))
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(onUpdate.mock.calls[0][1]).not.toHaveProperty('oneOff')
+  })
+})
+
+describe('מסך כמה פנוי לי', () => {
+  const templates = [
+    { id: 'salary', name: 'משכורת', active: true, category: 'income', actualAmount: 20000, startMonth: '2026-01' },
+    { id: 'rent', name: 'שכר דירה', active: true, category: 'fixed', actualAmount: 5800, startMonth: '2026-01' },
+    { id: 'loan', name: 'הלוואה', active: true, category: 'fixed', actualAmount: 1100, startMonth: '2026-01', endMonth: '2026-10' },
+  ]
+  const entries = [
+    { id: 'a', month: '2026-07', category: 'leisure', actualAmount: 2400 },
+    { id: 'b', month: '2026-08', category: 'leisure', actualAmount: 2400 },
+  ]
+  const open = async (props = {}) => {
+    const { default: Capacity } = await import('../src/components/Capacity')
+    return render(
+      <Capacity
+        entries={entries} templates={templates} month="2026-09"
+        onClose={() => {}} {...props}
+      />,
+    )
+  }
+
+  it('מציג את הפירוק, ולא רק מספר אחד', async () => {
+    const { container } = await open()
+    const text = container.textContent
+    expect(text).toContain('הכנסה קבועה')
+    expect(text).toContain('חיובים קבועים')
+    expect(text).toContain('חודש רגיל')
+  })
+
+  it('החודש שאחרי סיום ההלוואה מסומן', async () => {
+    const { container } = await open()
+    expect(container.textContent).toContain('נגמר: הלוואה')
+  })
+
+  it('בלי הכנסה אומר מה חסר במקום להציג אפס', async () => {
+    const { container } = await open({ templates: [], entries: [] })
+    expect(container.textContent).toContain('אין עדיין הכנסה')
+  })
+
+  it('סכום מקבל תשובה של מתי, ולא כן או לא', async () => {
+    const { container, getByPlaceholderText } = await open()
+    fireEvent.change(getByPlaceholderText('למשל 20000'), { target: { value: '20000' } })
+    expect(container.textContent).toContain('הסכום מצטבר עד')
+    expect(container.textContent).toContain('ההחלטה שלכם')
   })
 })

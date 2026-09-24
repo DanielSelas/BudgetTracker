@@ -600,3 +600,22 @@ describe('ציר החיובים עם קצב שאינו חודשי', () => {
     expect(inApril).toEqual([])
   })
 })
+
+describe('חיוב שנגמר לא מופיע בציר', () => {
+  /**
+   * הקצב והסיום הם שני דברים: תבנית חודשית עוברת את בדיקת הקצב
+   * תמיד, ובלי בדיקת סיום נפרדת היא נשארת על הציר לנצח.
+   */
+  it('הלוואה שנגמרה אינה עומדת לרדת', async () => {
+    const { buildTimeline } = await import('../src/lib/upcoming')
+    const loan = {
+      id: 'loan', name: 'הלוואה', active: true, category: 'fixed',
+      offCard: true, dueDay: 10, actualAmount: 1100,
+      startMonth: '2025-01', endMonth: '2026-08',
+    }
+    const before = buildTimeline({ templates: [loan], today: new Date(2026, 7, 1) })
+    const after = buildTimeline({ templates: [loan], today: new Date(2026, 8, 1) })
+    expect(before.map((event) => event.name)).toEqual(['הלוואה'])
+    expect(after).toEqual([])
+  })
+})

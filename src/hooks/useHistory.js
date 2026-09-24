@@ -59,5 +59,7 @@ export function useHistory(budgetId, monthCount = 6, fixedBase = 0) {
     [series],
   )
 
-  return { series, months, loading, error, hasData }
+  // גם הרשומות עצמן ולא רק הסיכום: חישוב הכושר צריך לסנן לפי
+  // סימון חד פעמי, לפי מקור חוזר ולפי הערות של תשלומים
+  return { entries, series, months, loading, error, hasData }
 }

@@ -1,4 +1,4 @@
-import { isBillingDay, runsInMonth } from './model'
+import { isBillingDay, isEnded, runsInMonth } from './model'
 
 /**
  * ציר הזמן של החודש הקרוב: מה יורד, מתי, ומה נכנס.
@@ -48,6 +48,8 @@ export function buildTimeline({
     // הבדיקה מותנית בקצב כדי שתבנית חודשית תישאר כפי שהייתה, גם
     // כשאין לה חודש פתיחה
     if (Number(template.everyMonths) > 1 && !runsInMonth(template, monthKey(when))) continue
+    // וחיוב שנגמר אינו עומד לרדת, בלי קשר לקצב שלו
+    if (isEnded(template, monthKey(when))) continue
     events.push({
       id: template.id,
       name: template.name,
