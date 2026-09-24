@@ -43,25 +43,6 @@
   --color-danger: oklch(0.45 0.16 25);
 
   /* צבעי קטגוריה. אותו משקל ויזואלי, גוון לכל קטגוריה. */
-  --cat-income-bg: oklch(0.95 0.03 128);
-  --cat-income-tint: var(--color-accent-2-200);
-  --cat-income-base: var(--color-accent-2-600);
-  --cat-income-ink: var(--color-accent-2-800);
-
-  --cat-fixed-bg: oklch(0.95 0.035 18);
-  --cat-fixed-tint: oklch(0.9 0.05 18);
-  --cat-fixed-base: oklch(0.62 0.13 18);
-  --cat-fixed-ink: oklch(0.42 0.1 18);
-
-  --cat-leisure-bg: oklch(0.95 0.035 55);
-  --cat-leisure-tint: var(--color-accent-200);
-  --cat-leisure-base: var(--color-accent-500);
-  --cat-leisure-ink: var(--color-accent-800);
-
-  --cat-fund-bg: oklch(0.94 0.03 235);
-  --cat-fund-tint: oklch(0.89 0.04 235);
-  --cat-fund-base: oklch(0.56 0.09 235);
-  --cat-fund-ink: oklch(0.4 0.07 235);
 
   --cat-unplanned-bg: oklch(0.93 0.045 85);
   --cat-unplanned-base: oklch(0.66 0.11 85);

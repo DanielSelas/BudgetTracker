@@ -53,11 +53,7 @@ export default function Login() {
 
   return (
     <main className="app login">
-      <div className="login-blob one" />
-      <div className="login-blob two" />
-
       <div className="login-inner">
-        <div className="login-mark">ב</div>
         <h1>בית ותקציב</h1>
         <p className="muted">שניכם, אותו חודש, אותה תמונה.</p>
       </div>

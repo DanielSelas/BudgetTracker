@@ -13,10 +13,10 @@ const JOIN_MESSAGES = {
   expired: 'תוקף הקוד פג. בקשו קוד חדש',
 }
 
-export default function BudgetSetup({ asSheet = false, onDone, onClose }) {
+export default function BudgetSetup({ asSheet = false, initialMode = 'create', onDone, onClose }) {
   const { user } = useAuth()
   const { budgets } = useBudget()
-  const [mode, setMode] = useState('create')
+  const [mode, setMode] = useState(initialMode)
   const [type, setType] = useState('household')
   const [name, setName] = useState('')
   const [frame, setFrame] = useState('')

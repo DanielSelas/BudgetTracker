@@ -135,9 +135,8 @@ button:disabled {
   align-self: flex-start;
   padding: 6px 2px;
   min-height: 32px;
-  font-family: var(--font-heading);
   font-size: 15px;
-  color: var(--cat-ink, var(--color-accent-800));
+  color: var(--color-neutral-800);
 }
 
 .btn-text:hover:not(:disabled) { opacity: 0.7; }
@@ -196,63 +195,29 @@ button:disabled {
 
 .login {
   position: relative;
-  overflow: hidden;
-  padding: 0 24px;
-}
-
-.login-blob {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.login-blob.one {
-  top: -120px;
-  left: -90px;
-  width: 320px;
-  height: 320px;
-  background: var(--color-accent-200);
-}
-
-.login-blob.two {
-  top: 120px;
-  left: -140px;
-  width: 240px;
-  height: 240px;
-  background: var(--color-accent-2-200);
+  padding: 0 var(--screen-pad);
 }
 
 .login-inner {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 6px;
   margin-top: 120px;
 }
 
-.login-mark {
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  color: var(--color-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-heading);
-  font-size: 34px;
+.login-inner h1 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0;
 }
 
-.login-inner h1 {
-  font-size: 40px;
-  margin: 6px 0 0;
-}
+.login-inner .muted { font-size: 15px; }
 
 .login-form {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   margin-top: 40px;
   padding-bottom: 40px;
 }
@@ -316,6 +281,60 @@ button:disabled {
 }
 
 .budget-card:hover { box-shadow: var(--shadow-md); }
+
+/* כותרת קבוצה: קטנה ורגועה, כי היא מסמנת חלוקה ולא פותחת נושא */
+.group-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--color-neutral-600);
+  padding-top: 6px;
+}
+
+.avatar-stack {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.only-you {
+  font-size: 12px;
+  color: var(--color-neutral-600);
+  white-space: nowrap;
+}
+
+/* שתי הפעולות יושבות מעל הניווט התחתון ולא נגללות איתו */
+.home-actions {
+  position: sticky;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 10px;
+  padding: 12px 0 0;
+  background: linear-gradient(to top, var(--color-bg) 70%, transparent);
+}
+
+.home-actions > button { flex: 1; min-width: 0; }
+
+.budget-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.budget-cap {
+  font-size: 12px;
+  color: var(--color-neutral-600);
+}
+
+.budget-balance {
+  font-size: 26px;
+  font-weight: 500;
+}
+
+/* הפס בכרטיס התקציב ניטרלי ולא צבעוני: אין כאן קטגוריה, רק כמה
+   מההכנסה כבר נוצל */
+.bar-fill.used { background: var(--color-neutral-800); }
 
 .budget-card-top {
   display: flex;
@@ -405,7 +424,6 @@ button:disabled {
 }
 
 .budget-remaining strong {
-  font-family: var(--font-heading);
   font-weight: 400;
   font-size: 24px;
   color: var(--color-text);
@@ -419,7 +437,6 @@ button:disabled {
   border: 1.5px dashed var(--color-neutral-400);
   border-radius: var(--radius-card);
   padding: 20px 22px;
-  font-family: var(--font-heading);
   font-size: 16px;
   color: var(--color-neutral-700);
 }
@@ -888,7 +905,7 @@ button:disabled {
   font-weight: 700;
 }
 
-.inline-edit .mini.save { background: var(--color-accent); color: var(--color-bg); }
+.inline-edit .mini.save { background: var(--color-neutral-900); color: var(--color-bg); }
 .inline-edit .mini.save:hover:not(:disabled) { background: var(--color-accent-600); }
 .inline-edit .mini.cancel { border: 1px solid var(--color-neutral-400); }
 .inline-edit .mini.cancel:hover { background: var(--color-neutral-200); }
@@ -969,8 +986,8 @@ button:disabled {
 .month-cell:hover:not(:disabled) { background: var(--color-neutral-300); }
 
 .month-cell[aria-pressed='true'] {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
+  background: var(--color-neutral-900);
+  border-color: var(--color-neutral-900);
   color: #fff;
   font-weight: 700;
 }
@@ -1068,14 +1085,14 @@ button:disabled {
 
 .bottom-nav {
   position: fixed;
-  bottom: max(16px, env(safe-area-inset-bottom));
+  bottom: max(20px, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
   width: min(440px, calc(100% - 40px));
   display: flex;
-  gap: 8px;
-  padding: 6px;
+  gap: 4px;
+  padding: 4px;
   border-radius: var(--radius-pill);
   background: var(--color-neutral-200);
   box-shadow: var(--shadow-md);
@@ -1092,7 +1109,7 @@ button:disabled {
 }
 
 .bottom-nav button[aria-current='page'] {
-  background: var(--color-bg);
+  background: var(--color-neutral-100);
   box-shadow: var(--shadow-sm);
   color: var(--color-text);
 }
@@ -1430,12 +1447,13 @@ button:disabled {
 /* ========== היסטוריה ========== */
 
 .chart-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-card);
-  padding: 20px 18px;
+  background: var(--color-neutral-100);
+  border-radius: var(--radius-card-2);
+  padding: var(--card-pad);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .legend {
@@ -1443,23 +1461,17 @@ button:disabled {
   align-items: center;
   gap: 14px;
   font-size: 12px;
-  color: var(--color-neutral-700);
+  color: var(--color-neutral-600);
 }
 
 .legend span {
   display: flex;
   align-items: center;
-  gap: 5px;
-}
-
-.swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  flex-shrink: 0;
+  gap: 6px;
 }
 
 .bars {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -1467,7 +1479,17 @@ button:disabled {
   height: 190px;
 }
 
+/* קווי היעד עוברים מאחורי העמודות ולא מעליהן */
+.guide {
+  position: absolute;
+  inset-inline: 0;
+  height: 0;
+  border-top: 1px dashed var(--color-divider);
+  pointer-events: none;
+}
+
 .bars-col {
+  position: relative;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -1486,48 +1508,59 @@ button:disabled {
 
 .bars-group i {
   flex: 1;
-  border-radius: 7px 7px 0 0;
+  border-radius: 6px 6px 0 0;
   transition: height 320ms var(--ease-soft);
   min-height: 2px;
 }
 
 .bars-col .m {
   font-size: 11px;
-  color: var(--color-neutral-700);
+  color: var(--color-neutral-600);
 }
 
 .bars-col.current .m { font-weight: 700; color: var(--color-text); }
 
+/* שורות ולא כרטיסים: שלוש שורות באותו כרטיס, מופרדות בקו */
 .avg-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
-.avg-card {
-  border-radius: 22px;
-  padding: 16px 18px;
+.avg-list li {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  background: var(--cat-bg);
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-divider);
 }
 
-.avg-card .name { font-size: 15px; }
+.avg-list li:first-child { padding-top: 0; }
+.avg-list li:last-child { padding-bottom: 0; border-bottom: none; }
 
-.avg-card .val {
+.avg-name {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
 }
 
-.avg-card .val strong {
-  font-family: var(--font-heading);
-  font-weight: 400;
-  font-size: 22px;
-  color: var(--cat-ink);
+.avg-val {
+  font-size: 13px;
+  color: var(--color-neutral-600);
 }
+
+.avg-val strong {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.avg-val strong.danger { color: var(--color-danger); }
+
 
 .avg-card .val span {
   font-size: 12px;
@@ -1585,7 +1618,7 @@ button:disabled {
   font-weight: 700;
 }
 
-.toast-actions .go { background: var(--color-accent); color: var(--color-bg); }
+.toast-actions .go { background: var(--color-neutral-900); color: var(--color-bg); }
 .toast-actions .go:hover { background: var(--color-accent-600); }
 .toast-actions .dismiss { border: 1px solid var(--color-neutral-600); color: var(--color-neutral-100); }
 .toast-actions .dismiss:hover { background: var(--color-neutral-700); }
@@ -1600,37 +1633,33 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: var(--cat-bg);
-  border: 1.5px solid var(--cat-base);
+  background: var(--color-neutral-100);
+  border: 1px solid var(--color-divider);
 }
 
-.prompt-card:hover {
-  background: var(--cat-tint);
-}
+.prompt-card:hover { box-shadow: var(--shadow-sm); }
 
 .prompt-title {
-  font-family: var(--font-heading);
-  font-size: 19px;
-  color: var(--cat-ink);
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .prompt-body {
   font-size: 13px;
   font-weight: 400;
   line-height: 1.5;
-  color: var(--cat-ink);
-  opacity: 0.85;
+  color: var(--color-neutral-600);
 }
 
 .prompt-cta {
   align-self: flex-start;
-  margin-top: 4px;
+  margin-top: 6px;
   padding: 9px 18px;
   border-radius: var(--radius-pill);
-  background: var(--cat-base);
+  background: var(--color-neutral-900);
   color: var(--color-bg);
-  font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 /* ========== בורר סוג תקציב ========== */
@@ -1654,12 +1683,11 @@ button:disabled {
 }
 
 .type-option[aria-pressed='true'] {
-  border-color: var(--color-accent);
+  border-color: var(--color-neutral-900);
   background: var(--color-accent-200);
 }
 
 .type-label {
-  font-family: var(--font-heading);
   font-size: 17px;
   color: var(--color-text);
 }
@@ -1674,49 +1702,6 @@ button:disabled {
 select.input {
   appearance: none;
   padding-inline-end: 22px;
-}
-
-/* קטגוריות הטיול מקבלות את אותם גוונים מאומתים של המערכת */
-[data-category='lodging'] {
-  --cat-bg: var(--cat-fund-bg);
-  --cat-tint: var(--cat-fund-tint);
-  --cat-base: var(--cat-fund-base);
-  --cat-ink: var(--cat-fund-ink);
-}
-
-[data-category='transport'] {
-  --cat-bg: var(--cat-fixed-bg);
-  --cat-tint: var(--cat-fixed-tint);
-  --cat-base: var(--cat-fixed-base);
-  --cat-ink: var(--cat-fixed-ink);
-}
-
-[data-category='attractions'] {
-  --cat-bg: var(--cat-leisure-bg);
-  --cat-tint: var(--cat-leisure-tint);
-  --cat-base: var(--cat-leisure-base);
-  --cat-ink: var(--cat-leisure-ink);
-}
-
-[data-category='dining'] {
-  --cat-bg: var(--cat-income-bg);
-  --cat-tint: var(--cat-income-tint);
-  --cat-base: var(--cat-income-base);
-  --cat-ink: var(--cat-income-ink);
-}
-
-[data-category='shopping'] {
-  --cat-bg: var(--cat-unplanned-bg);
-  --cat-tint: oklch(0.89 0.06 85);
-  --cat-base: var(--cat-unplanned-base);
-  --cat-ink: var(--cat-unplanned-ink);
-}
-
-[data-category='other'] {
-  --cat-bg: var(--color-neutral-200);
-  --cat-tint: var(--color-neutral-300);
-  --cat-base: var(--color-neutral-500);
-  --cat-ink: var(--color-neutral-800);
 }
 
 .tag-row {
@@ -1798,15 +1783,8 @@ select.input {
   white-space: pre;
 }
 
-/* ההכנסה היא הפעולה הראשונה בחודש וממנה נגזר הכל, ולכן היא בולטת יותר */
-.cat-card[data-category='income'] {
-  padding: 24px 22px;
-  border: 1.5px solid var(--cat-base);
-}
-
-.cat-card[data-category='income'] .cat-title h2 {
-  font-size: 23px;
-}
+/* ההכנסה אינה בולטת יותר משאר הכרטיסים. היא הייתה ממוסגרת בצבע
+   שלה, וזה הוסיף משטח רביעי למסך במקום להוסיף מידע */
 
 .cat-card[data-category='income'] .dot {
   width: 14px;
@@ -1848,21 +1826,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 /* במטרת חיסכון הצבירה היא ההישג, ולכן הפס ירוק ולא בצבע האקסנט */
 .summary .bar-fill.goal {
-  background: var(--cat-income-base);
-}
-
-[data-category='deposit'] {
-  --cat-bg: var(--cat-income-bg);
-  --cat-tint: var(--cat-income-tint);
-  --cat-base: var(--cat-income-base);
-  --cat-ink: var(--cat-income-ink);
-}
-
-[data-category='withdrawal'] {
-  --cat-bg: var(--color-neutral-200);
-  --cat-tint: var(--color-neutral-300);
-  --cat-base: var(--color-neutral-500);
-  --cat-ink: var(--color-neutral-800);
+  background: var(--cat-income);
 }
 
 /* ========== קישור תקציב מסגרת לבית ========== */
@@ -1992,9 +1956,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-family: var(--font-heading);
   font-size: 30px;
-  background: var(--cat-base);
+  background: var(--dot, var(--color-neutral-800));
   color: var(--color-neutral-100);
   border: 3px solid var(--color-bg);
 }
@@ -2011,8 +1974,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .intro-chip {
   padding: 8px 18px;
   border-radius: var(--radius-pill);
-  background: var(--cat-tint, var(--color-neutral-200));
-  color: var(--cat-ink, var(--color-neutral-800));
+  background: var(--color-neutral-200);
+  color: var(--color-neutral-800);
   font-weight: 700;
 }
 
@@ -2045,7 +2008,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: center;
   gap: 6px;
   font-weight: 700;
-  color: var(--cat-ink);
+  color: var(--color-neutral-800);
 }
 
 .intro-bar-hint {
@@ -2066,7 +2029,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .intro-fill {
   height: 100%;
   border-radius: var(--radius-pill);
-  background: var(--cat-base, var(--color-accent));
+  background: var(--color-neutral-800);
 }
 
 /* הבסיס הוא מה שמתוכנן, והשארית הגלויה מאחוריו היא הרזרבה */
@@ -2080,14 +2043,14 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: flex-start;
 }
 
-.intro-reserve .intro-track { width: 100%; background: var(--cat-base); }
+.intro-reserve .intro-track { width: 100%; background: var(--dot, var(--color-neutral-800)); }
 
 .intro-reserve-tag {
   align-self: flex-start;
   padding: 4px 12px;
   border-radius: var(--radius-pill);
-  background: var(--cat-tint);
-  color: var(--cat-ink);
+  background: var(--color-neutral-200);
+  color: var(--color-neutral-800);
   font-weight: 700;
   font-size: 14px;
 }
@@ -2109,7 +2072,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .intro-dot[data-on] {
   width: 20px;
   border-radius: var(--radius-pill);
-  background: var(--color-accent);
+  background: var(--color-neutral-900);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2293,14 +2256,13 @@ input[type='date']::-webkit-calendar-picker-indicator {
   gap: 10px;
   padding-top: 16px;
   margin-top: 4px;
-  border-top: 1px solid color-mix(in srgb, var(--cat-ink, var(--color-text)) 20%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
 }
 
 .subsection h3 {
   margin: 0;
-  font-family: var(--font-heading);
   font-size: 17px;
-  color: var(--cat-ink, var(--color-neutral-700));
+  color: var(--color-neutral-700);
 }
 
 /* יציאה מהתקציב, מעל בורר החודשים */
@@ -2320,7 +2282,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 .back-link:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
-.back-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.back-link:focus-visible { outline: 2px solid var(--color-neutral-900); outline-offset: 2px; }
 
 /* פעולה משנית בכותרת מסך, למשל התנתקות */
 .btn-text.quiet {
@@ -2459,7 +2421,6 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .upcoming-title {
   flex: 1;
   min-width: 0;
-  font-family: var(--font-heading);
   font-size: 16px;
 }
 

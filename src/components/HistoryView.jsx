@@ -68,13 +68,18 @@ export default function HistoryView({ budgetId, fixedBase = 0 }) {
             <div className="legend">
               {GROUPS.map((g) => (
                 <span key={g.group}>
-                  <span className="swatch" style={{ background: `var(--cat-${g.category}-base)` }} />
+                  <span className="dot" style={{ background: `var(--cat-${g.category})` }} />
                   {g.label}
                 </span>
               ))}
             </div>
 
             <div className="bars">
+              {/* קווי היעד: בלעדיהם הגובה של עמודה הוא מספר בלי
+                  קנה מידה, ואי אפשר לראות חריגה במבט */}
+              {[50, 30, 20].map((pct) => (
+                <span key={pct} className="guide" style={{ bottom: `${(pct / 100) * BAR_HEIGHT}px` }} />
+              ))}
               {series.map((point) => (
                 <div
                   key={point.month}
@@ -88,7 +93,7 @@ export default function HistoryView({ budgetId, fixedBase = 0 }) {
                           key={g.group}
                           style={{
                             height: `${(actual / peak) * BAR_HEIGHT}px`,
-                            background: `var(--cat-${g.category}-base)`,
+                            background: `var(--cat-${g.category})`,
                           }}
                           title={`${g.label} ${shortMonth(point.month)}`}
                         />
@@ -101,17 +106,24 @@ export default function HistoryView({ budgetId, fixedBase = 0 }) {
             </div>
           </section>
 
-          <div className="avg-list">
-            {averages.map((g) => (
-              <div key={g.group} className="avg-card" data-category={g.category}>
-                <span className="name">{g.label} בממוצע</span>
-                <span className="val">
-                  <strong className="num">{g.percent}%</strong>
-                  <span className="num">יעד {g.target}%</span>
-                </span>
-              </div>
-            ))}
-          </div>
+          <section className="cat-card">
+            <ul className="avg-list">
+              {averages.map((g) => (
+                <li key={g.group} data-category={g.category}>
+                  <span className="avg-name">
+                    <span className="dot" />
+                    {g.label}
+                  </span>
+                  <span className="avg-val num">
+                    <strong className={g.percent > g.target && g.group !== 'savings' ? 'danger' : ''}>
+                      {g.percent}%
+                    </strong>
+                    <span className="of"> / {g.target}%</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
         </>
       )}
     </div>
