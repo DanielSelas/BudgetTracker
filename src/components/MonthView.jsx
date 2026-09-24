@@ -155,7 +155,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
 
         {loading ? <Skeleton /> : (
           <>
-            <SummaryCard summary={summary} />
+            <SummaryCard summary={summary} onEditBase={() => setEditingBase(true)} />
 
             {isPast && <MonthVerdict summary={summary} />}
 
@@ -194,7 +194,6 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
                 group={summary.groups[CATEGORIES[category].budgetGroup]}
                 authorOf={shared ? members.get : null}
                 actions={actions}
-                onAdd={openSheet}
                 onStopRecurring={setPendingStop}
               />
             ))}
@@ -206,7 +205,6 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
               entries={byCategory.unplanned}
               authorOf={shared ? members.get : null}
               actions={actions}
-              onAdd={openSheet}
               onStopRecurring={setPendingStop}
             />
 
@@ -247,9 +245,10 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
       <button
         type="button"
         className="fab"
+        aria-label="הוספת רשומה"
         onClick={() => openSheet(needsIncome ? 'income' : 'fixed')}
       >
-        <span className="plus">+</span> {needsIncome ? 'הכנסה' : 'הוצאה'}
+        <span className="plus" aria-hidden="true">+</span>
       </button>
 
       {sheet && (

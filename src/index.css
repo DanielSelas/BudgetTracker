@@ -75,13 +75,30 @@
   --radius-inner: 20px;
   --radius-pill: 999px;
 
-  --font-heading: 'Secular One', system-ui, sans-serif;
+  /* פונט אחד לכל האפליקציה. שני פונטים יצרו שתי שפות על אותו מסך,
+     ובעברית ההבדל בולט הרבה יותר מאשר בלטינית */
+  --font-heading: 'Heebo', system-ui, sans-serif;
   --font-body: 'Heebo', system-ui, sans-serif;
+
+  /* צבע הקטגוריה מופיע בשלושה מקומות בלבד: הנקודה שליד השם, פס
+     ההתקדמות, והפלח בפס הסיכום. לא ברקעים ולא בתגיות */
+  --cat-income: var(--color-accent-2-600);
+  --cat-fixed: var(--color-accent-500);
+  --cat-leisure: oklch(0.6 0.08 18);
+  --cat-fund: oklch(0.55 0.06 235);
+  --cat-unplanned: oklch(0.65 0.08 85);
+
+  /* מידות שחוזרות בכל המסכים */
+  --screen-pad: 20px;
+  --card-pad: 20px;
+  --radius-card-2: 20px;
 
   --ease-soft: cubic-bezier(0.2, 0.7, 0.3, 1);
 
   color-scheme: light;
   font-family: var(--font-body);
+  /* ספרות ברוחב אחיד בכל מקום, כדי שעמודות סכומים לא יזוזו */
+  font-variant-numeric: tabular-nums;
   font-size: 15px;
   line-height: 1.55;
   color: var(--color-text);
@@ -113,9 +130,9 @@ body {
 h1, h2, h3, h4 {
   margin: 0;
   font-family: var(--font-heading);
-  font-weight: 400;
+  font-weight: 700;
   line-height: 1.12;
-  letter-spacing: 0;
+  letter-spacing: -0.3px;
 }
 
 /* מספרי כסף ברוחב ספרה אחיד, כך שהעמודות לא זזות בזמן הקלדה */
@@ -132,7 +149,7 @@ code {
 :focus { outline: none; }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-neutral-900);
   outline-offset: 2px;
 }
 

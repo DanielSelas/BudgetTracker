@@ -103,7 +103,8 @@ describe('רינדור ראשוני', () => {
     const { container } = await renderWithContexts(
       <MonthView budgetId="b1" budget={household} uid="u1" />,
     )
-    expect(container.textContent).toContain('יתרה')
+    // הכותרת של הבלת״ם, שהיא הכרטיס האחרון במסך
+    expect(container.textContent).toContain('בלת״ם')
   })
 
   it('מסך הטיול נטען', async () => {
@@ -771,7 +772,7 @@ describe('כרטיס הבלת״ם', () => {
         entries={[]} actions={{}} onAdd={() => {}} onDeposit={() => {}}
       />,
     )
-    expect(container.textContent).toContain('לא הוזנה הכנסה')
+    expect(container.textContent).toContain('אין רזרבה שתכסה')
   })
 
   it('כשיש יתרה חוזרים להציג כמה נשאר', async () => {
@@ -866,7 +867,7 @@ describe('סימון הוצאה חד פעמית', () => {
         />
       </ul>,
     )
-    expect(getByText('חד פעמי').title).toBe('ניתוח לכלבה')
+    expect(getByText('· חד פעמי').title).toBe('ניתוח לכלבה')
   })
 
   it('ביטול הסימון נשלח במפורש, כדי שהשדה יימחק ולא יישאר', async () => {

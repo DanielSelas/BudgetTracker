@@ -4,7 +4,7 @@ import { groupEntries } from '../lib/groups'
 
 /** רשימת השורות של קטגוריה, כשרשומות מקובצות מוצגות כשורה אחת מכווצת. */
 export default function EntryItems({
-  entries, authorOf, actions, categories, onStopRecurring, onAddToGroup,
+  entries, authorOf, actions, categories, onStopRecurring,
 }) {
   const items = groupEntries(entries)
 
@@ -19,7 +19,6 @@ export default function EntryItems({
             actions={actions}
             categories={categories}
             onStopRecurring={onStopRecurring}
-            onAdd={onAddToGroup}
           />
         ) : (
           <EntryRow

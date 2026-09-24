@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import Avatar from './Avatar'
 import Sheet from './Sheet'
 import MonthSelect from './MonthSelect'
 import { monthLabel, shekels } from '../lib/format'
@@ -218,6 +217,18 @@ export default function EntrySheet({
             onChange={(event) => setAmount(event.target.value)}
             autoFocus
           />
+
+          {/* ההשפעה יושבת מתחת לסכום ולא בתחתית המגירה: היא נקראת
+              בזמן ההקלדה, וכשהיא רחוקה ממנו איש אינו רואה אותה */}
+          {(overage || impact) && (
+            <span className={`impact-line ${overage ? 'danger' : ''}`} role="status" aria-live="polite">
+              {overage
+                ? overage.crossing
+                  ? `ההוצאה הזו מוציאה אתכם מעבר להכנסות החודש, בחריגה של ${shekels(overage.gap)}`
+                  : `אתם כבר מעבר להכנסות החודש. אחרי זה החריגה תהיה ${shekels(overage.gap)}`
+                : impact}
+            </span>
+          )}
         </label>
 
         <div className="stack">
@@ -414,22 +425,14 @@ export default function EntrySheet({
           )}
         </div>
 
+        {/* שורת ייחוס כטקסט ולא כאווטאר: המידע הוא מי נרשם, ועיגול
+            צבעוני עם אות בתוכו מושך אליו יותר תשומת לב מהמשפט */}
         {me && (
-          <div className="attribution">
-            <Avatar member={me.member} profile={me.profile} size="md" />
-            נרשם על שמך{partner ? ` · ${partner} יראה את זה מיד` : ''}
-          </div>
+          <span className="attribution">
+            {partner ? `יירשם על שמך · גלוי ל${partner}` : 'יירשם בתקציב האישי שלך'}
+          </span>
         )}
 
-        {overage && (
-          <div className="impact warn" role="status">
-            {overage.crossing
-              ? `ההוצאה הזו מוציאה אתכם מעבר להכנסות החודש, בחריגה של ${shekels(overage.gap)}.`
-              : `אתם כבר מעבר להכנסות החודש. אחרי זה החריגה תהיה ${shekels(overage.gap)}.`}
-          </div>
-        )}
-
-        {impact && <div className="impact">{impact}</div>}
         {error && <p className="notice block" role="alert">{error}</p>}
 
         <div className="sheet-actions">

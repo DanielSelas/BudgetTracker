@@ -7,7 +7,7 @@ import { shekels } from '../lib/format'
  * סגורה כברירת מחדל, כי הערך שלה הוא בדיוק זה, לא לראות את הפירוט.
  */
 export default function EntryGroup({
-  group, authorOf, actions, categories, onStopRecurring, onAdd,
+  group, authorOf, actions, categories, onStopRecurring,
 }) {
   const [open, setOpen] = useState(false)
   const count = group.entries.length
@@ -27,26 +27,21 @@ export default function EntryGroup({
       </button>
 
       {open && (
-        <>
-          <ul className="entry-list nested">
-            {group.entries.map((entry) => (
-              <EntryRow
-                key={entry.id}
-                entry={entry}
-                author={authorOf?.(entry.addedBy)}
-                categories={categories}
-                onUpdate={actions.update}
-                onRemove={actions.remove}
-                onStopRecurring={onStopRecurring}
-              />
-            ))}
-          </ul>
-
-          <button type="button" className="btn-text nested-add" onClick={() => onAdd?.(group.key)}>
-            + הוספה ל{group.key}
-          </button>
-        </>
+        <ul className="entry-list nested">
+          {group.entries.map((entry) => (
+            <EntryRow
+              key={entry.id}
+              entry={entry}
+              author={authorOf?.(entry.addedBy)}
+              categories={categories}
+              onUpdate={actions.update}
+              onRemove={actions.remove}
+              onStopRecurring={onStopRecurring}
+            />
+          ))}
+        </ul>
       )}
+
     </li>
   )
 }

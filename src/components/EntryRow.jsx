@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import Avatar from './Avatar'
 import { shekels } from '../lib/format'
 import { displayName } from '../lib/members'
 
@@ -164,27 +163,24 @@ export default function EntryRow({
       {entry.recurringId && (
         <button
           type="button"
-          className="recurring-tag"
+          className="row-tag"
           title="לחיצה מפסיקה את החיוב הקבוע מהחודש הבא"
           onClick={() => onStopRecurring?.(entry)}
         >
-          קבוע
+          · חודשי
         </button>
       )}
 
       {entry.oneOff && (
-        <span className="recurring-tag as-tag" title={entry.note || 'לא נחשב כהוצאה רגילה'}>
-          חד פעמי
+        <span className="row-tag as-tag" title={entry.note || 'לא נחשב כהוצאה רגילה'}>
+          · חד פעמי
         </span>
       )}
 
+      {/* שם המזין כטקסט ולא כאווטאר בתוך שורה: אווטאר בגודל שורה
+          הוא עיגול צבעוני שמושך את העין אל מי שהזין במקום אל הסכום */}
       {author && (
-        <Avatar
-          member={author.member}
-          profile={author.profile}
-          size="sm"
-          title={`הוזן על ידי ${displayName(author.member, author.profile)}`}
-        />
+        <span className="row-author">{displayName(author.member, author.profile)}</span>
       )}
 
       <button type="button" className="entry-amount button num" onClick={open}>
