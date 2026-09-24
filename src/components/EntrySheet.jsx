@@ -68,6 +68,8 @@ export default function EntrySheet({
   const [offCard, setOffCard] = useState(false)
   const [dueDay, setDueDay] = useState('')
   const [group, setGroup] = useState(initialGroup)
+  const [oneOff, setOneOff] = useState(false)
+  const [note, setNote] = useState('')
   const [date, setDate] = useState(todayDate)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -160,6 +162,8 @@ export default function EntrySheet({
             // ביד היה יוצא מהקבוצה שאליה אותו סניף נכנס בייבוא
             groupKey: normalizeGroup(group || merchantGroup(name)),
             fromRemainder,
+            oneOff,
+            note: oneOff ? note.trim() : '',
           })
       onClose()
     } catch {
@@ -224,6 +228,36 @@ export default function EntrySheet({
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
+
+          {!frame && !isIncome && !recurring && (
+            <>
+              <button
+                type="button"
+                className="recur-toggle"
+                aria-pressed={oneOff}
+                onClick={() => setOneOff((on) => !on)}
+              >
+                הוצאה חד פעמית
+                <span className="switch"><span className="knob" /></span>
+              </button>
+
+              {oneOff && (
+                <>
+                  <input
+                    className="input"
+                    maxLength={200}
+                    placeholder="למה? למשל: טלפון חדש"
+                    value={note}
+                    onChange={(event) => setNote(event.target.value)}
+                  />
+                  <span className="type-hint">
+                    היא נכנסת לחודש הזה במלואה, ורק לא תיחשב כשמחשבים
+                    כמה חודש רגיל עולה לכם.
+                  </span>
+                </>
+              )}
+            </>
+          )}
 
           {!frame && !isIncome && (
             <div className="group-field">

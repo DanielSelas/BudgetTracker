@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { deleteDoc, onSnapshot, query, setDoc, updateDoc, where } from 'firebase/firestore'
+import {
+  deleteDoc, deleteField, onSnapshot, query, setDoc, updateDoc, where,
+} from 'firebase/firestore'
 import { entriesRef, entryId, entryRef } from '../lib/paths'
 import { CATEGORIES } from '../lib/model'
 import { useRetry } from './useRetry'
@@ -56,7 +58,7 @@ export function entryActions({ budgetId, month, uid }) {
   return {
     add: ({
       category, name, plannedAmount = 0, actualAmount = 0, note = '',
-      groupKey = '', fromRemainder = false,
+      groupKey = '', fromRemainder = false, oneOff = false,
     }) =>
       setDoc(entryRef(budgetId, entryId({ month, category, name })), {
         month,
@@ -71,6 +73,9 @@ export function entryActions({ budgetId, month, uid }) {
         ...(groupKey ? { groupKey } : {}),
         // הפקדה שמומנה מהיתרה, ולכן מקטינה אותה ולא רק מוסיפה להפקדות
         ...(fromRemainder ? { fromRemainder: true } : {}),
+        // הוצאה שלא תחזור, ולכן אינה מלמדת מה רגיל: ניתוח לכלבה,
+        // טלפון חדש. היא נשארת בחודש שלה במלואה ויוצאת מהמודל בלבד
+        ...(oneOff ? { oneOff: true } : {}),
       }),
 
     // קבוצת התקציב נגזרת מהקטגוריה ולא נבחרת, ולכן שינוי קטגוריה
@@ -78,6 +83,9 @@ export function entryActions({ budgetId, month, uid }) {
     update: (id, changes) => updateDoc(entryRef(budgetId, id), {
       ...changes,
       ...(changes.category ? { budgetGroup: CATEGORIES[changes.category].budgetGroup } : {}),
+      // הסימון נשמר כנוכחות השדה ולא כערך, ולכן ביטול חייב למחוק
+      // אותו. כתיבת false הייתה נדחית בכללים ונשארת במסמך
+      ...('oneOff' in changes && !changes.oneOff ? { oneOff: deleteField() } : {}),
     }),
 
     remove: (id) => deleteDoc(entryRef(budgetId, id)),

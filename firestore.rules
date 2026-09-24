@@ -163,6 +163,9 @@ service cloud.firestore {
             && data.addedBy is string
             && validGroupKey(data)
             && (!('fromRemainder' in data) || data.fromRemainder == true)
+            // הוצאה חד פעמית שאינה מלמדת מה רגיל. אם קיים, חייב אמת
+            && (!('oneOff' in data) || data.oneOff == true)
+            && (!('note' in data) || (data.note is string && data.note.size() <= 200))
             // סימון שהשורה הגיעה מייבוא ולא הוזנה ידנית
             && (!('imported' in data) || data.imported == true);
         }

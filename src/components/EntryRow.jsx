@@ -18,12 +18,16 @@ export default function EntryRow({
   const [actual, setActual] = useState(String(entry.actualAmount ?? 0))
   const [name, setName] = useState(entry.name || '')
   const [category, setCategory] = useState(entry.category)
+  const [oneOff, setOneOff] = useState(Boolean(entry.oneOff))
+  const [note, setNote] = useState(entry.note || '')
   const [busy, setBusy] = useState(false)
 
   function open() {
     setActual(String(entry.actualAmount ?? 0))
     setName(entry.name || '')
     setCategory(entry.category)
+    setOneOff(Boolean(entry.oneOff))
+    setNote(entry.note || '')
     setEditing(true)
   }
 
@@ -35,6 +39,8 @@ export default function EntryRow({
       const trimmed = name.trim()
       if (trimmed && trimmed !== entry.name) changes.name = trimmed
       if (category !== entry.category) changes.category = category
+      if (oneOff !== Boolean(entry.oneOff)) changes.oneOff = oneOff
+      if (note.trim() !== (entry.note || '')) changes.note = note.trim()
       await onUpdate(entry.id, changes)
       setEditing(false)
     } finally {
@@ -81,6 +87,33 @@ export default function EntryRow({
                 </button>
               ))}
             </div>
+          )}
+
+          <button
+            type="button"
+            className="recur-toggle"
+            aria-pressed={oneOff}
+            onClick={() => setOneOff((on) => !on)}
+          >
+            הוצאה חד פעמית
+            <span className="switch"><span className="knob" /></span>
+          </button>
+
+          {oneOff && (
+            <input
+              className="input"
+              maxLength={200}
+              placeholder="למה? למשל: ניתוח לכלבה"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+            />
+          )}
+
+          {oneOff && (
+            <span className="type-hint">
+              השורה נשארת בחודש הזה במלואה. היא רק לא תיחשב כשמחשבים
+              כמה חודש רגיל עולה לכם.
+            </span>
           )}
 
           <div className="row-edit-foot">
@@ -137,6 +170,12 @@ export default function EntryRow({
         >
           קבוע
         </button>
+      )}
+
+      {entry.oneOff && (
+        <span className="recurring-tag as-tag" title={entry.note || 'לא נחשב כהוצאה רגילה'}>
+          חד פעמי
+        </span>
       )}
 
       {author && (

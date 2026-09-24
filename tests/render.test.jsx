@@ -823,3 +823,79 @@ describe('שורות הבלת״ם', () => {
     expect(container.querySelector('.subsection')).toBeNull()
   })
 })
+
+describe('סימון הוצאה חד פעמית', () => {
+  /**
+   * הכלבה עברה ניתוח באוגוסט 2025, והוא לבדו הפך את החודש הזה
+   * ליקר ביותר מתוך תשעה עשר. בלי הסימון, התובנה הראשונה שהאפליקציה
+   * הייתה מפיקה היא ש"באוגוסט מוציאים הרבה", והיא הייתה נלמדת
+   * מאירוע אחד שלא יחזור.
+   */
+  const entry = {
+    id: 'e1', name: 'וט המומחים', category: 'unplanned',
+    actualAmount: 11178, month: '2025-08',
+  }
+
+  it('הסימון וההערה נשמרים יחד', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const onUpdate = vi.fn(async () => {})
+    const { getByText, getByLabelText, getByPlaceholderText } = render(
+      <ul><EntryRow entry={entry} onUpdate={onUpdate} onRemove={() => {}} /></ul>,
+    )
+    fireEvent.click(getByLabelText(`עריכה של ${entry.name}`))
+    fireEvent.click(getByText('הוצאה חד פעמית'))
+    fireEvent.change(getByPlaceholderText('למה? למשל: ניתוח לכלבה'), {
+      target: { value: 'ניתוח לכלבה' },
+    })
+    fireEvent.click(getByText('שמור'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(onUpdate).toHaveBeenCalledWith('e1', expect.objectContaining({
+      oneOff: true, note: 'ניתוח לכלבה',
+    }))
+  })
+
+  it('שורה מסומנת מציגה את זה, וההערה היא ההסבר', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const { getByText } = render(
+      <ul>
+        <EntryRow
+          entry={{ ...entry, oneOff: true, note: 'ניתוח לכלבה' }}
+          onUpdate={() => {}} onRemove={() => {}}
+        />
+      </ul>,
+    )
+    expect(getByText('חד פעמי').title).toBe('ניתוח לכלבה')
+  })
+
+  it('ביטול הסימון נשלח במפורש, כדי שהשדה יימחק ולא יישאר', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const onUpdate = vi.fn(async () => {})
+    const { getByText, getByLabelText } = render(
+      <ul>
+        <EntryRow
+          entry={{ ...entry, oneOff: true, note: 'ניתוח לכלבה' }}
+          onUpdate={onUpdate} onRemove={() => {}}
+        />
+      </ul>,
+    )
+    fireEvent.click(getByLabelText(`עריכה של ${entry.name}`))
+    fireEvent.click(getByText('הוצאה חד פעמית'))
+    fireEvent.click(getByText('שמור'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(onUpdate.mock.calls[0][1].oneOff).toBe(false)
+  })
+
+  it('הוצאה שלא סומנה אינה שולחת את השדה בכלל', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const onUpdate = vi.fn(async () => {})
+    const { getByText, getByLabelText } = render(
+      <ul><EntryRow entry={entry} onUpdate={onUpdate} onRemove={() => {}} /></ul>,
+    )
+    fireEvent.click(getByLabelText(`עריכה של ${entry.name}`))
+    fireEvent.click(getByText('שמור'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(onUpdate.mock.calls[0][1]).not.toHaveProperty('oneOff')
+  })
+})

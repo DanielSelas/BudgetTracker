@@ -897,6 +897,28 @@ describe('הפקדה מהיתרה', () => {
   })
 })
 
+describe('הוצאה חד פעמית', () => {
+  it('הדגל מתקבל כשהוא אמת, עם הערה', async () => {
+    const body = entry({ oneOff: true, note: 'ניתוח לכלבה' })
+    delete body.budgetId
+    await assertSucceeds(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'o1'), body))
+  })
+
+  it('שקר או ערך שאינו בוליאני נדחים', async () => {
+    for (const value of [false, 'true', 1]) {
+      const body = entry({ oneOff: value })
+      delete body.budgetId
+      await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'o2'), body))
+    }
+  })
+
+  it('הערה ארוכה מדי נדחית', async () => {
+    const body = entry({ note: 'א'.repeat(201) })
+    delete body.budgetId
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'o3'), body))
+  })
+})
+
 describe('פרופיל משתמש', () => {
   it('כותבים רק את הפרופיל של עצמכם', async () => {
     await assertSucceeds(setDoc(doc(as(OWNER), 'users', OWNER), { displayName: 'דניאל', tone: 'a1' }))
