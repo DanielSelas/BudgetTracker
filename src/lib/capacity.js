@@ -87,18 +87,27 @@ export function incomeFloor(entries = [], templates = [], month, { now = monthKe
     && template.category === 'income'
     && runsInMonth(template, month)
     && !isEnded(template, month))
-  if (recurring.length > 0) {
-    return { amount: sum(recurring.map((t) => t.actualAmount)), source: 'recurring' }
-  }
+  const fixed = sum(recurring.map((template) => template.actualAmount))
 
+  // הכנסה שאינה נגזרת מתבנית היא החלק המשתנה, ולכן היא נמדדת לפי
+  // החודש הנמוך שנצפה. השתיים מתחברות ולא מחליפות זו את זו: בסיס
+  // ידוע של אחד בני הזוג אינו אומר שהמשכורת של השני נעלמה
   const seen = []
   for (const [key, list] of byMonth(entries)) {
     if (key >= now) continue
-    const value = incomeOf(list)
+    const value = sum(list
+      .filter((entry) => entry.category === 'income' && !entry.recurringId)
+      .map((entry) => entry.actualAmount))
     // חודש בלי הכנסה הוא חודש שלא הוזן, ולא חודש בלי משכורת
     if (value > 0) seen.push(value)
   }
-  return { amount: seen.length > 0 ? Math.min(...seen) : 0, source: seen.length ? 'lowest' : 'none' }
+  const variable = seen.length > 0 ? Math.min(...seen) : 0
+
+  const source = fixed > 0
+    ? (variable > 0 ? 'mixed' : 'recurring')
+    : (variable > 0 ? 'lowest' : 'none')
+
+  return { amount: fixed + variable, source }
 }
 
 /** ההתחייבויות הקבועות של חודש מסוים, לפי התבניות שחלות בו. */

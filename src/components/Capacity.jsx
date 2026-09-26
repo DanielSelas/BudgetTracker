@@ -13,6 +13,15 @@ import { buildCapacity, planFor } from '../lib/capacity'
  * וזה קו ולא מספר, כי ההתחייבויות נגמרות בתאריכים ידועים והמרווח
  * קופץ. בלי להסתכל קדימה אי אפשר לראות את זה.
  */
+// מאיפה הגיעה הרצפה. ההבחנה חשובה: "קבועה" היא הבטחה, "החודש
+// הנמוך" היא הערכה זהירה, ורוב הבתים הם שילוב של השתיים
+const INCOME_LABEL = {
+  recurring: 'הכנסה קבועה',
+  lowest: 'הכנסה לפי החודש הנמוך',
+  mixed: 'קבועה, ועוד החודש הנמוך',
+  none: 'הכנסה',
+}
+
 export default function Capacity({ entries = [], templates = [], month, onClose }) {
   const [amount, setAmount] = useState('')
   const [target, setTarget] = useState('')
@@ -46,7 +55,7 @@ export default function Capacity({ entries = [], templates = [], month, onClose 
 
             <ul className="capacity-breakdown">
               <li>
-                <span>הכנסה {first.incomeSource === 'recurring' ? 'קבועה' : 'לפי החודש הנמוך'}</span>
+                <span>{INCOME_LABEL[first.incomeSource]}</span>
                 <span className="num">{shekels(first.income)}</span>
               </li>
               <li className="out">

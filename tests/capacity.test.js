@@ -87,12 +87,40 @@ describe('רצפת ההכנסה', () => {
       .toEqual({ amount: 18000, source: 'lowest' })
   })
 
-  it('תבנית קבועה גוברת, כי היא ידועה מראש', () => {
+  /**
+   * שתי משכורות: אחת עם בסיס קבוע ואחת משתנה לגמרי. הן מתחברות
+   * ולא מחליפות זו את זו. הגרסה הראשונה החזירה את התבנית במקום
+   * ההכנסה שנצפתה, כלומר הגדרת הבסיס של בן הייתה מוחקת את
+   * המשכורת של דניאל מהחישוב ומורידה את הרצפה במקום לחדד אותה.
+   */
+  it('בסיס קבוע מתחבר לחלק המשתנה, ולא מחליף אותו', () => {
     const templates = [{
-      id: 'i1', active: true, category: 'income', actualAmount: 14000, startMonth: '2025-01',
+      id: 'ben', active: true, category: 'income', actualAmount: 10000, startMonth: '2025-01',
     }]
+    // ההיסטוריה כאן היא המשכורת המשתנה בלבד, שלא נגזרה מתבנית
     expect(incomeFloor(history, templates, '2025-11', { now: '2025-11' }))
-      .toEqual({ amount: 14000, source: 'recurring' })
+      .toEqual({ amount: 28000, source: 'mixed' })
+  })
+
+  it('שורה שנגזרה מהתבנית אינה נספרת פעמיים', () => {
+    const templates = [{
+      id: 'ben', active: true, category: 'income', actualAmount: 10000, startMonth: '2025-01',
+    }]
+    const withMaterialized = [
+      ...history,
+      entry('2025-09', 'income', 10000, { recurringId: 'ben' }),
+    ]
+    // 18,000 הוא עדיין החודש הנמוך של החלק המשתנה
+    expect(incomeFloor(withMaterialized, templates, '2025-11', { now: '2025-11' }).amount)
+      .toBe(28000)
+  })
+
+  it('תבנית בלבד, בלי היסטוריה משתנה', () => {
+    const templates = [{
+      id: 'ben', active: true, category: 'income', actualAmount: 10000, startMonth: '2025-01',
+    }]
+    expect(incomeFloor([], templates, '2025-11', { now: '2025-11' }))
+      .toEqual({ amount: 10000, source: 'recurring' })
   })
 
   it('בלי שום נתון מחזירה אפס ואומרת זאת', () => {
