@@ -1118,6 +1118,72 @@ button:disabled {
   color: var(--color-neutral-700);
 }
 
+/* ── שיחה עם היועץ ──────────────────────────────────────────── */
+.chat-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.chat-suggestions .cat-pill {
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  text-align: start;
+  padding: 12px 16px;
+  min-height: 44px;
+  background: var(--color-neutral-200);
+  font-weight: 400;
+  white-space: normal;
+}
+
+.chat-suggestions .cat-pill::before { display: none; }
+.chat-suggestions .cat-pill:hover { background: var(--color-neutral-300); }
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-log:empty { display: none; }
+
+/* בועה של המשתמש כהה וצמודה לצד שלו, ושל היועץ בהירה ורחבה: כך
+   אפשר לסרוק את השיחה בלי לקרוא מי אמר מה */
+.bubble {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  max-width: 88%;
+}
+
+.bubble.user {
+  align-self: flex-start;
+  background: var(--color-neutral-900);
+  color: var(--color-bg);
+  border-bottom-left-radius: 6px;
+}
+
+.bubble.assistant {
+  align-self: flex-end;
+  background: var(--color-neutral-100);
+  border-bottom-right-radius: 6px;
+}
+
+.bubble.thinking { color: var(--color-neutral-600); }
+
+.chat-compose {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.chat-compose .input { flex: 1; min-width: 0; }
+.chat-compose .btn-primary { padding: 0 20px; flex-shrink: 0; }
+
 .bottom-nav button[aria-current='page'] {
   background: var(--color-neutral-100);
   box-shadow: var(--shadow-sm);

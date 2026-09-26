@@ -499,6 +499,7 @@ describe('דרכי כניסה למסכי התקציב', () => {
    */
   const ACTIONS = [
     'כמה פנוי לי',
+    'שאלה על התקציב',
     'חיובים קבועים',
     'הזמנת שותף',
     'סכום הבסיס',
@@ -945,5 +946,58 @@ describe('מסך כמה פנוי לי', () => {
     fireEvent.change(getByPlaceholderText('למשל 20000'), { target: { value: '20000' } })
     expect(container.textContent).toContain('הסכום מצטבר עד')
     expect(container.textContent).toContain('ההחלטה שלכם')
+  })
+})
+
+describe('שיחה עם היועץ', () => {
+  /**
+   * מפתח ה-API חי בשרת, ולכן המסך לבדו לא יכול לענות. מה שנבדק כאן
+   * הוא מה שהמסך עושה לפני ואחרי הקריאה, ובעיקר שהוא אומר מה קרה
+   * כשהיא נכשלת במקום להישאר ריק.
+   */
+  it('נפתח ריק עם הצעות, ואומר מה היועץ רואה', async () => {
+    const { default: ChatSheet } = await import('../src/components/ChatSheet')
+    const { container } = render(<ChatSheet context="" onClose={() => {}} />)
+    expect(container.textContent).toContain('לא רואה עסקאות בודדות')
+    expect(container.querySelectorAll('.chat-suggestions button').length).toBeGreaterThan(0)
+  })
+
+  it('כפתור השליחה מושבת כל עוד אין שאלה', async () => {
+    const { default: ChatSheet } = await import('../src/components/ChatSheet')
+    const { getByText, getByPlaceholderText } = render(
+      <ChatSheet context="" onClose={() => {}} />,
+    )
+    expect(getByText('שליחה').disabled).toBe(true)
+    fireEvent.change(getByPlaceholderText('מה תרצו לשאול?'), { target: { value: 'שאלה' } })
+    expect(getByText('שליחה').disabled).toBe(false)
+  })
+
+  it('כישלון מוצג כהודעה מובנת ולא כמסך ריק', async () => {
+    const chat = await import('../src/lib/chat')
+    const ask = vi.spyOn(chat, 'askAdvisor').mockRejectedValue(new Error('chat-not-configured'))
+    const { default: ChatSheet } = await import('../src/components/ChatSheet')
+    const { getByText, getByPlaceholderText, container } = render(
+      <ChatSheet context="" onClose={() => {}} />,
+    )
+    fireEvent.change(getByPlaceholderText('מה תרצו לשאול?'), { target: { value: 'שאלה' } })
+    fireEvent.click(getByText('שליחה'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(container.textContent).toContain('חסר מפתח API')
+    ask.mockRestore()
+  })
+
+  it('והשאלה עצמה נשארת על המסך', async () => {
+    const chat = await import('../src/lib/chat')
+    const ask = vi.spyOn(chat, 'askAdvisor').mockResolvedValue('התשובה')
+    const { default: ChatSheet } = await import('../src/components/ChatSheet')
+    const { getByText, getByPlaceholderText, container } = render(
+      <ChatSheet context="" onClose={() => {}} />,
+    )
+    fireEvent.change(getByPlaceholderText('מה תרצו לשאול?'), { target: { value: 'כמה נשאר?' } })
+    fireEvent.click(getByText('שליחה'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(container.textContent).toContain('כמה נשאר?')
+    expect(container.textContent).toContain('התשובה')
+    ask.mockRestore()
   })
 })

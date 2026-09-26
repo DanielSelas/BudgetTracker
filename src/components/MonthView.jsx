@@ -6,6 +6,7 @@ import EndingSoon from './EndingSoon'
 import UpcomingCharges from './UpcomingCharges'
 import Commitments from './Commitments'
 import Capacity from './Capacity'
+import ChatSheet from './ChatSheet'
 import ImportSheet from './ImportSheet'
 import UnplannedCard from './UnplannedCard'
 import MonthPicker from './MonthPicker'
@@ -29,6 +30,7 @@ import { displayName, memberIndex } from '../lib/members'
 import { useProfiles } from '../hooks/useProfiles'
 import { useSectorRules } from '../hooks/useSectorRules'
 import { useHistory } from '../hooks/useHistory'
+import { buildChatContext } from '../lib/chatContext'
 import { deleteBudget, renameBudget, setBaseAmount, setBillingDay } from '../lib/budgets'
 import { importEntries } from '../lib/importEntries'
 import { rememberSectors } from '../lib/sectors'
@@ -70,9 +72,13 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
   const ending = useMemo(() => endingSoon(templates, month), [templates, month])
   const sectorRules = useSectorRules(budgetId)
   const [showCapacity, setShowCapacity] = useState(false)
+  const [asking, setAsking] = useState(false)
   // ההיסטוריה נטענת רק כשמסך הכושר נפתח, כי היא חלון גדול בהרבה
   // מחודש אחד. שנים עשר חודשים כדי שהחציון יישען על שנה
-  const history = useHistory(showCapacity ? budgetId : '', 12)
+  // אותה היסטוריה משרתת את מסך הכושר ואת היועץ, ונטענת רק כשאחד
+  // מהם פתוח כי היא חלון גדול בהרבה מחודש אחד
+  const needsHistory = showCapacity || asking
+  const history = useHistory(needsHistory ? budgetId : '', 12)
 
   const actions = useMemo(() => ({
     ...base,
@@ -215,6 +221,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
               <button type="button" className="btn-text" onClick={() => setShowCapacity(true)}>
                 כמה פנוי לי
               </button>
+              <button type="button" className="btn-text" onClick={() => setAsking(true)}>
+                שאלה על התקציב
+              </button>
               <button type="button" className="btn-text" onClick={() => setImporting(true)}>
                 ייבוא CSV
               </button>
@@ -281,6 +290,20 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
             return result
           }}
           onClose={() => setImporting(false)}
+        />
+      )}
+
+      {asking && (
+        <ChatSheet
+          context={buildChatContext({
+            month,
+            summary,
+            entries,
+            history: history.entries,
+            templates,
+            billingDay,
+          })}
+          onClose={() => setAsking(false)}
         />
       )}
 

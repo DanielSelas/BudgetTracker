@@ -34,4 +34,15 @@ describe('vercel.json', () => {
     // קובץ שנמחק בפריסה חדשה צריך להחזיר 404 ולא דף HTML שמתחזה לקוד
     expect(pattern.test('/assets/index-abc123.js')).toBe(false)
   })
+
+  /**
+   * פונקציית השרת חייבת להישאר מחוץ לניתוב. בלי ההחרגה הקריאה
+   * ליועץ הייתה מקבלת את index.html במקום תשובה, וזה נראה כמו
+   * שגיאת פענוח ולא כמו ניתוב שגוי.
+   */
+  it('הנקודה של היועץ אינה נבלעת בניתוב', () => {
+    const [rule] = config.rewrites
+    const pattern = new RegExp(`^${rule.source}$`)
+    expect(pattern.test('/api/chat')).toBe(false)
+  })
 })

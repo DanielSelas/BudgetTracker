@@ -9,14 +9,16 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test:rules": "firebase emulators:exec --only firestore --project budgettracker-rules-test \"vitest run tests/rules.test.js\"",
-    "test": "node scripts/check-tests.mjs && vitest run --environment jsdom tests/model.test.js tests/recurring.test.js tests/recurring-delete.test.js tests/trips.test.js tests/goal-rollup.test.js tests/groups.test.js tests/ids.test.js tests/import.test.js tests/cleanup.test.js tests/fresh-build.test.js tests/config.test.js tests/currency.test.js tests/capacity.test.js tests/xlsx.test.js tests/nudge.test.js tests/render.test.jsx tests/app-render.test.jsx",
+    "test": "node scripts/check-tests.mjs && vitest run --environment jsdom tests/model.test.js tests/recurring.test.js tests/recurring-delete.test.js tests/trips.test.js tests/goal-rollup.test.js tests/groups.test.js tests/ids.test.js tests/import.test.js tests/cleanup.test.js tests/fresh-build.test.js tests/config.test.js tests/currency.test.js tests/capacity.test.js tests/chat-context.test.js tests/xlsx.test.js tests/nudge.test.js tests/render.test.jsx tests/app-render.test.jsx",
     "nudge": "node scripts/month-end-nudge.mjs",
     "shots": "node scripts/shots.mjs",
     "deploy:rules": "firebase deploy --only firestore"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "fflate": "^0.8.3",
     "firebase": "^12.19.0",
+    "firebase-admin": "^14.4.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -27,7 +29,6 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
-    "firebase-admin": "^14.4.0",
     "jsdom": "^30.0.1",
     "oxlint": "^1.81.0",
     "vite": "^8.3.0",
