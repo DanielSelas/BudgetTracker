@@ -31,6 +31,7 @@ import { useProfiles } from '../hooks/useProfiles'
 import { useSectorRules } from '../hooks/useSectorRules'
 import { useHistory } from '../hooks/useHistory'
 import { buildChatContext } from '../lib/chatContext'
+import { chatEnabled } from '../lib/features'
 import { deleteBudget, renameBudget, setBaseAmount, setBillingDay } from '../lib/budgets'
 import { importEntries } from '../lib/importEntries'
 import { rememberSectors } from '../lib/sectors'
@@ -221,9 +222,11 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
               <button type="button" className="btn-text" onClick={() => setShowCapacity(true)}>
                 כמה פנוי לי
               </button>
-              <button type="button" className="btn-text" onClick={() => setAsking(true)}>
-                שאלה על התקציב
-              </button>
+              {chatEnabled && (
+                <button type="button" className="btn-text" onClick={() => setAsking(true)}>
+                  שאלה על התקציב
+                </button>
+              )}
               <button type="button" className="btn-text" onClick={() => setImporting(true)}>
                 ייבוא CSV
               </button>

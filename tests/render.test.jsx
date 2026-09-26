@@ -499,7 +499,6 @@ describe('דרכי כניסה למסכי התקציב', () => {
    */
   const ACTIONS = [
     'כמה פנוי לי',
-    'שאלה על התקציב',
     'חיובים קבועים',
     'הזמנת שותף',
     'סכום הבסיס',
@@ -999,5 +998,22 @@ describe('שיחה עם היועץ', () => {
     expect(container.textContent).toContain('כמה נשאר?')
     expect(container.textContent).toContain('התשובה')
     ask.mockRestore()
+  })
+})
+
+describe('היועץ מאחורי מתג', () => {
+  /**
+   * כל שאלה עולה כסף, ולכן היועץ אינו נדלק מעצמו. כפתור שנראה
+   * זמין ומחזיר שגיאה גרוע יותר מכפתור שאינו שם.
+   */
+  it('כבוי כברירת מחדל, ולכן אין כפתור', async () => {
+    const { chatEnabled } = await import('../src/lib/features')
+    expect(chatEnabled).toBe(false)
+
+    const { default: MonthView } = await import('../src/components/MonthView')
+    const { queryByText } = await renderWithContexts(
+      <MonthView budgetId="b1" budget={household} uid="u1" />,
+    )
+    expect(queryByText('שאלה על התקציב')).toBeNull()
   })
 })
