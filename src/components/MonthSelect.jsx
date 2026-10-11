@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MONTH_NAMES, monthLabel } from '../lib/format'
-import { monthKey, shiftMonth } from '../lib/model'
+import { monthKey } from '../lib/model'
 
 /**
  * בורר חודשים.

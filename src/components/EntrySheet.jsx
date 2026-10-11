@@ -5,7 +5,7 @@ import { monthLabel, shekels } from '../lib/format'
 import { MAX_GROUP_LENGTH, SUGGESTED_GROUPS, normalizeGroup } from '../lib/groups'
 import { merchantGroup } from '../lib/merchants'
 import { endAfterPayments } from '../lib/recurring'
-import { EXPENSE_PILLS, GOAL_PILLS, TRIP_PILLS } from '../lib/pills'
+import { ENTRY_PILLS, GOAL_PILLS, TRIP_PILLS } from '../lib/pills'
 import { CATEGORIES, calcBaseAmount, groupTarget, incomeOverage, todayDate } from '../lib/model'
 
 // התאריך של שורת מסגרת קובע לאיזה חודש היא נזקפת בתקציב הבית,
@@ -54,7 +54,6 @@ export default function EntrySheet({
   const goal = mode === 'goal'
   const frame = trip || goal
   // נקבע בפתיחה ולא משתנה, אחרת החלפת קטגוריה הייתה מחליפה את סוג הפעולה
-  const [incomeMode] = useState(() => !frame && initialCategory === 'income')
   const [category, setCategory] = useState(initialCategory)
   const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : '')
   const [name, setName] = useState('')
@@ -183,9 +182,11 @@ export default function EntrySheet({
             : isIncome ? 'הכנסה חדשה' : 'הוצאה חדשה'}
         </h2>
 
-        {!incomeMode && (
+        {/* ההכנסה היא אחד המקטעים ולא מסך נפרד. בלעדיה אי אפשר היה
+            להזין משכורת שנייה, כי הכפתור הראשי פותח הוצאה ברגע שיש
+            הכנסה אחת */}
         <div className="cat-pills">
-          {(goal ? GOAL_PILLS : trip ? TRIP_PILLS : EXPENSE_PILLS).map((pill) => (
+          {(goal ? GOAL_PILLS : trip ? TRIP_PILLS : ENTRY_PILLS).map((pill) => (
             <button
               key={pill.category}
               type="button"
@@ -198,7 +199,6 @@ export default function EntrySheet({
             </button>
           ))}
         </div>
-        )}
 
         <label className="amount-card">
           <span className="cap">
@@ -270,7 +270,7 @@ export default function EntrySheet({
             </>
           )}
 
-          {!frame && !isIncome && (
+          {!goal && !isIncome && (
             <div className="group-field">
               <div className="group-chips">
                 {chips.map((chip) => (

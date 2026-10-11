@@ -1017,3 +1017,54 @@ describe('היועץ מאחורי מתג', () => {
     expect(queryByText('שאלה על התקציב')).toBeNull()
   })
 })
+
+describe('הזנת הכנסה שנייה', () => {
+  /**
+   * אחרי הכנסה אחת, הכפתור הראשי פותח הוצאה והבקר לא הציע הכנסה
+   * בכלל. לא הייתה שום דרך להזין משכורת שנייה, וזו הייתה רגרסיה
+   * מהעיצוב מחדש: כפתור ההוספה שבתוך כרטיס ההכנסות הוסר.
+   */
+  it('הכנסה היא אחד המקטעים במגירה', async () => {
+    const { default: EntrySheet } = await import('../src/components/EntrySheet')
+    const { getByText } = render(
+      <EntrySheet category="fixed" month="2026-09" me="דניאל" onSubmit={() => {}} onClose={() => {}} />,
+    )
+    expect(getByText('הכנסות')).toBeTruthy()
+  })
+
+  it('ובחירה בה מזינה הכנסה', async () => {
+    const { default: EntrySheet } = await import('../src/components/EntrySheet')
+    const onSubmit = vi.fn(async () => {})
+    const { getByText, getByPlaceholderText } = render(
+      <EntrySheet category="fixed" month="2026-09" me="דניאל" onSubmit={onSubmit} onClose={() => {}} />,
+    )
+    fireEvent.click(getByText('הכנסות'))
+    fireEvent.change(getByPlaceholderText('₪0'), { target: { value: '8000' } })
+    fireEvent.click(getByText('שמירה'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ category: 'income', actualAmount: 8000 })
+  })
+})
+
+describe('מסך הטיול', () => {
+  const trip = { id: 't1', name: 'יוון', type: 'trip', frame: 8000, members: [{ uid: 'u1' }] }
+
+  it('כפתור ההוספה הוא עיגול עם פלוס, בלי טקסט שגולש', async () => {
+    const { default: TripView } = await import('../src/components/TripView')
+    const { container } = await renderWithContexts(
+      <TripView budgetId="t1" budget={trip} uid="u1" />,
+    )
+    const fab = container.querySelector('.fab')
+    expect(fab.getAttribute('aria-label')).toBe('הוספת הוצאה')
+    expect(fab.textContent.trim()).toBe('+')
+  })
+
+  it('הסכום של כל רובריקה מודגש ולא אפור', async () => {
+    const { default: TripView } = await import('../src/components/TripView')
+    const { container } = await renderWithContexts(
+      <TripView budgetId="t1" budget={trip} uid="u1" />,
+    )
+    // בלי strong הסכום יורש גודל 14 וצבע משני, ונראה כמו תווית
+    expect(container.querySelector('.cat-total strong')).toBeTruthy()
+  })
+})

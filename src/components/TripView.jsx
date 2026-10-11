@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import EntryRow from './EntryRow'
+import EntryItems from './EntryItems'
 import EntrySheet from './EntrySheet'
 import ConfirmDialog from './ConfirmDialog'
 import BackToBudgets from './BackToBudgets'
@@ -11,6 +11,7 @@ import FrameLink from './FrameLink'
 import { shekels } from '../lib/format'
 import { TRIP_CATEGORIES, TRIP_ORDER, summarizeTrip } from '../lib/model'
 import { TRIP_PILLS } from '../lib/pills'
+import { usedGroups } from '../lib/groups'
 import { memberIndex } from '../lib/members'
 import { useProfiles } from '../hooks/useProfiles'
 import { useFrameEntries, frameActions } from '../hooks/useFrameEntries'
@@ -26,7 +27,7 @@ function Skeleton() {
   )
 }
 
-function TripCategory({ category, entries, total, authorOf, actions, onAdd }) {
+function TripCategory({ category, entries, total, authorOf, actions }) {
   return (
     <section className="cat-card" data-category={category}>
       <div className="cat-head">
@@ -34,29 +35,21 @@ function TripCategory({ category, entries, total, authorOf, actions, onAdd }) {
           <span className="dot" />
           <h2>{TRIP_CATEGORIES[category].label}</h2>
         </span>
-        <span className="cat-total num">{shekels(total)}</span>
+        <span className="cat-total num"><strong>{shekels(total)}</strong></span>
       </div>
 
       {entries.length > 0 ? (
-        <ul className="entry-list">
-          {entries.map((entry) => (
-            <EntryRow
-              key={entry.id}
-              entry={entry}
-              author={authorOf?.(entry.addedBy)}
-              categories={TRIP_PILLS}
-              onUpdate={actions.update}
-              onRemove={actions.remove}
-            />
-          ))}
-        </ul>
+        /* אותו קיבוץ כמו בתקציב: שלוש ארוחות באותו מקום הן שורה
+           אחת שנפתחת, ולא שלוש שורות שמציפות את הכרטיס */
+        <EntryItems
+          entries={entries}
+          authorOf={authorOf}
+          actions={actions}
+          categories={TRIP_PILLS}
+        />
       ) : (
-        <p className="empty">אין עדיין שורות</p>
+        <p className="empty">אין עדיין רשומות</p>
       )}
-
-      <button type="button" className="btn-text" onClick={() => onAdd(category)}>
-        + הוספה
-      </button>
     </section>
   )
 }
@@ -70,6 +63,8 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
 
   const actions = useMemo(() => frameActions({ budgetId, uid }), [budgetId, uid])
   const summary = useMemo(() => summarizeTrip(entries, budget?.frame || 0), [entries, budget?.frame])
+  // הקיבוצים שכבר בשימוש בטיול, כצ'יפים מהירים במגירה
+  const groups = useMemo(() => usedGroups(entries), [entries])
   const memberList = budget?.members
   const memberUids = useMemo(
     () => (memberList || []).map((member) => member.uid),
@@ -169,7 +164,6 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
                 total={summary.totals[category]}
                 authorOf={shared ? members.get : null}
                 actions={actions}
-                onAdd={setSheet}
               />
             ))}
             <div className="budget-actions">
@@ -191,14 +185,20 @@ export default function TripView({ budgetId, budget, uid, onDeleted }) {
         )}
       </div>
 
-      <button type="button" className="fab" onClick={() => setSheet('lodging')}>
-        <span className="plus">+</span> הוצאה
+      <button
+        type="button"
+        className="fab"
+        aria-label="הוספת הוצאה"
+        onClick={() => setSheet('lodging')}
+      >
+        <span className="plus" aria-hidden="true">+</span>
       </button>
 
       {sheet && (
         <EntrySheet
           mode="trip"
           initialCategory={sheet}
+          groups={groups}
           summary={summary}
           me={members.get(uid)}
           onSubmit={actions.add}

@@ -21,9 +21,7 @@ import Sheet from './Sheet'
 import InvitePanel from './InvitePanel'
 import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
-import {
-  createTemplate, deleteTemplateEverywhere, endingSoon, skipMonth, stopTemplate, upcomingCharge,
-} from '../lib/recurring'
+import { createTemplate, endingSoon, skipMonth, upcomingCharge } from '../lib/recurring'
 import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth } from '../lib/model'
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
