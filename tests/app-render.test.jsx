@@ -63,7 +63,10 @@ vi.mock('virtual:pwa-register/react', () => ({
 afterEach(cleanup)
 
 describe('עץ האפליקציה עם משתמש מחובר', () => {
-  it('נטען בלי לזרוק, ומגיע למסך תקציבים', async () => {
+  // רינדור של כל עץ האפליקציה, ולכן איטי מכל בדיקה אחרת. ברירת
+  // המחדל של חמש שניות נגעה בגבול והבדיקה נפלה כשההרצה המקבילית
+  // העמיסה, בלי ששום דבר במוצר נשבר
+  it('נטען בלי לזרוק, ומגיע למסך תקציבים', { timeout: 20000 }, async () => {
     const { default: App } = await import('../src/App')
     const { container } = render(<App />)
     await waitFor(() => {
