@@ -95,7 +95,12 @@ export function nudgeFor({ member, budget, summary }) {
 
 async function main() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT
-  if (!raw) throw new Error('חסר FIREBASE_SERVICE_ACCOUNT')
+  // חוסר הגדרה אינו תקלה: הוא אומר שהתכונה לא הודלקה. יציאה נקייה
+  // במקום שגיאה, אחרת כל ריצה יומית שולחת מייל על משהו שאיש לא ביקש
+  if (!raw) {
+    console.log('FIREBASE_SERVICE_ACCOUNT לא מוגדר. התזכורות כבויות, ואין מה לשלוח.')
+    return
+  }
 
   // הריצה יומית, וכל תקציב נסגר במועד החיוב שלו, ולכן ההחלטה
   // אם לשלוח נעשית לכל תקציב בנפרד ולא פעם אחת לכולם
