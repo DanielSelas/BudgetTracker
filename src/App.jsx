@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { BudgetProvider, useBudget } from './context/BudgetContext'
 import Login from './components/Login'
@@ -107,16 +107,35 @@ function Home() {
 }
 
 function BudgetGate() {
-  const { loading, hasNoBudgets, budgetId, budgetIds, selectBudget } = useBudget()
+  const { loading, hasNoBudgets, budgetId, budgetIds, budgets, selectBudget } = useBudget()
   // שני הפרמטרים נקראים כאן ולא בכל רכיב בנפרד, כי הניקוי מוחק את
   // הכתובת כולה: קריאה מאוחרת של אחד מהם הייתה מגיעה אחרי שהשני ניקה
   const [nudge, setNudge] = useState(readNudge)
   const [capture, setCapture] = useState(readCapture)
   const target = nudge?.budgetId || capture?.budgetId
 
+  /**
+   * איפה קליטה מהקיצור נוחתת כשלא נאמר תקציב.
+   *
+   * חייב להיות תקציב משק בית, כי רק לו יש מסך חודש ורק שם מוצגת
+   * התיבה. בלי הבחירה הזו הקליטה נבלעה בשקט בכל מצב שאינו מסך החודש:
+   * דפדפן חדש שנפתח על רשימת התקציבים, או תקציב טיול שהיה האחרון
+   * שנפתח. הדפדפן נפתח, שום דבר לא קרה, ואין מה לראות.
+   */
+  const landing = useMemo(() => {
+    if (!capture) return null
+    const households = budgets.filter((item) => budgetType(item) === 'household')
+    // התקציב שכבר פתוח מנצח, כדי שקליטה לא תקפיץ אותך לתקציב אחר
+    return households.some((item) => item.id === budgetId)
+      ? budgetId
+      : households[0]?.id || null
+  }, [capture, budgets, budgetId])
+
   // קישור מהתראה או מקיצור פותח את התקציב הנכון, ומיד מנוקה מהכתובת
   useEffect(() => {
     if (!budgetIds || (!nudge && !capture)) return
+    clearDeepLink()
+
     if (target) {
       if (budgetIds.includes(target)) selectBudget(target)
       else {
@@ -125,14 +144,11 @@ function BudgetGate() {
         setNudge(null)
         setCapture(null)
       }
-    } else if (capture && budgetIds.length === 1) {
-      // קליטה בלי תקציב מפורש צריכה בכל זאת לנחות איפשהו. עם תקציב
-      // אחד אין ספק מי זה, ובלי הבחירה הזו הוצאה שנקלטה הייתה
-      // נעלמת בשקט במסך רשימת התקציבים
-      selectBudget(budgetIds[0])
+      return
     }
-    clearDeepLink()
-  }, [nudge, capture, target, budgetIds, selectBudget])
+
+    if (landing && landing !== budgetId) selectBudget(landing)
+  }, [nudge, capture, target, landing, budgetId, budgetIds, selectBudget])
 
   if (loading) return <Loading label="טוען תקציבים" />
   if (hasNoBudgets) return <Onboarding />
