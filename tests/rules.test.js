@@ -1087,3 +1087,79 @@ describe('שורה מיובאת', () => {
     )
   })
 })
+
+describe('הוצאה ממתינה בתיבה', () => {
+  const capture = (overrides = {}) => ({
+    name: 'סופר',
+    amount: 50,
+    date: '2026-11-11',
+    source: 'shortcut',
+    createdBy: OWNER,
+    ...overrides,
+  })
+
+  const at = (uid, itemId) => doc(as(uid), 'budgets', BUDGET, 'inbox', itemId)
+
+  it('חבר קולט וקורא; זר לא נוגע', async () => {
+    await assertSucceeds(setDoc(at(OWNER, 'cap_1'), capture()))
+    await assertSucceeds(getDoc(at(OWNER, 'cap_1')))
+    await assertFails(getDoc(at(STRANGER, 'cap_1')))
+    await assertFails(setDoc(at(STRANGER, 'cap_2'), capture({ createdBy: STRANGER })))
+  })
+
+  it('סכום חייב להיות חיובי', async () => {
+    await assertFails(setDoc(at(OWNER, 'cap_3'), capture({ amount: 0 })))
+    await assertFails(setDoc(at(OWNER, 'cap_4'), capture({ amount: -5 })))
+    await assertFails(setDoc(at(OWNER, 'cap_5'), capture({ amount: '50' })))
+  })
+
+  it('תאריך בפורמט מלא בלבד', async () => {
+    await assertFails(setDoc(at(OWNER, 'cap_6'), capture({ date: '2026-11' })))
+  })
+
+  it('הניחוש הוא הוצאה ולא הכנסה', async () => {
+    await assertSucceeds(
+      setDoc(at(OWNER, 'cap_7'), capture({ suggestedCategory: 'leisure' })),
+    )
+    await assertFails(
+      setDoc(at(OWNER, 'cap_8'), capture({ suggestedCategory: 'income' })),
+    )
+  })
+
+  it('אי אפשר לייחס קליטה למישהו אחר', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(
+        doc(context.firestore(), 'budgets', BUDGET, 'members', PARTNER),
+        { uid: PARTNER, role: 'member' },
+      )
+    })
+    await assertFails(setDoc(at(OWNER, 'cap_9'), capture({ createdBy: PARTNER })))
+  })
+
+  it('אישור הוא כתיבה אחת: הרשומה נכתבת והשורה הממתינה נמחקת', async () => {
+    await assertSucceeds(setDoc(at(OWNER, 'cap_10'), capture()))
+    const db = as(OWNER)
+    const batch = writeBatch(db)
+    batch.set(doc(db, 'budgets', BUDGET, 'entries', 'from_cap_10'), entry({
+      category: 'leisure',
+      budgetGroup: 'leisure',
+      name: 'סופר',
+      month: '2026-11',
+      date: '2026-11-11',
+      plannedAmount: 0,
+      actualAmount: 50,
+    }))
+    batch.delete(doc(db, 'budgets', BUDGET, 'inbox', 'cap_10'))
+    await assertSucceeds(batch.commit())
+  })
+
+  it('שותף מאשר או מתעלם ממה שנקלט בטלפון השני', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await setDoc(doc(db, 'budgets', BUDGET, 'members', PARTNER), { uid: PARTNER, role: 'member' })
+      await setDoc(doc(db, 'budgets', BUDGET, 'inbox', 'cap_11'), capture())
+    })
+    await assertSucceeds(getDoc(at(PARTNER, 'cap_11')))
+    await assertSucceeds(deleteDoc(at(PARTNER, 'cap_11')))
+  })
+})

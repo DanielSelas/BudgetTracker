@@ -11,6 +11,7 @@ import Commitments from '../components/Commitments'
 import ImportSheet from '../components/ImportSheet'
 import BottomNav from '../components/BottomNav'
 import CategoryCard from '../components/CategoryCard'
+import InboxCard from '../components/InboxCard'
 import UnplannedCard from '../components/UnplannedCard'
 import SummaryCard from '../components/SummaryCard'
 import MonthPicker from '../components/MonthPicker'
@@ -358,6 +359,29 @@ const SCREENS = {
       <Month />
       <ImportSheet onImport={async () => ({ written: 0 })} onClose={noop} />
     </>
+  ),
+  // שורה מסווגת ושורה שאינה, כי אלה שני המצבים: אישור בלחיצה אחת,
+  // ובחירה שגם מלמדת להבא
+  inbox: (
+    <main className="app">
+      <div className="sticky-head">
+        <BackToBudgets onClick={noop} />
+        <MonthPicker month="2026-09" onChange={noop} subtitle="משק הבית · משותף" billingDay={10} />
+      </div>
+      <div className="app-scroll">
+        <InboxCard
+          items={[
+            { id: 'c1', name: 'שופרסל דיל', amount: 212, date: '2026-09-14',
+              suggestedCategory: 'fixed', groupKey: 'סופר' },
+            { id: 'c2', name: 'ביסטרו 51', amount: 164, date: '2026-09-15' },
+          ]}
+          onApprove={async () => {}}
+          onDismiss={noop}
+        />
+        <SummaryCard summary={summary} />
+      </div>
+      <BottomNav active="month" onChange={noop} />
+    </main>
   ),
   profile: (
     <AuthContext.Provider

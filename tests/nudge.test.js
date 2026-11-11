@@ -88,6 +88,41 @@ describe('קריאת הקישור מההתראה', () => {
   })
 })
 
+describe('קריאת הקישור מהקיצור', () => {
+  async function readFrom(search) {
+    vi.resetModules()
+    const original = window.location
+    delete window.location
+    window.location = { search, pathname: '/' }
+    const { readCapture } = await import('../src/lib/deepLink.js')
+    const result = readCapture()
+    window.location = original
+    return result
+  }
+
+  it('קורא טקסט חופשי', async () => {
+    expect(await readFrom('?add=50%20%D7%A1%D7%95%D7%A4%D7%A8')).toMatchObject({
+      text: '50 סופר', budgetId: null,
+    })
+  })
+
+  it('קורא גם סכום ושם מופרדים', async () => {
+    expect(await readFrom('?name=%D7%93%D7%9C%D7%A7&amount=120')).toMatchObject({
+      name: 'דלק', amount: 120,
+    })
+  })
+
+  it('מתעלם מכתובת בלי פרמטר, וגם מהקישור של ההתראה', async () => {
+    expect(await readFrom('')).toBeNull()
+    expect(await readFrom('?nudge=fund&budget=b1&amount=1240')).toBeNull()
+  })
+
+  it('תאריך שבור נזרק, אחרת הכללים היו דוחים את הכתיבה', async () => {
+    expect((await readFrom('?add=50&date=11/11/2026')).date).toBe('')
+    expect((await readFrom('?add=50&date=2026-11-11')).date).toBe('2026-11-11')
+  })
+})
+
 describe('הודעה על חריגה', () => {
   const member = { displayName: 'דניאל' }
   const budget = { id: 'b1', name: 'משק הבית' }

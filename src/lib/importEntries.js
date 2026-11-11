@@ -14,7 +14,7 @@ import { MAX_GROUP_LENGTH, normalizeGroup } from './groups'
 
 const BATCH_LIMIT = 500
 
-function stableTail(seed) {
+export function stableTail(seed) {
   let hash = 0x811c9dc5
   for (let index = 0; index < seed.length; index += 1) {
     hash ^= seed.charCodeAt(index)

@@ -2606,3 +2606,75 @@ input[type='file'] {
   padding: 14px;
   font-size: 14px;
 }
+
+/* ========== הוצאות ממתינות ========== */
+
+/* הכרטיס הראשון במסך, והיחיד שדורש פעולה. לכן גבול כתום ולא רק
+   צל: צל מסמן עוד כרטיס, וזה לא עוד כרטיס */
+.inbox-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px var(--card-pad);
+  border-radius: var(--radius-card-2);
+  border: 1px solid var(--color-accent);
+  background: var(--color-neutral-100);
+}
+
+.inbox-card h2 { margin: 0; font-size: 16px; font-weight: 700; }
+
+.inbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.inbox-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-neutral-300);
+}
+
+.inbox-row:first-child { padding-top: 0; border-top: none; }
+
+.inbox-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.inbox-head .entry-name { flex: 1; min-width: 0; }
+
+.inbox-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.inbox-actions .btn-primary { flex: 1; }
+
+/* פעולה בתוך שורה ולא בתחתית מגירה, ולכן נמוכה מהגובה המלא */
+.btn-primary.slim {
+  min-height: 42px;
+  padding: 0 16px;
+  font-size: 15px;
+}
+
+/* שורה בלי קטגוריה אינה שגיאה אלא בחירה שעוד לא נעשתה, ולכן הכפתור
+   נסוג למסגרת: כפתור כהה ומעומעם קרא כמו פעולה שנכשלה */
+.inbox-actions .btn-primary:disabled {
+  background: transparent;
+  border: 1px dashed var(--color-neutral-400);
+  color: var(--color-neutral-700);
+  opacity: 1;
+}
+
+.inbox-when {
+  font-size: 13px;
+  color: var(--color-neutral-600);
+}

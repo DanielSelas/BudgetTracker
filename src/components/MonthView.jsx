@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import CategoryCard from './CategoryCard'
+import InboxCard from './InboxCard'
 import SummaryCard from './SummaryCard'
 import MonthVerdict from './MonthVerdict'
 import EndingSoon from './EndingSoon'
@@ -22,17 +23,20 @@ import InvitePanel from './InvitePanel'
 import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
 import { createTemplate, endingSoon, skipMonth, upcomingCharge } from '../lib/recurring'
-import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth } from '../lib/model'
+import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth, todayDate } from '../lib/model'
 import { usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
 import { useProfiles } from '../hooks/useProfiles'
 import { useSectorRules } from '../hooks/useSectorRules'
+import { useInbox } from '../hooks/useInbox'
 import { useHistory } from '../hooks/useHistory'
 import { buildChatContext } from '../lib/chatContext'
 import { chatEnabled } from '../lib/features'
 import { deleteBudget, renameBudget, setBaseAmount, setBillingDay } from '../lib/budgets'
 import { importEntries } from '../lib/importEntries'
 import { rememberSectors } from '../lib/sectors'
+import { addCapture, approveCapture, dismissCapture } from '../lib/inbox'
+import { parseCapture, suggestForCapture } from '../lib/capture'
 
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
 
@@ -46,7 +50,7 @@ function Skeleton() {
   )
 }
 
-export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDeleted }) {
+export default function MonthView({ budgetId, budget, uid, nudge, capture, onBack, onDeleted }) {
   const billingDay = budget?.billingDay
   // נפתח על המחזור שרץ עכשיו, שאינו בהכרח החודש שבלוח
   const [month, setMonth] = useState(() => activeMonth(billingDay))
@@ -63,6 +67,34 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
   const [showCommitments, setShowCommitments] = useState(false)
   const [importing, setImporting] = useState(false)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
+  const inbox = useInbox(budgetId)
+  const [captureFailed, setCaptureFailed] = useState('')
+
+  // קליטה מהקיצור: נכתבת פעם אחת, ואחרי שהרשומות נטענו כדי שהניחוש
+  // יישען על מה שכבר סווג. הדגל הוא ref ולא state, כי הוא אינו
+  // משפיע על התצוגה ושינוי שלו לא אמור לרנדר מחדש
+  const consumed = useRef(false)
+  useEffect(() => {
+    if (!capture || consumed.current || loading) return
+    consumed.current = true
+
+    const parsed = capture.text ? parseCapture(capture.text) : { amount: 0, name: '' }
+    const amount = capture.amount || parsed.amount
+    const name = capture.name || parsed.name
+    if (!amount) {
+      setCaptureFailed(capture.text || capture.name || '')
+      return
+    }
+
+    addCapture({
+      budgetId,
+      uid,
+      name,
+      amount,
+      date: capture.date || todayDate(),
+      suggestion: suggestForCapture(name, entries),
+    }).catch(() => setCaptureFailed(capture.text || name))
+  }, [capture, loading, entries, budgetId, uid])
 
   const base = useMemo(() => entryActions({ budgetId, month, uid }), [budgetId, month, uid])
   const { templates, error: recurringError } = useRecurring({
@@ -157,6 +189,20 @@ export default function MonthView({ budgetId, budget, uid, nudge, onBack, onDele
             {failure.what} נכשל: <code>{failure.error.code || 'unknown'}</code>
           </p>
         )}
+
+        {captureFailed && (
+          <p className="notice block" role="alert">
+            לא הצלחתי לקרוא סכום מתוך "{captureFailed}". אמרו את הסכום
+            במספר, למשל "50 סופר".
+          </p>
+        )}
+
+        {/* לפני הסיכום, כי זה הדבר היחיד במסך שמחכה לפעולה */}
+        <InboxCard
+          items={inbox}
+          onApprove={(item, category) => approveCapture({ budgetId, uid, item, category })}
+          onDismiss={(item) => dismissCapture(budgetId, item.id)}
+        />
 
         {loading ? <Skeleton /> : (
           <>

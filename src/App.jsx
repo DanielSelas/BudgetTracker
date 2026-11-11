@@ -15,7 +15,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Maintenance from './components/Maintenance'
 import Welcome, { seenIntro } from './components/Welcome'
 import { isFirebaseConfigured, missingFirebaseKeys } from './lib/firebase'
-import { clearNudge, readNudge } from './lib/deepLink'
+import { clearDeepLink, readCapture, readNudge } from './lib/deepLink'
 import { useOwnProfile } from './hooks/useOwnProfile'
 import { budgetType, isGoal, isTrip } from './lib/model'
 import './App.css'
@@ -61,7 +61,7 @@ function Onboarding() {
   )
 }
 
-function Workspace({ nudge }) {
+function Workspace({ nudge, capture }) {
   const { user } = useAuth()
   const { budget, budgetId, goHome } = useBudget()
   const [tab, setTab] = useState('month')
@@ -83,7 +83,7 @@ function Workspace({ nudge }) {
         : trip
         ? <TripView budgetId={budgetId} budget={budget} uid={user.uid} onDeleted={goHome} />
         : tab === 'month'
-          ? <MonthView budgetId={budgetId} budget={budget} uid={user.uid} nudge={nudge} onBack={goHome} onDeleted={goHome} />
+          ? <MonthView budgetId={budgetId} budget={budget} uid={user.uid} nudge={nudge} capture={capture} onBack={goHome} onDeleted={goHome} />
           : <HistoryView budgetId={budgetId} fixedBase={budget?.baseAmount} />}
       <BottomNav active={tab} onChange={handleNav} type={budgetType(budget)} />
       {intro && <Welcome kind={kind} onClose={() => setIntro(false)} />}
@@ -108,20 +108,36 @@ function Home() {
 
 function BudgetGate() {
   const { loading, hasNoBudgets, budgetId, budgetIds, selectBudget } = useBudget()
+  // שני הפרמטרים נקראים כאן ולא בכל רכיב בנפרד, כי הניקוי מוחק את
+  // הכתובת כולה: קריאה מאוחרת של אחד מהם הייתה מגיעה אחרי שהשני ניקה
   const [nudge, setNudge] = useState(readNudge)
+  const [capture, setCapture] = useState(readCapture)
+  const target = nudge?.budgetId || capture?.budgetId
 
-  // קישור מהתראה פותח את התקציב הנכון, ומיד מנוקה מהכתובת
+  // קישור מהתראה או מקיצור פותח את התקציב הנכון, ומיד מנוקה מהכתובת
   useEffect(() => {
-    if (!nudge?.budgetId || !budgetIds) return
-    if (budgetIds.includes(nudge.budgetId)) selectBudget(nudge.budgetId)
-    else setNudge(null)
-    clearNudge()
-  }, [nudge, budgetIds, selectBudget])
+    if (!budgetIds || (!nudge && !capture)) return
+    if (target) {
+      if (budgetIds.includes(target)) selectBudget(target)
+      else {
+        // תקציב שאינו שלנו: אין לאן לכתוב, ולכן הקישור נזרק במקום
+        // להיקלט לתקציב שסתם היה פתוח
+        setNudge(null)
+        setCapture(null)
+      }
+    } else if (capture && budgetIds.length === 1) {
+      // קליטה בלי תקציב מפורש צריכה בכל זאת לנחות איפשהו. עם תקציב
+      // אחד אין ספק מי זה, ובלי הבחירה הזו הוצאה שנקלטה הייתה
+      // נעלמת בשקט במסך רשימת התקציבים
+      selectBudget(budgetIds[0])
+    }
+    clearDeepLink()
+  }, [nudge, capture, target, budgetIds, selectBudget])
 
   if (loading) return <Loading label="טוען תקציבים" />
   if (hasNoBudgets) return <Onboarding />
   if (!budgetId) return <Home />
-  return <Workspace nudge={nudge} />
+  return <Workspace nudge={nudge} capture={capture} />
 }
 
 function AuthGate() {
