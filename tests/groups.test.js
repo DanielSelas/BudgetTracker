@@ -122,22 +122,29 @@ describe('קבוצות לצירוף', () => {
  */
 describe('קבוצות שנשמרות מחודש לחודש', () => {
   it('שם חדש נוסף לסוף הרשימה', () => {
-    expect(withRemembered(['דלק'], 'סופר')).toEqual(['דלק', 'סופר'])
+    expect(withRemembered(['דלק'], ['סופר'])).toEqual(['דלק', 'סופר'])
   })
 
-  it('שם שכבר שם אינו כתיבה', () => {
-    expect(withRemembered(['סופר', 'דלק'], 'סופר')).toBeNull()
-    expect(withRemembered(['סופר'], '  סופר  ')).toBeNull()
+  // חודש שלם נקרא בבת אחת, ולכן כמה שמות בכתיבה אחת
+  it('כמה שמות נכנסים יחד, בלי כפילות ביניהם', () => {
+    expect(withRemembered(['דלק'], ['סופר', 'דלק', 'סופר', 'חניה']))
+      .toEqual(['דלק', 'סופר', 'חניה'])
   })
 
-  it('שם ריק אינו שם', () => {
-    expect(withRemembered(['סופר'], '')).toBeNull()
-    expect(withRemembered(['סופר'], undefined)).toBeNull()
+  /**
+   * null הוא מה שעוצר את הלולאה: הכתיבה משנה את מסמך התקציב, המסמך
+   * מפעיל מחדש את מי שקרא לכאן, ובפעם השנייה אין מה להוסיף
+   */
+  it('כשאין מה להוסיף אין כתיבה', () => {
+    expect(withRemembered(['סופר', 'דלק'], ['סופר'])).toBeNull()
+    expect(withRemembered(['סופר'], ['  סופר  '])).toBeNull()
+    expect(withRemembered(['סופר'], [])).toBeNull()
+    expect(withRemembered(['סופר'], ['', undefined])).toBeNull()
   })
 
   it('כשהרשימה מתמלאת הוותיק יוצא', () => {
     const full = Array.from({ length: MAX_REMEMBERED_GROUPS }, (_, index) => `ק${index}`)
-    const next = withRemembered(full, 'חדש')
+    const next = withRemembered(full, ['חדש'])
     expect(next).toHaveLength(MAX_REMEMBERED_GROUPS)
     expect(next[0]).toBe('ק1')
     expect(next.at(-1)).toBe('חדש')

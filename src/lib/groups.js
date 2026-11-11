@@ -65,15 +65,25 @@ export function groupEntries(entries = []) {
 /**
  * הרשימה המעודכנת של שמות שנשמרים, או null כשאין מה לשנות.
  *
- * null ולא הרשימה עצמה, כדי שהקורא ידע לדלג על הכתיבה. השם החדש
- * כבר שם בדרך כלל, ולכתוב את אותו מסמך בכל הוספה זה סיבוב רשת על
- * לא כלום.
+ * null ולא הרשימה עצמה, כדי שהקורא ידע לדלג על הכתיבה. בדרך כלל אין
+ * מה להוסיף, ולכתוב את אותו מסמך בכל פתיחת חודש זה סיבוב רשת על לא
+ * כלום. ובלי ה-null גם הייתה לולאה: הכתיבה משנה את המסמך, והמסמך
+ * מפעיל מחדש את מי שקרא לכאן.
+ *
+ * מקבל רשימה ולא שם בודד, כי חודש שלם נקרא בבת אחת.
  */
-export function withRemembered(names = [], key) {
-  const clean = normalizeGroup(key)
-  if (!clean || names.includes(clean)) return null
-  // החדש נכנס בסוף, והוותיק יוצא בראש
-  return [...names, clean].slice(-MAX_REMEMBERED_GROUPS)
+export function withRemembered(names = [], keys = []) {
+  const list = Array.isArray(keys) ? keys : [keys]
+  const added = []
+  for (const key of list) {
+    const clean = normalizeGroup(key)
+    if (!clean) continue
+    if (names.includes(clean) || added.includes(clean)) continue
+    added.push(clean)
+  }
+  if (added.length === 0) return null
+  // החדשים נכנסים בסוף, והוותיקים יוצאים בראש
+  return [...names, ...added].slice(-MAX_REMEMBERED_GROUPS)
 }
 
 /**

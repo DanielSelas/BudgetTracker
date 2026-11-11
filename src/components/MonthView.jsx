@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import CategoryCard from './CategoryCard'
 import InboxCard from './InboxCard'
 import CaptureSetup from './CaptureSetup'
@@ -123,20 +123,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
   // מערך חדש בכל רינדור, אחרת כל מי שתלוי בזה היה מחושב מחדש תמיד
   const remembered = budget?.groupNames || NO_GROUPS
 
-  /**
-   * שם קבוצה שנעשה בו שימוש נשמר על התקציב, כדי שיהיה שם גם בחודש
-   * הבא. הכתיבה אחרי ההוספה ובלי להמתין לה: היא נוחות להמשך ולא
-   * חלק מהשורה, וכשל בה לא אמור להפיל הזנה שהצליחה.
-   */
-  const remember = useCallback((groupKey) => {
-    const next = withRemembered(remembered, groupKey)
-    if (next) rememberGroupNames(budgetId, next).catch(() => {})
-  }, [budgetId, remembered])
-
   const actions = useMemo(() => ({
     ...base,
     add: async ({ recurring, ...values }) => {
-      remember(values.groupKey)
       if (!recurring) return base.add(values)
       // התבנית היא המקור; השורה של החודש הזה נגזרת ממנה אוטומטית
       return createTemplate({ budgetId, uid, month, ...values })
@@ -147,7 +136,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
       if (entry?.recurringId) await skipMonth(budgetId, entry.recurringId, month)
       return base.remove(entryId)
     },
-  }), [base, budgetId, month, uid, remember])
+  }), [base, budgetId, month, uid])
 
   const fixedBase = budget?.baseAmount
   const summary = useMemo(() => {
@@ -157,6 +146,26 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
   // הקבוצות שכבר בשימוש החודש ומה שנשמר מחודשים שעברו, כדי שהוספה
   // חוזרת תהיה בחירה ולא הקלדה גם ב-1 בחודש
   const groups = useMemo(() => usedGroups(entries, remembered), [entries, remembered])
+  const monthGroups = useMemo(() => usedGroups(entries), [entries])
+
+  /**
+   * כל קבוצה שרואים בחודש נשמרת על התקציב.
+   *
+   * כאן ולא בהוספה עצמה, כי זו התשובה גם לקבוצות שכבר קיימות: מי
+   * שפתח "סופר" לפני חודשיים לא צריך לפתוח אותו מחדש כדי שייזכר.
+   * פתיחת החודש היא הרגע שבו האפליקציה רואה אותן, וזה הרגע לזכור.
+   *
+   * null מ-withRemembered הוא מה שעוצר את הלולאה: הכתיבה משנה את
+   * מסמך התקציב, המסמך מפעיל את ההשפעה מחדש, ובפעם השנייה אין מה
+   * להוסיף. בלי המתנה לכתיבה, כי היא נוחות ולא חלק מהמסך
+   */
+  useEffect(() => {
+    // בלי מסמך התקציב הרשימה הנוכחית נראית ריקה, וכתיבה כאן הייתה
+    // מוחקת שמות שכבר נשמרו במקום להוסיף להם
+    if (loading || !budget) return
+    const next = withRemembered(remembered, monthGroups)
+    if (next) rememberGroupNames(budgetId, next).catch(() => {})
+  }, [loading, budget, monthGroups, remembered, budgetId])
   // לתיבה צריך גם את הסכום והקטגוריה של כל קבוצה, כדי שיהיה ברור
   // למה מצרפים ולא רק לאיזה שם
   const attachable = useMemo(() => groupOptions(entries, remembered), [entries, remembered])
@@ -228,10 +237,8 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
         <InboxCard
           items={inbox}
           groups={attachable}
-          onApprove={(item, category, groupKey) => {
-            remember(groupKey)
-            return approveCapture({ budgetId, uid, item, category, groupKey })
-          }}
+          onApprove={(item, category, groupKey) =>
+            approveCapture({ budgetId, uid, item, category, groupKey })}
           onDismiss={(item) => dismissCapture(budgetId, item.id)}
         />
 
