@@ -52,11 +52,22 @@ export default async function handler(request, response) {
     return response.status(405).json({ error: 'method-not-allowed' })
   }
 
-  // גם משורת השאילתה וגם מגוף הבקשה: קיצור ב-iOS שולח בשאילתה בשתי
-  // נגיעות, וגוף JSON דורש לבנות מילון. התוצאה זהה
+  /**
+   * הטקסט מגיע מגוף הבקשה, לא משורת השאילתה.
+   *
+   * בשאילתה הוא נחתך: רווח בתוך כתובת שאינה מקודדת מסיים את הכתובת
+   * מבחינת HTTP, וכל מה שאחריו נזרק. "שופרסל 120" הגיע כ"שופרסל",
+   * כלומר הסכום נעלם ודווקא הוא מה שאי אפשר לשחזר.
+   *
+   * השאילתה עדיין נקראת, בשביל האסימון ובשביל קיצור ישן שעוד מחזיק
+   * את הצורה הקודמת. הגוף גובר עליה, כי הוא השלם מביניהם.
+   */
   const query = request.query || {}
-  const body = typeof request.body === 'object' && request.body ? request.body : {}
-  const pick = (key) => String(query[key] ?? body[key] ?? '').slice(0, MAX_TEXT)
+  const raw = request.body
+  const body = typeof raw === 'object' && raw ? raw : {}
+  const pick = (key) => String(body[key] ?? query[key] ?? '').slice(0, MAX_TEXT)
+  // גוף טקסט חופשי, למי שלא בנה מילון JSON
+  const plain = typeof raw === 'string' ? raw.slice(0, MAX_TEXT) : ''
 
   const token = pick('token')
   if (!token || token.length !== 32) {
@@ -78,7 +89,7 @@ export default async function handler(request, response) {
   const owner = budget.get('ownerUid')
   if (!owner) return response.status(401).json({ error: 'unauthorized' })
 
-  const text = pick('add') || pick('text')
+  const text = pick('add') || pick('text') || plain
   const parsed = text ? parseCapture(text) : { amount: 0, name: '' }
   const amount = Number(pick('amount')) || parsed.amount
   const name = (pick('name') || parsed.name).trim().slice(0, 100) || 'הוצאה'

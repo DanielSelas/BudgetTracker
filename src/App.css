@@ -2692,3 +2692,22 @@ input[type='file'] {
   overflow-wrap: anywhere;
   user-select: all;
 }
+
+.steps {
+  margin: 0;
+  padding-inline-start: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-neutral-700);
+  line-height: 1.5;
+}
+
+.steps code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--color-neutral-200);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}

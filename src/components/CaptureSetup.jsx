@@ -17,9 +17,9 @@ export default function CaptureSetup({ budgetId, token, onClose }) {
   const [failed, setFailed] = useState(false)
   const [rotating, setRotating] = useState(false)
 
-  const url = token
-    ? `${window.location.origin}/api/capture?token=${token}&add=`
-    : ''
+  // האסימון בלבד בכתובת, והטקסט בגוף הבקשה. רווח בכתובת שאינה
+  // מקודדת חותך את כל מה שאחריו, וכך הסכום נעלם בדרך
+  const url = token ? `${window.location.origin}/api/capture?token=${token}` : ''
 
   async function create() {
     setBusy(true)
@@ -74,11 +74,19 @@ export default function CaptureSetup({ budgetId, token, onClose }) {
             {copied ? 'הועתק' : 'העתקת הכתובת'}
           </button>
 
+          <ol className="steps">
+            <li><strong>Ask for Input</strong>, סוג Text</li>
+            <li><strong>Get Contents of URL</strong> עם הכתובת הזו</li>
+            <li><strong>Method</strong>: POST</li>
+            <li>
+              <strong>Request Body</strong>: JSON ← Add new field ← Text,
+              מפתח <code>add</code>, וכערך גוררים את Provided Input
+            </li>
+          </ol>
+
           <p className="hint">
-            בקיצור: <strong>Ask for Input</strong> מסוג Text, ואז
-            {' '}<strong>Get Contents of URL</strong> עם הכתובת הזו,
-            {' '}<strong>Method: POST</strong>, וגוררים את Provided Input
-            לסוף הכתובת. בלי Open URLs, וזה בדיוק מה שמשאיר את הדפדפן סגור.
+            הטקסט נכנס לגוף הבקשה ולא לכתובת, כי רווח בתוך כתובת חותך
+            את כל מה שאחריו. בלי Open URLs, וזה מה שמשאיר את הדפדפן סגור.
           </p>
 
           {!rotating ? (
