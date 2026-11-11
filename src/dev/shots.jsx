@@ -382,6 +382,10 @@ const SCREENS = {
               suggestedCategory: 'fixed', groupKey: 'סופר' },
             { id: 'c2', name: 'ביסטרו 51', amount: 164, date: '2026-09-15' },
           ]}
+          groups={[
+            { key: 'סופר', total: 1278, category: 'fixed' },
+            { key: 'דלק', total: 420, category: 'fixed' },
+          ]}
           onApprove={async () => {}}
           onDismiss={noop}
         />

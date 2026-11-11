@@ -59,3 +59,36 @@ export function usedGroups(entries = []) {
   }
   return seen
 }
+
+/**
+ * הקבוצות שכבר בשימוש, עם הקטגוריה והסכום של כל אחת.
+ *
+ * זה מה שצריך כדי לשייך הוצאה שנקלטה לחיוב קיים: לא רק השם, אלא גם
+ * כמה כבר יש שם וללאן זה נספר. "סופר, 1,240 ש״ח, קבועות" אומר למה
+ * מצרפים, ושם לבדו לא.
+ *
+ * ממוין לפי סכום ולא לפי אלפבית, כי מה שגדול הוא גם מה שמצרפים
+ * אליו: החיוב שחוזר שבוע אחרי שבוע הוא הראשון ברשימה.
+ */
+export function groupOptions(entries = []) {
+  const byKey = new Map()
+
+  for (const entry of entries) {
+    const key = normalizeGroup(entry.groupKey)
+    if (!key) continue
+    const current = byKey.get(key) || { key, total: 0, counts: new Map() }
+    current.total += entry.actualAmount || 0
+    current.counts.set(entry.category, (current.counts.get(entry.category) || 0) + 1)
+    byKey.set(key, current)
+  }
+
+  return [...byKey.values()]
+    .map(({ key, total, counts }) => ({
+      key,
+      total,
+      // הקטגוריה הנפוצה בקבוצה. קבוצה מעורבת היא נדירה, ואז הרוב
+      // הוא הניחוש הסביר ביותר
+      category: [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0],
+    }))
+    .sort((a, b) => b.total - a.total)
+}

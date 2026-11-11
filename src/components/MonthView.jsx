@@ -25,7 +25,7 @@ import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
 import { createTemplate, endingSoon, skipMonth, upcomingCharge } from '../lib/recurring'
 import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth, todayDate } from '../lib/model'
-import { usedGroups } from '../lib/groups'
+import { groupOptions, usedGroups } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
 import { useProfiles } from '../hooks/useProfiles'
 import { useSectorRules } from '../hooks/useSectorRules'
@@ -135,6 +135,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
   }, [entries, fixedBase, templates])
   // הקבוצות שכבר בשימוש החודש, כדי שהוספה חוזרת תהיה בחירה ולא הקלדה
   const groups = useMemo(() => usedGroups(entries), [entries])
+  // לתיבה צריך גם את הסכום והקטגוריה של כל קבוצה, כדי שיהיה ברור
+  // למה מצרפים ולא רק לאיזה שם
+  const attachable = useMemo(() => groupOptions(entries), [entries])
   const openSheet = (category, group = '', amount = 0, fromRemainder = false, recurring = false) => {
     setPrefill(amount)
     setSheet({ category, group, fromRemainder, recurring })
@@ -202,7 +205,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
         {/* לפני הסיכום, כי זה הדבר היחיד במסך שמחכה לפעולה */}
         <InboxCard
           items={inbox}
-          onApprove={(item, category) => approveCapture({ budgetId, uid, item, category })}
+          groups={attachable}
+          onApprove={(item, category, groupKey) =>
+            approveCapture({ budgetId, uid, item, category, groupKey })}
           onDismiss={(item) => dismissCapture(budgetId, item.id)}
         />
 

@@ -102,9 +102,11 @@ export function watchInbox(budgetId, onItems, onError) {
  * החודש נגזר מתאריך ההוצאה ולא מהחודש שפתוח על המסך: אישור ב-2
  * בחודש של קנייה מה-30 שייך לחודש שבו היא קרתה.
  */
-export function approveCapture({ budgetId, uid, item, category, groupKey = '' }) {
+export function approveCapture({ budgetId, uid, item, category, groupKey }) {
   const month = monthOfDate(item.date)
-  const group = normalizeGroup(groupKey || item.groupKey || '')
+  // מחרוזת ריקה אינה "לא נאמר" אלא "בפני עצמה". רק היעדר ערך נופל
+  // חזרה לקבוצה שנוחשה, אחרת ניתוק מקבוצה היה מתעלם מעצמו
+  const group = normalizeGroup(groupKey === undefined ? (item.groupKey || '') : groupKey)
   const batch = writeBatch(db)
 
   batch.set(entryRef(budgetId, entryId({ month, category, name: item.name })), {

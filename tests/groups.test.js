@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupEntries, normalizeGroup, usedGroups } from '../src/lib/groups'
+import { groupEntries, groupOptions, normalizeGroup, usedGroups } from '../src/lib/groups'
 
 const entry = (id, actualAmount, groupKey) => ({ id, actualAmount, groupKey, name: id })
 
@@ -73,5 +73,42 @@ describe('usedGroups', () => {
 
   it('בלי קיבוצים מחזיר רשימה ריקה', () => {
     expect(usedGroups([entry('a', 1)])).toEqual([])
+  })
+})
+
+describe('קבוצות לצירוף', () => {
+  const rows = [
+    { groupKey: 'סופר', category: 'fixed', actualAmount: 1240 },
+    { groupKey: 'סופר', category: 'fixed', actualAmount: 38 },
+    { groupKey: 'דלק', category: 'fixed', actualAmount: 300 },
+    { category: 'leisure', actualAmount: 90 },
+  ]
+
+  it('סכום וקטגוריה לכל קבוצה, בלי שורות שאינן מקובצות', () => {
+    expect(groupOptions(rows)).toEqual([
+      { key: 'סופר', total: 1278, category: 'fixed' },
+      { key: 'דלק', total: 300, category: 'fixed' },
+    ])
+  })
+
+  it('ממוין לפי סכום: מה שגדול הוא מה שמצרפים אליו', () => {
+    const [first] = groupOptions([
+      { groupKey: 'קפה', category: 'leisure', actualAmount: 18 },
+      { groupKey: 'סופר', category: 'fixed', actualAmount: 900 },
+    ])
+    expect(first.key).toBe('סופר')
+  })
+
+  it('קבוצה מעורבת מקבלת את הקטגוריה הנפוצה בה', () => {
+    const [group] = groupOptions([
+      { groupKey: 'שונות', category: 'leisure', actualAmount: 10 },
+      { groupKey: 'שונות', category: 'fixed', actualAmount: 10 },
+      { groupKey: 'שונות', category: 'fixed', actualAmount: 10 },
+    ])
+    expect(group.category).toBe('fixed')
+  })
+
+  it('בלי רשומות מחזיר רשימה ריקה ולא נופל', () => {
+    expect(groupOptions()).toEqual([])
   })
 })

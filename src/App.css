@@ -2711,3 +2711,19 @@ input[type='file'] {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 13px;
 }
+
+/* תווית קצרה מעל קבוצת גלולות, כשצריך לומר מה בוחרים */
+.inbox-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-neutral-600);
+}
+
+/* הסכום שכבר יש בקבוצה, בתוך הגלולה. קטן ודהוי: הוא ההקשר ולא
+   הכותרת, והשם הוא מה שבוחרים לפיו */
+.chip-total {
+  margin-inline-start: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.6;
+}
