@@ -2678,3 +2678,17 @@ input[type='file'] {
   font-size: 13px;
   color: var(--color-neutral-600);
 }
+
+/* כתובת ארוכה שמעתיקים. נשברת באמצע ולא גולשת, כי גלילה אופקית
+   בתוך מגירה פירושה שחצי מהכתובת לא נראה ואי אפשר לסמן אותו */
+.code-block {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-card-2);
+  background: var(--color-neutral-200);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  user-select: all;
+}

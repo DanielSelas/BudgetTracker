@@ -3,6 +3,7 @@ import { db } from './firebase'
 // ההגדרה חיה ב-importRows כי היא נוגעת לקריאת הקובץ, ומיוצאת גם
 // מכאן כדי שמי שמסווג לא יצטרך לדעת משני מקומות
 import { isStanding } from './importRows'
+import { seedCategory } from './sectorSeeds'
 
 /**
  * מה שנלמד על ענפים.
@@ -14,39 +15,6 @@ import { isStanding } from './importRows'
  * זה אוסף נפרד ולא שדה על התקציב, כי הוא גדל עם הזמן ונקרא רק
  * במסך הייבוא.
  */
-
-// הענפים כאן הם שמות אמיתיים מדוחות אשראי ישראליים, ולא ניחוש.
-// הסדר קובע: "מזון מהיר" חייב להיבדק לפני "מזון", אחרת המבורגר
-// מסווג כקניות בסופר
-const SEEDS = [
-  { match: ['מזון מהיר'], category: 'leisure' },
-  { match: ['מזון', 'סופר', 'מכולת', 'משקאות'], category: 'fixed' },
-  { match: ['חשמל', 'מים', 'תקשורת', 'מחשב', 'סלולר', 'אינטרנט'], category: 'fixed' },
-  { match: ['ביטוח', 'פיננס', 'בריאות', 'תרופ', 'רפוא'], category: 'fixed' },
-  // הדלק יושב תחת "אנרגיה" ולא תחת "דלק", וזה החמיץ אותו לגמרי
-  { match: ['דלק', 'אנרגיה', 'תחבורה', 'חניה', 'רכב'], category: 'fixed' },
-  // ארנונה, מים ועירייה. "מוסדות" הוא השם שחברת האשראי נותנת להם
-  { match: ['מוסדות', 'ממשל', 'עירי'], category: 'fixed' },
-  // דמי כרטיס מגיעים תחת "ציוד ומשרד", והם חיוב חודשי קבוע
-  { match: ['ציוד ומשרד'], category: 'fixed' },
-  { match: ['מסעד', 'קפה', 'בתי אוכל'], category: 'leisure' },
-  { match: ['ביגוד', 'הנעלה', 'אופנה', 'שופינג', 'קניות', 'טיפוח', 'יופי'], category: 'leisure' },
-  { match: ['פנאי', 'בידור', 'תרבות', 'ספורט', 'נופש', 'אירוע', 'מזל'], category: 'leisure' },
-  { match: ['תיירות', 'מלונ', 'אירוח', 'נסיע'], category: 'leisure' },
-  { match: ['ריהוט', 'בית', 'תעשי', 'מכירות'], category: 'leisure' },
-]
-
-/**
- * ניחוש פתיחה לענף שעוד לא נלמד.
- * מכוון להיות שמרני: ענף שלא מזוהה בוודאות מוחזר ריק, כי הצעה שגויה
- * גרועה מהיעדר הצעה. המשתמש יבחר, וזה ייזכר.
- */
-export function seedCategory(sector) {
-  const text = String(sector || '').toLowerCase()
-  if (!text) return ''
-  const hit = SEEDS.find((seed) => seed.match.some((word) => text.includes(word)))
-  return hit?.category || ''
-}
 
 /** מזהה מסמך בטוח מתוך שם ענף. */
 export const sectorId = (sector) =>
@@ -74,6 +42,8 @@ export function watchSectorRules(budgetId, onChange, onError) {
 }
 
 export { isStanding }
+// נשאר מיוצא מכאן כי זה המקום שבו מסווגים חושבים עליו
+export { seedCategory }
 
 /**
  * הקטגוריה המוצעת, ומאיפה היא באה.

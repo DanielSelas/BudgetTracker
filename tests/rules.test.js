@@ -1163,3 +1163,37 @@ describe('הוצאה ממתינה בתיבה', () => {
     await assertSucceeds(deleteDoc(at(PARTNER, 'cap_11')))
   })
 })
+
+describe('אסימון הקליטה', () => {
+  const token = (value) => ({
+    name: 'משפחתי', ownerUid: OWNER, type: 'household', captureToken: value,
+  })
+
+  it('חבר קובע אסימון באורך הנכון', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET), token('a'.repeat(32))),
+    )
+  })
+
+  it('אורך אחר נדחה, אחרת זה שדה טקסט חופשי על מסמך משותף', async () => {
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET), token('a'.repeat(31))))
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET), token('a'.repeat(200))))
+    await assertFails(setDoc(doc(as(OWNER), 'budgets', BUDGET), token(12345)))
+  })
+
+  it('זר אינו קורא את האסימון, כי הוא אינו קורא את התקציב', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'budgets', BUDGET), token('b'.repeat(32)))
+    })
+    await assertSucceeds(getDoc(doc(as(OWNER), 'budgets', BUDGET)))
+    await assertFails(getDoc(doc(as(STRANGER), 'budgets', BUDGET)))
+  })
+
+  it('תקציב בלי אסימון נשאר תקין: הוא נוצר רק בלחיצה', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET), {
+        name: 'משפחתי', ownerUid: OWNER, type: 'household',
+      }),
+    )
+  })
+})

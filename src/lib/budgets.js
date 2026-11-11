@@ -267,3 +267,32 @@ export function setBaseAmount({ budgetId, baseAmount }) {
     baseAmount: Math.max(0, Number(baseAmount) || 0),
   })
 }
+
+/**
+ * אסימון הקליטה: מה שמאפשר לקיצור בטלפון לשלוח הוצאה בלי לפתוח
+ * דפדפן ובלי להתחבר.
+ *
+ * הוא יושב על מסמך התקציב ולא באוסף נפרד, כי הוא נקרא בדיוק על ידי
+ * מי שכבר קורא את התקציב: החברים בו. אין כאן סוד נוסף להסתיר מהם.
+ *
+ * מה שהוא מרשה הוא מכוון צר: ליצור שורה ממתינה בתיבה, וזהו. לא
+ * לקרוא, לא לכתוב רשומות, ולא לראות מספר אחד. אסימון שדלף מייצר זבל
+ * בתיבה שנמחק בלחיצה, ולכן הוא לא צריך להיות מוגן כמו סיסמה.
+ *
+ * 32 תווים מ-crypto, ולא מ-Math.random: מחולל שאפשר לנחש את מצבו
+ * הופך אסימון לניחוש, וזה בדיוק מה שאסימון אמור למנוע.
+ */
+const TOKEN_ALPHABET = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+export const CAPTURE_TOKEN_LENGTH = 32
+
+export function generateCaptureToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(CAPTURE_TOKEN_LENGTH))
+  return Array.from(bytes, (byte) => TOKEN_ALPHABET[byte % TOKEN_ALPHABET.length]).join('')
+}
+
+/** יוצר אסימון חדש ודורס את הקודם, כלומר מבטל כל קיצור שהחזיק אותו. */
+export async function rotateCaptureToken(budgetId) {
+  const captureToken = generateCaptureToken()
+  await updateDoc(doc(db, 'budgets', budgetId), { captureToken })
+  return captureToken
+}

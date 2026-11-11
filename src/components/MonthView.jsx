@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import CategoryCard from './CategoryCard'
 import InboxCard from './InboxCard'
+import CaptureSetup from './CaptureSetup'
 import SummaryCard from './SummaryCard'
 import MonthVerdict from './MonthVerdict'
 import EndingSoon from './EndingSoon'
@@ -66,6 +67,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
   const [editingBase, setEditingBase] = useState(false)
   const [showCommitments, setShowCommitments] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [capturing, setCapturing] = useState(false)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
   const inbox = useInbox(budgetId)
   const [captureFailed, setCaptureFailed] = useState('')
@@ -274,6 +276,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
               <button type="button" className="btn-text" onClick={() => setImporting(true)}>
                 ייבוא CSV
               </button>
+              <button type="button" className="btn-text" onClick={() => setCapturing(true)}>
+                קליטה מהטלפון
+              </button>
               <button type="button" className="btn-text" onClick={() => setSharing(true)}>
                 הזמנת שותף
               </button>
@@ -321,6 +326,14 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
           partner={partner ? displayName(partner) : ''}
           onSubmit={actions.add}
           onClose={() => { setSheet(null); setPrefill(0) }}
+        />
+      )}
+
+      {capturing && (
+        <CaptureSetup
+          budgetId={budgetId}
+          token={budget?.captureToken}
+          onClose={() => setCapturing(false)}
         />
       )}
 

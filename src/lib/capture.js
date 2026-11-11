@@ -1,5 +1,8 @@
-import { merchantCategory, merchantGroup, merchantSector } from './merchants'
-import { seedCategory } from './sectors'
+// סיומת מפורשת, בניגוד לשאר הקוד: את הקובץ הזה מייבאת גם פונקציית
+// השרת, ושם רץ Node רגיל בלי Vite שישלים אותה. בלעדיה הפריסה עולה
+// והקליטה נופלת רק בקריאה הראשונה
+import { merchantCategory, merchantGroup, merchantSector } from './merchants.js'
+import { seedCategory } from './sectorSeeds.js'
 
 /**
  * קליטה מהירה: משפט אחד שהופך להוצאה ממתינה.

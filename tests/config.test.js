@@ -40,9 +40,10 @@ describe('vercel.json', () => {
    * ליועץ הייתה מקבלת את index.html במקום תשובה, וזה נראה כמו
    * שגיאת פענוח ולא כמו ניתוב שגוי.
    */
-  it('הנקודה של היועץ אינה נבלעת בניתוב', () => {
+  it('נקודות השרת אינן נבלעות בניתוב', () => {
     const [rule] = config.rewrites
     const pattern = new RegExp(`^${rule.source}$`)
     expect(pattern.test('/api/chat')).toBe(false)
+    expect(pattern.test('/api/capture')).toBe(false)
   })
 })

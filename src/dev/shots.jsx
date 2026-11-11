@@ -12,6 +12,7 @@ import ImportSheet from '../components/ImportSheet'
 import BottomNav from '../components/BottomNav'
 import CategoryCard from '../components/CategoryCard'
 import InboxCard from '../components/InboxCard'
+import CaptureSetup from '../components/CaptureSetup'
 import UnplannedCard from '../components/UnplannedCard'
 import SummaryCard from '../components/SummaryCard'
 import MonthPicker from '../components/MonthPicker'
@@ -358,6 +359,12 @@ const SCREENS = {
     <>
       <Month />
       <ImportSheet onImport={async () => ({ written: 0 })} onClose={noop} />
+    </>
+  ),
+  capture: (
+    <>
+      <Month />
+      <CaptureSetup budgetId="b1" token={'k7Qm2xRv9TpLd4Wn6YbZ3sHgJfA8Ce5U'} onClose={noop} />
     </>
   ),
   // שורה מסווגת ושורה שאינה, כי אלה שני המצבים: אישור בלחיצה אחת,
