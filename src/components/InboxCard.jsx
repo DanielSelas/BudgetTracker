@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { shekels } from '../lib/format'
+import { dayMonth, shekels } from '../lib/format'
 import { EXPENSE_PILLS } from '../lib/pills'
 import { CATEGORIES, todayDate } from '../lib/model'
 
@@ -14,12 +14,6 @@ import { CATEGORIES, todayDate } from '../lib/model'
  * עוד חיוב בתוך חיוב קיים. בלי זה כל קנייה הייתה שורה נפרדת, וחודש
  * של קניות היה מציף את הכרטיס ומסתיר את כל השאר.
  */
-
-// יום וחודש בלבד: השנה אינה מוסיפה כלום לשורה שנקלטה השבוע
-const dayLabel = (date) => {
-  const [, month, day] = String(date || '').split('-')
-  return month && day ? `${Number(day)}.${Number(month)}` : ''
-}
 
 export default function InboxCard({ items = [], groups = [], onApprove, onDismiss }) {
   const today = todayDate()
@@ -78,7 +72,7 @@ export default function InboxCard({ items = [], groups = [], onApprove, onDismis
                     כי הוא קובע לאיזה חודש השורה תיזקף */}
                 <span className="entry-name">{item.name}</span>
                 {item.date !== today && (
-                  <span className="inbox-when num">{dayLabel(item.date)}</span>
+                  <span className="inbox-when num">{dayMonth(item.date)}</span>
                 )}
                 <span className="entry-amount num">{shekels(item.amount)}</span>
               </div>

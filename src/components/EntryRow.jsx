@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { shekels } from '../lib/format'
+import { dayMonth, shekels } from '../lib/format'
 import { displayName } from '../lib/members'
 
 /**
@@ -46,6 +46,10 @@ export default function EntryRow({
       setBusy(false)
     }
   }
+
+  // שורות ישנות ושורות שנוצרו מתבנית אין להן תאריך, ואז אין מה
+  // להציג. תאריך מומצא היה גרוע מהיעדרו
+  const when = dayMonth(entry.date)
 
   // שורה מסכמת של טיול או מטרה נגזרת ממקום אחר, ולכן היא לקריאה בלבד
   if (entry.linkedTripId) {
@@ -151,13 +155,16 @@ export default function EntryRow({
 
   return (
     <li className="entry-row">
+      {/* התאריך מתחת לשם ולא לצדו: לצדו הוא מתחרה בשם על הרוחב
+          ובשורה צרה אחד מהם נחתך. מתחת הוא הקשר ולא מידע מתחרה */}
       <button
         type="button"
-        className="entry-name as-button"
+        className={`entry-name as-button${when ? ' stacked' : ''}`}
         onClick={open}
         aria-label={`עריכה של ${entry.name}`}
       >
-        {entry.name}
+        <span className="entry-title">{entry.name}</span>
+        {when && <span className="row-when num">{when}</span>}
       </button>
 
       {entry.recurringId && (

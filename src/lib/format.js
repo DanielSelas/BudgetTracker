@@ -15,3 +15,13 @@ export function monthLabel(key) {
   const [year, month] = String(key).split('-')
   return `${MONTH_NAMES[Number(month) - 1]} ${year}`
 }
+
+/**
+ * יום וחודש בלבד, לתאריך שמוצג בתוך שורה.
+ * השנה אינה מוסיפה כלום לשורה שיושבת בתוך חודש מסוים, והיא גם
+ * מאריכה את התווית פי שניים בדיוק במקום שבו אין מקום.
+ */
+export function dayMonth(date) {
+  const [, month, day] = String(date || '').split('-')
+  return month && day ? `${Number(day)}.${Number(month)}` : ''
+}

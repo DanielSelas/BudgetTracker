@@ -3,7 +3,7 @@ import {
   deleteDoc, deleteField, onSnapshot, query, setDoc, updateDoc, where,
 } from 'firebase/firestore'
 import { entriesRef, entryId, entryRef } from '../lib/paths'
-import { CATEGORIES } from '../lib/model'
+import { CATEGORIES, todayDate } from '../lib/model'
 import { useRetry } from './useRetry'
 
 /**
@@ -59,9 +59,16 @@ export function entryActions({ budgetId, month, uid }) {
     add: ({
       category, name, plannedAmount = 0, actualAmount = 0, note = '',
       groupKey = '', fromRemainder = false, oneOff = false,
-    }) =>
-      setDoc(entryRef(budgetId, entryId({ month, category, name })), {
+    }) => {
+      // תאריך, כדי שאפשר יהיה לראות בשורה מתי היא נכנסה. רק כשהיום
+      // נמצא בתוך החודש שעורכים: הכללים דורשים שהתאריך והחודש
+      // יתיישבו, ולכן הזנה לחודש קודם הייתה נדחית בגללו
+      const today = todayDate()
+      const dated = today.startsWith(`${month}-`) ? { date: today } : {}
+
+      return setDoc(entryRef(budgetId, entryId({ month, category, name })), {
         month,
+        ...dated,
         category,
         budgetGroup: CATEGORIES[category].budgetGroup,
         name: name.trim(),
@@ -76,7 +83,8 @@ export function entryActions({ budgetId, month, uid }) {
         // הוצאה שלא תחזור, ולכן אינה מלמדת מה רגיל: ניתוח לכלבה,
         // טלפון חדש. היא נשארת בחודש שלה במלואה ויוצאת מהמודל בלבד
         ...(oneOff ? { oneOff: true } : {}),
-      }),
+      })
+    },
 
     // קבוצת התקציב נגזרת מהקטגוריה ולא נבחרת, ולכן שינוי קטגוריה
     // חייב לגרור אותה. אחרת השורה הייתה נספרת ביעד של הקטגוריה הישנה
