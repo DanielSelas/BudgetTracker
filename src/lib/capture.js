@@ -1,5 +1,5 @@
-import { merchantCategory, merchantGroup } from './merchants'
-import { normalizeGroup } from './groups'
+import { merchantCategory, merchantGroup, merchantSector } from './merchants'
+import { seedCategory } from './sectors'
 
 /**
  * קליטה מהירה: משפט אחד שהופך להוצאה ממתינה.
@@ -122,36 +122,22 @@ export function parseCapture(text) {
 /**
  * איזו קטגוריה מתאימה להוצאה שנקלטה.
  *
- * מהקיצור מגיע שם בלבד ולא ענף, ולכן כללי הענפים אינם עוזרים כאן.
- * מה שכן עוזר זה מה שכבר אושר בעבר: ברגע שסיווגת "סופר" פעם אחת,
- * כל סופר הבא מגיע מסווג. זו הסיבה היחידה שאישור הופך להרגל ולא
- * לעוד טופס.
+ * מהקיצור מגיע שם בלבד ולא ענף, ולכן השם מתורגם קודם לענף ורק אז
+ * לקטגוריה. זה אותו מסלול שהייבוא עובר, ולכן אותה מסעדה מסווגת
+ * אותו דבר בין אם הגיעה מהטלפון ובין אם הגיעה מקובץ האשראי.
+ *
+ * ובמכוון, בלי ללמוד ממה שכבר סווג כאן. היסטוריה היא בסיס גרוע
+ * לשני דברים: היא ריקה לגמרי למי שהתחיל אתמול, והיא משכפלת כל טעות
+ * ישנה בביטחון גובר. הידע על בתי עסק שייך לאפליקציה, לא למשתמש.
  */
-export function suggestForCapture(name, entries = []) {
-  const group = merchantGroup(name)
+export function suggestForCapture(name) {
+  const groupKey = merchantGroup(name)
+
+  // כלל לפי שם בית העסק גובר על הענף: הוא נקבע כשהענף עצמו מטעה
   const byMerchant = merchantCategory(name)
-  if (byMerchant) return { category: byMerchant, groupKey: group, source: 'merchant' }
+  if (byMerchant) return { category: byMerchant, groupKey, source: 'merchant' }
 
-  const needle = String(name || '').trim().toLowerCase()
-  if (!needle) return { category: '', groupKey: group, source: '' }
-
-  // התאמה לפי הקבוצה כשיש לה כלל, ואחרת לפי השם עצמו. ההכנסות
-  // מוחרגות: שם של משכורת שמתנגש בשם של חנות אינו ראיה לכלום
-  const counts = new Map()
-  let matchedGroup = group
-  for (const entry of entries) {
-    if (entry.category === 'income') continue
-    const entryGroup = normalizeGroup(entry.groupKey)
-    const same = group
-      ? entryGroup === group
-      : String(entry.name || '').trim().toLowerCase() === needle
-    if (!same) continue
-    counts.set(entry.category, (counts.get(entry.category) || 0) + 1)
-    if (!matchedGroup && entryGroup) matchedGroup = entryGroup
-  }
-
-  if (counts.size === 0) return { category: '', groupKey: group, source: '' }
-
-  const [category] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]
-  return { category, groupKey: matchedGroup, source: 'history' }
+  const sector = merchantSector(name)
+  const category = sector ? seedCategory(sector) : ''
+  return { category: category || '', groupKey, sector, source: category ? 'sector' : '' }
 }

@@ -83,7 +83,7 @@ The interface is in Hebrew and right to left throughout.
 | **Saving goals** | A target to accumulate towards, whose deposits show up in the household's deposits. |
 | **Works offline** | Opens and shows data without a connection. Writes sync when it returns. |
 | **Who entered what** | A coloured avatar on every row. |
-| **Quick capture** | A Shortcut on the phone, or a double tap on its back: say "50 groceries" and it waits in an inbox at the top of the month for one tap to approve. No server and no token, because the browser that opens the link is already signed in. See [docs/quick-capture.md](docs/quick-capture.md). |
+| **Quick capture** | One Shortcut, or a double tap on the back of the phone: say "50 shufersal" and it waits in an inbox at the top of the month for one tap to approve. The category is guessed from the merchant name through the same sector table the importer uses, never from what you classified before. No server and no token, because the browser that opens the link is already signed in. See [docs/quick-capture.md](docs/quick-capture.md). |
 | **End of month nudge** | On your billing date: what is left to deposit, or where you overspent. |
 | **One profile** | A name and a colour that belong to the person, identical in every budget. |
 

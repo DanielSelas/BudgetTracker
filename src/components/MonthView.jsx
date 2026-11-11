@@ -70,12 +70,12 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
   const inbox = useInbox(budgetId)
   const [captureFailed, setCaptureFailed] = useState('')
 
-  // קליטה מהקיצור: נכתבת פעם אחת, ואחרי שהרשומות נטענו כדי שהניחוש
-  // יישען על מה שכבר סווג. הדגל הוא ref ולא state, כי הוא אינו
-  // משפיע על התצוגה ושינוי שלו לא אמור לרנדר מחדש
+  // קליטה מהקיצור, פעם אחת. אין המתנה לטעינת הרשומות כי הניחוש אינו
+  // נשען עליהן: השם מתורגם לענף, והענף לקטגוריה. הדגל הוא ref ולא
+  // state, כי הוא אינו משפיע על התצוגה ואינו אמור לרנדר מחדש
   const consumed = useRef(false)
   useEffect(() => {
-    if (!capture || consumed.current || loading) return
+    if (!capture || consumed.current) return
     consumed.current = true
 
     const parsed = capture.text ? parseCapture(capture.text) : { amount: 0, name: '' }
@@ -92,9 +92,9 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
       name,
       amount,
       date: capture.date || todayDate(),
-      suggestion: suggestForCapture(name, entries),
+      suggestion: suggestForCapture(name),
     }).catch(() => setCaptureFailed(capture.text || name))
-  }, [capture, loading, entries, budgetId, uid])
+  }, [capture, budgetId, uid])
 
   const base = useMemo(() => entryActions({ budgetId, month, uid }), [budgetId, month, uid])
   const { templates, error: recurringError } = useRecurring({

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { parseCapture, suggestForCapture } from '../src/lib/capture.js'
 import { captureId } from '../src/lib/inbox.js'
+import { merchantSector } from '../src/lib/merchants.js'
+import { seedCategory } from '../src/lib/sectors.js'
 
 describe('parseCapture', () => {
   it('ספרות ושם, בכל סדר', () => {
@@ -57,43 +59,46 @@ describe('captureId', () => {
 })
 
 describe('suggestForCapture', () => {
-  it('כלל לפי שם בית עסק גובר', () => {
+  it('כלל לפי שם בית עסק גובר על הענף', () => {
     expect(suggestForCapture('aliexpress')).toMatchObject({
       category: 'leisure',
       source: 'merchant',
     })
   })
 
-  it('הקבוצה נגזרת מהשם גם בלי היסטוריה', () => {
-    expect(suggestForCapture('שופרסל דיל').groupKey).toBe('סופר')
-  })
-
-  it('לומד ממה שכבר סווג באותה קבוצה', () => {
-    const entries = [
-      { name: 'שופרסל', groupKey: 'סופר', category: 'fixed' },
-      { name: 'יוחננוף', groupKey: 'סופר', category: 'fixed' },
-    ]
-    expect(suggestForCapture('טיב טעם', entries)).toMatchObject({
+  it('השם מתורגם לענף, והענף לקטגוריה', () => {
+    expect(suggestForCapture('שופרסל דיל')).toMatchObject({
+      sector: 'מזון ומשקאות',
       category: 'fixed',
       groupKey: 'סופר',
-      source: 'history',
+      source: 'sector',
     })
-  })
-
-  it('בלי קבוצה, לפי השם עצמו', () => {
-    const entries = [{ name: 'ארנונה', category: 'fixed' }]
-    expect(suggestForCapture('ארנונה', entries)).toMatchObject({
+    expect(suggestForCapture('ארומה')).toMatchObject({
+      category: 'leisure',
+      source: 'sector',
+    })
+    expect(suggestForCapture('פנגו')).toMatchObject({
       category: 'fixed',
-      source: 'history',
+      source: 'sector',
     })
   })
 
-  it('הכנסה אינה ראיה: שם שמתנגש במשכורת אינו מסווג כהכנסה', () => {
-    const entries = [{ name: 'סופר', category: 'income' }]
-    expect(suggestForCapture('סופר', entries).category).toBe('')
+  it('בית מרקחת לפני סופר, אחרת סופר פארם נבלע בקניות', () => {
+    expect(suggestForCapture('סופר פארם').sector).toBe('בריאות ותרופות')
+    expect(suggestForCapture('סופר יודה').sector).toBe('מזון ומשקאות')
   })
 
-  it('בלי התאמה מחזיר ריק ולא ניחוש', () => {
-    expect(suggestForCapture('חנות שלא הייתי בה', []).category).toBe('')
+  it('מזון מהיר אינו קניות בסופר', () => {
+    expect(suggestForCapture('מקדונלדס').category).toBe('leisure')
+  })
+
+  it('אותו עסק מסווג אותו דבר בקליטה ובייבוא', () => {
+    const name = 'קפה גרג'
+    expect(suggestForCapture(name).category).toBe(seedCategory(merchantSector(name)))
+  })
+
+  it('אינו נשען על מה שכבר סווג: עסק לא מוכר נשאר ריק', () => {
+    expect(suggestForCapture('חנות שלא הייתי בה').category).toBe('')
+    expect(suggestForCapture('').category).toBe('')
   })
 })
