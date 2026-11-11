@@ -170,6 +170,9 @@ service cloud.firestore {
                     && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
                     && data.date[0:7] == data.month))
             && data.addedBy is string
+            // מתי השורה נכנסה לאפליקציה. אופציונלי, כי לשורות
+            // שנכתבו לפני השדה אין אותו ולעולם לא יהיה
+            && (!('addedAt' in data) || data.addedAt is timestamp)
             && validGroupKey(data)
             && (!('fromRemainder' in data) || data.fromRemainder == true)
             // הוצאה חד פעמית שאינה מלמדת מה רגיל. אם קיים, חייב אמת

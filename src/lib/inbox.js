@@ -1,5 +1,5 @@
 import {
-  collection, deleteDoc, doc, onSnapshot, query, setDoc, writeBatch,
+  collection, deleteDoc, doc, onSnapshot, query, serverTimestamp, setDoc, writeBatch,
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { entryRef, entryId } from './paths'
@@ -118,6 +118,7 @@ export function approveCapture({ budgetId, uid, item, category, groupKey }) {
     plannedAmount: 0,
     actualAmount: item.amount,
     addedBy: uid,
+    addedAt: serverTimestamp(),
     ...(group ? { groupKey: group } : {}),
     ...(item.note ? { note: String(item.note).slice(0, 200) } : {}),
   })

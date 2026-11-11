@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  deleteDoc, deleteField, onSnapshot, query, setDoc, updateDoc, where,
+  deleteDoc, deleteField, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where,
 } from 'firebase/firestore'
 import { entriesRef, entryId, entryRef } from '../lib/paths'
 import { CATEGORIES, todayDate } from '../lib/model'
@@ -69,6 +69,10 @@ export function entryActions({ budgetId, month, uid }) {
       return setDoc(entryRef(budgetId, entryId({ month, category, name })), {
         month,
         ...dated,
+        // מתי השורה נכנסה לאפליקציה, להבדיל ממתי ההוצאה קרתה. בשעון
+        // השרת ולא בשעון המכשיר, אחרת שני טלפונים עם שעה שונה היו
+        // נותנים שתי תשובות לאותה שאלה
+        addedAt: serverTimestamp(),
         category,
         budgetGroup: CATEGORIES[category].budgetGroup,
         name: name.trim(),

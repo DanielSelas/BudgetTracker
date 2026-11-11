@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { dayMonth, shekels } from '../lib/format'
+import { dayMonth, shekels, stampDay } from '../lib/format'
 import { displayName } from '../lib/members'
 
 /**
@@ -47,9 +47,22 @@ export default function EntryRow({
     }
   }
 
-  // שורות ישנות ושורות שנוצרו מתבנית אין להן תאריך, ואז אין מה
-  // להציג. תאריך מומצא היה גרוע מהיעדרו
-  const when = dayMonth(entry.date)
+  /**
+   * שני תאריכים שונים, ולכן לא תמיד שניהם.
+   *
+   * date הוא מתי ההוצאה קרתה, ו-addedAt הוא מתי השורה נכנסה
+   * לאפליקציה. בהזנה ידנית ובקליטה מהטלפון הם אותו יום, ואז אומרים
+   * אותו פעם אחת. בשורה מיובאת הם נפרדים: הקנייה הייתה ב-3.9
+   * והקובץ עלה ב-11.11, ואז שווה להגיד את שניהם.
+   *
+   * שורות ישנות ושורות שנוצרו מתבנית אין להן אף אחד מהם, ואז אין
+   * מה להציג. תאריך מומצא גרוע מהיעדרו.
+   */
+  const happened = dayMonth(entry.date)
+  const added = stampDay(entry.addedAt)
+  const when = happened
+    ? (added && added !== happened ? `${happened} · נוסף ${added}` : happened)
+    : (added ? `נוסף ${added}` : '')
 
   // שורה מסכמת של טיול או מטרה נגזרת ממקום אחר, ולכן היא לקריאה בלבד
   if (entry.linkedTripId) {

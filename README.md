@@ -182,7 +182,7 @@ income exists, and the screen leads with a prompt to enter one.
 budgets/household_home_bc43zy    name, ownerUid, ownerEmail, type, billingDay, baseAmount
   members/{uid}                  membership itself; each person creates only their own
   recurring/fixed-rent-k3n9x2    a template a monthly row is derived from
-  entries/2026-09_fixed_rent_a7f3   month, date, category, budgetGroup, amounts, addedBy
+  entries/2026-09_fixed_rent_a7f3   month, date, addedAt, category, budgetGroup, amounts, addedBy
 users/{uid}                      profile: display name and avatar colour
 users/{uid}/memberships/{id}     private index: which budgets am I in
 users/{uid}/devices/{token}      notification registrations, private to that user
@@ -220,7 +220,7 @@ valid, unused and unexpired.
 npm run test:rules
 ```
 
-runs 108 tests against a real Firestore emulator, including the adversarial cases:
+runs 125 tests against a real Firestore emulator, including the adversarial cases:
 joining without a code, a used code, an expired code, a code belonging to another
 budget, adding somebody else with a valid code, extending an expiry, taking over
 ownership, listing invites, moving a record between budgets, forging `addedBy`,

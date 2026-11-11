@@ -744,6 +744,28 @@ describe('קיבוץ שורות בתוך קטגוריה', () => {
   })
 })
 
+describe('מתי הרשומה נכנסה לאפליקציה', () => {
+  it('חותמת זמן מתקבלת', async () => {
+    await assertSucceeds(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'a-ok'), entry({ addedAt: past() })),
+    )
+  })
+
+  // לשורות שנכתבו לפני השדה אין אותו, ולעולם לא יהיה
+  it('רשומה בלי חותמת ממשיכה לעבוד', async () => {
+    await assertSucceeds(setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'a-none'), entry()))
+  })
+
+  it('מה שאינו חותמת נדחה', async () => {
+    await assertFails(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'a-str'), entry({ addedAt: '2026-11-11' })),
+    )
+    await assertFails(
+      setDoc(doc(as(OWNER), 'budgets', BUDGET, 'entries', 'a-num'), entry({ addedAt: 1762819200 })),
+    )
+  })
+})
+
 describe('רשומות כתת אוסף של התקציב', () => {
   const nested = (id) => doc(as(OWNER), 'budgets', BUDGET, 'entries', id)
   // התקציב בנתיב, ולכן אינו שדה במסמך

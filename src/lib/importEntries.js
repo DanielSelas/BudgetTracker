@@ -1,4 +1,4 @@
-import { writeBatch } from 'firebase/firestore'
+import { serverTimestamp, writeBatch } from 'firebase/firestore'
 import { db } from './firebase'
 import { entryRef } from './paths'
 import { CATEGORIES } from './model'
@@ -65,6 +65,9 @@ export async function importEntries({ budgetId, uid, rows }) {
         // ההערה מהקובץ נשמרת כי היא נושאת מידע, למשל "תשלום 1 מתוך 3"
         note: String(row.note || '').slice(0, 100),
         addedBy: uid,
+        // מתי הקובץ עלה. תאריך העסקה כבר נמצא ב-date, ובייבוא
+        // השניים רחוקים זה מזה: קנייה מספטמבר שנכנסה בנובמבר
+        addedAt: serverTimestamp(),
         // הקיבוץ נקבע במסך הסיווג, שם כלל לפי שם כבר אוחד: כל
         // הסופרים הם "סופר" אחד. גזירה מהשם כאן הייתה מבטלת את זה
         groupKey: normalizeGroup(
