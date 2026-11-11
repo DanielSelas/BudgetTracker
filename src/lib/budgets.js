@@ -296,3 +296,14 @@ export async function rotateCaptureToken(budgetId) {
   await updateDoc(doc(db, 'budgets', budgetId), { captureToken })
   return captureToken
 }
+
+/**
+ * שומר על התקציב את שמות הקבוצות שבשימוש.
+ *
+ * על מסמך התקציב ולא כשאילתה על הרשומות, כי המסמך כבר טעון במסך
+ * ולכן זו קריאה בחינם, ובעיקר כי זו עובדה על התקציב ולא על חודש
+ * מסוים: שם קבוצה אינו תוצר של השורות שבמקרה פתוחות עכשיו.
+ */
+export function rememberGroupNames(budgetId, names) {
+  return updateDoc(doc(db, 'budgets', budgetId), { groupNames: names })
+}

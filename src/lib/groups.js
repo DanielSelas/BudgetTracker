@@ -8,6 +8,18 @@
 
 export const MAX_GROUP_LENGTH = 40
 
+/**
+ * כמה שמות קבוצה נשמרים על התקציב.
+ *
+ * הרשימה יושבת על מסמך התקציב ולא נגזרת מהרשומות, וזו בדיוק הנקודה:
+ * קבוצה היא תווית שנפתחה בכוונה, ולכן היא שורדת מעבר חודש. בלי זה
+ * ה"סופר" של אוקטובר נעלם ב-1 בנובמבר ונפתח מחדש בהקלדה.
+ *
+ * ותקרה, כי זהו שדה שכל חבר יכול לכתוב אליו: כשהיא מתמלאת הוותיק
+ * ביותר יוצא, וכך הרשימה נשארת מה שבאמת בשימוש
+ */
+export const MAX_REMEMBERED_GROUPS = 30
+
 /** הצעות פתיחה למי שעוד לא יצר קבוצה משלו. */
 export const SUGGESTED_GROUPS = ['קניות בסופר', 'דלק', 'בית מרקחת']
 
@@ -50,11 +62,35 @@ export function groupEntries(entries = []) {
   return items
 }
 
-/** שמות הקבוצות שכבר בשימוש החודש, להצעה מהירה במגירת ההזנה. */
-export function usedGroups(entries = []) {
+/**
+ * הרשימה המעודכנת של שמות שנשמרים, או null כשאין מה לשנות.
+ *
+ * null ולא הרשימה עצמה, כדי שהקורא ידע לדלג על הכתיבה. השם החדש
+ * כבר שם בדרך כלל, ולכתוב את אותו מסמך בכל הוספה זה סיבוב רשת על
+ * לא כלום.
+ */
+export function withRemembered(names = [], key) {
+  const clean = normalizeGroup(key)
+  if (!clean || names.includes(clean)) return null
+  // החדש נכנס בסוף, והוותיק יוצא בראש
+  return [...names, clean].slice(-MAX_REMEMBERED_GROUPS)
+}
+
+/**
+ * שמות הקבוצות להצעה מהירה במגירת ההזנה.
+ *
+ * מה שבשימוש החודש קודם, ואחריו מה שנשמר מחודשים שעברו: הקבוצה
+ * שכבר פתוחה עכשיו היא הסבירה יותר, אבל גם זו משלשום ראויה לנגיעה
+ * במקום להקלדה.
+ */
+export function usedGroups(entries = [], remembered = []) {
   const seen = []
   for (const entry of entries) {
     const key = normalizeGroup(entry.groupKey)
+    if (key && !seen.includes(key)) seen.push(key)
+  }
+  for (const name of remembered) {
+    const key = normalizeGroup(name)
     if (key && !seen.includes(key)) seen.push(key)
   }
   return seen
@@ -69,8 +105,12 @@ export function usedGroups(entries = []) {
  *
  * ממוין לפי סכום ולא לפי אלפבית, כי מה שגדול הוא גם מה שמצרפים
  * אליו: החיוב שחוזר שבוע אחרי שבוע הוא הראשון ברשימה.
+ *
+ * קבוצה שנשמרה מחודש שעבר ועוד אין לה שורה החודש נכנסת בסוף, בלי
+ * סכום ובלי קטגוריה. היא מוצעת כשם בלבד: הקטגוריה תיקבע מהניחוש
+ * לפי בית העסק או מבחירה, ולא ממה שסווג שם בעבר.
  */
-export function groupOptions(entries = []) {
+export function groupOptions(entries = [], remembered = []) {
   const byKey = new Map()
 
   for (const entry of entries) {
@@ -82,7 +122,7 @@ export function groupOptions(entries = []) {
     byKey.set(key, current)
   }
 
-  return [...byKey.values()]
+  const open = [...byKey.values()]
     .map(({ key, total, counts }) => ({
       key,
       total,
@@ -91,4 +131,11 @@ export function groupOptions(entries = []) {
       category: [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0],
     }))
     .sort((a, b) => b.total - a.total)
+
+  const waiting = remembered
+    .map((name) => normalizeGroup(name))
+    .filter((key) => key && !byKey.has(key))
+    .map((key) => ({ key, total: 0, category: '' }))
+
+  return [...open, ...waiting]
 }

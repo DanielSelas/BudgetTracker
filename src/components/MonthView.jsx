@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import CategoryCard from './CategoryCard'
 import InboxCard from './InboxCard'
 import CaptureSetup from './CaptureSetup'
@@ -25,7 +25,7 @@ import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
 import { createTemplate, endingSoon, skipMonth, upcomingCharge } from '../lib/recurring'
 import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth, todayDate } from '../lib/model'
-import { groupOptions, usedGroups } from '../lib/groups'
+import { groupOptions, usedGroups, withRemembered } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
 import { useProfiles } from '../hooks/useProfiles'
 import { useSectorRules } from '../hooks/useSectorRules'
@@ -33,11 +33,16 @@ import { useInbox } from '../hooks/useInbox'
 import { useHistory } from '../hooks/useHistory'
 import { buildChatContext } from '../lib/chatContext'
 import { chatEnabled } from '../lib/features'
-import { deleteBudget, renameBudget, setBaseAmount, setBillingDay } from '../lib/budgets'
+import {
+  deleteBudget, rememberGroupNames, renameBudget, setBaseAmount, setBillingDay,
+} from '../lib/budgets'
 import { importEntries } from '../lib/importEntries'
 import { rememberSectors } from '../lib/sectors'
 import { addCapture, approveCapture, dismissCapture } from '../lib/inbox'
 import { parseCapture, suggestForCapture } from '../lib/capture'
+
+// קבוע ולא מערך חדש, כדי שתקציב בלי קבוצות שמורות לא יפסול מטמון
+const NO_GROUPS = []
 
 const ORDER = ['income', 'fixed', 'leisure', 'fund']
 
@@ -113,9 +118,25 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
   const needsHistory = showCapacity || asking
   const history = useHistory(needsHistory ? budgetId : '', 12)
 
+  // שמות קבוצות שנשמרו על התקציב. יושבים על המסמך שכבר טעון, ולכן
+  // לזכור קבוצה מחודש שעבר אינו עולה קריאה נוספת. NO_GROUPS ולא
+  // מערך חדש בכל רינדור, אחרת כל מי שתלוי בזה היה מחושב מחדש תמיד
+  const remembered = budget?.groupNames || NO_GROUPS
+
+  /**
+   * שם קבוצה שנעשה בו שימוש נשמר על התקציב, כדי שיהיה שם גם בחודש
+   * הבא. הכתיבה אחרי ההוספה ובלי להמתין לה: היא נוחות להמשך ולא
+   * חלק מהשורה, וכשל בה לא אמור להפיל הזנה שהצליחה.
+   */
+  const remember = useCallback((groupKey) => {
+    const next = withRemembered(remembered, groupKey)
+    if (next) rememberGroupNames(budgetId, next).catch(() => {})
+  }, [budgetId, remembered])
+
   const actions = useMemo(() => ({
     ...base,
     add: async ({ recurring, ...values }) => {
+      remember(values.groupKey)
       if (!recurring) return base.add(values)
       // התבנית היא המקור; השורה של החודש הזה נגזרת ממנה אוטומטית
       return createTemplate({ budgetId, uid, month, ...values })
@@ -126,18 +147,19 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
       if (entry?.recurringId) await skipMonth(budgetId, entry.recurringId, month)
       return base.remove(entryId)
     },
-  }), [base, budgetId, month, uid])
+  }), [base, budgetId, month, uid, remember])
 
   const fixedBase = budget?.baseAmount
   const summary = useMemo(() => {
     const base = summarizeMonth(entries, { fixedBase })
     return { ...base, upcoming: upcomingCharge(entries, templates) }
   }, [entries, fixedBase, templates])
-  // הקבוצות שכבר בשימוש החודש, כדי שהוספה חוזרת תהיה בחירה ולא הקלדה
-  const groups = useMemo(() => usedGroups(entries), [entries])
+  // הקבוצות שכבר בשימוש החודש ומה שנשמר מחודשים שעברו, כדי שהוספה
+  // חוזרת תהיה בחירה ולא הקלדה גם ב-1 בחודש
+  const groups = useMemo(() => usedGroups(entries, remembered), [entries, remembered])
   // לתיבה צריך גם את הסכום והקטגוריה של כל קבוצה, כדי שיהיה ברור
   // למה מצרפים ולא רק לאיזה שם
-  const attachable = useMemo(() => groupOptions(entries), [entries])
+  const attachable = useMemo(() => groupOptions(entries, remembered), [entries, remembered])
   const openSheet = (category, group = '', amount = 0, fromRemainder = false, recurring = false) => {
     setPrefill(amount)
     setSheet({ category, group, fromRemainder, recurring })
@@ -206,8 +228,10 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
         <InboxCard
           items={inbox}
           groups={attachable}
-          onApprove={(item, category, groupKey) =>
-            approveCapture({ budgetId, uid, item, category, groupKey })}
+          onApprove={(item, category, groupKey) => {
+            remember(groupKey)
+            return approveCapture({ budgetId, uid, item, category, groupKey })
+          }}
           onDismiss={(item) => dismissCapture(budgetId, item.id)}
         />
 

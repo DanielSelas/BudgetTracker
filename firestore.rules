@@ -47,6 +47,13 @@ service cloud.firestore {
         || (data.captureToken is string && data.captureToken.size() == 32);
     }
 
+    // שמות הקבוצות שנשמרו. רשימה, וחסומה באורך: זהו שדה שכל חבר
+    // יכול לכתוב אליו, ובלי תקרה הוא מקום אחסון חופשי על המסמך
+    function validGroupNames(data) {
+      return !('groupNames' in data)
+        || (data.groupNames is list && data.groupNames.size() <= 30);
+    }
+
     function validBaseAmount(data) {
       return !('baseAmount' in data)
         || (data.baseAmount is number && data.baseAmount >= 0);
@@ -87,6 +94,7 @@ service cloud.firestore {
         && validOwnerEmail(request.resource.data)
         && validMemberEmails(request.resource.data)
         && validCaptureToken(request.resource.data)
+        && validGroupNames(request.resource.data)
         // לטיול ולמטרה יש סכום שנקבע מראש; למשק בית אין
         && (request.resource.data.type == 'household'
             || (request.resource.data.frame is number
@@ -102,6 +110,7 @@ service cloud.firestore {
         && validOwnerEmail(request.resource.data)
         && validMemberEmails(request.resource.data)
         && validCaptureToken(request.resource.data)
+        && validGroupNames(request.resource.data)
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.get('type', 'household')
            == resource.data.get('type', 'household');

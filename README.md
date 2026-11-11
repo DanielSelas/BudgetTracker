@@ -179,7 +179,7 @@ income exists, and the screen leads with a prompt to enter one.
 ## Data model
 
 ```
-budgets/household_home_bc43zy    name, ownerUid, ownerEmail, type, billingDay, baseAmount
+budgets/household_home_bc43zy    name, ownerUid, ownerEmail, type, billingDay, baseAmount, groupNames
   members/{uid}                  membership itself; each person creates only their own
   recurring/fixed-rent-k3n9x2    a template a monthly row is derived from
   entries/2026-09_fixed_rent_a7f3   month, date, addedAt, category, budgetGroup, amounts, addedBy
@@ -220,7 +220,7 @@ valid, unused and unexpired.
 npm run test:rules
 ```
 
-runs 125 tests against a real Firestore emulator, including the adversarial cases:
+runs 129 tests against a real Firestore emulator, including the adversarial cases:
 joining without a code, a used code, an expired code, a code belonging to another
 budget, adding somebody else with a valid code, extending an expiry, taking over
 ownership, listing invites, moving a record between budgets, forging `addedBy`,

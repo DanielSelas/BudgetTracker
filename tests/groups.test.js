@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { groupEntries, groupOptions, normalizeGroup, usedGroups } from '../src/lib/groups'
+import {
+  MAX_REMEMBERED_GROUPS, groupEntries, groupOptions, normalizeGroup, usedGroups, withRemembered,
+} from '../src/lib/groups'
 
 const entry = (id, actualAmount, groupKey) => ({ id, actualAmount, groupKey, name: id })
 
@@ -110,5 +112,54 @@ describe('קבוצות לצירוף', () => {
 
   it('בלי רשומות מחזיר רשימה ריקה ולא נופל', () => {
     expect(groupOptions()).toEqual([])
+  })
+})
+
+
+/**
+ * קבוצה היא תווית שנפתחה בכוונה, ולכן היא שורדת מעבר חודש. בלי
+ * הזכירה הזו ה"סופר" של אוקטובר נעלם ב-1 בנובמבר
+ */
+describe('קבוצות שנשמרות מחודש לחודש', () => {
+  it('שם חדש נוסף לסוף הרשימה', () => {
+    expect(withRemembered(['דלק'], 'סופר')).toEqual(['דלק', 'סופר'])
+  })
+
+  it('שם שכבר שם אינו כתיבה', () => {
+    expect(withRemembered(['סופר', 'דלק'], 'סופר')).toBeNull()
+    expect(withRemembered(['סופר'], '  סופר  ')).toBeNull()
+  })
+
+  it('שם ריק אינו שם', () => {
+    expect(withRemembered(['סופר'], '')).toBeNull()
+    expect(withRemembered(['סופר'], undefined)).toBeNull()
+  })
+
+  it('כשהרשימה מתמלאת הוותיק יוצא', () => {
+    const full = Array.from({ length: MAX_REMEMBERED_GROUPS }, (_, index) => `ק${index}`)
+    const next = withRemembered(full, 'חדש')
+    expect(next).toHaveLength(MAX_REMEMBERED_GROUPS)
+    expect(next[0]).toBe('ק1')
+    expect(next.at(-1)).toBe('חדש')
+  })
+
+  it('הצעות ההזנה מחברות את החודש ואת מה שנשמר, בלי כפילות', () => {
+    const entries = [entry('a', 100, 'סופר')]
+    expect(usedGroups(entries, ['סופר', 'דלק'])).toEqual(['סופר', 'דלק'])
+  })
+
+  it('קבוצה שנשמרה ואין לה שורה החודש נכנסת בסוף, בלי סכום', () => {
+    const options = groupOptions([entry('a', 100, 'סופר')], ['סופר', 'בית מרקחת'])
+    expect(options.map((option) => option.key)).toEqual(['סופר', 'בית מרקחת'])
+    expect(options[1]).toEqual({ key: 'בית מרקחת', total: 0, category: '' })
+  })
+
+  /**
+   * קטגוריה ריקה ולא מה שסווג שם בעבר: הקטגוריה תיקבע מהניחוש לפי
+   * בית העסק או מבחירה, ולא מהיסטוריית הסיווג של המשתמש
+   */
+  it('הקבוצה שנשמרה מציעה שם ולא קטגוריה', () => {
+    const [option] = groupOptions([], ['סופר'])
+    expect(option.category).toBe('')
   })
 })

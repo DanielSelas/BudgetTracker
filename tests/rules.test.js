@@ -744,6 +744,32 @@ describe('קיבוץ שורות בתוך קטגוריה', () => {
   })
 })
 
+describe('שמות קבוצות שנשמרים על התקציב', () => {
+  it('רשימה קצרה מתקבלת', async () => {
+    await assertSucceeds(
+      updateDoc(doc(as(OWNER), 'budgets', BUDGET), { groupNames: ['סופר', 'דלק'] }),
+    )
+  })
+
+  // בלי תקרה זהו מקום אחסון חופשי על מסמך שכל חבר כותב אליו
+  it('רשימה ארוכה מדי נדחית', async () => {
+    const many = Array.from({ length: 31 }, (_, index) => `ק${index}`)
+    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { groupNames: many }))
+  })
+
+  it('מה שאינו רשימה נדחה', async () => {
+    await assertFails(
+      updateDoc(doc(as(OWNER), 'budgets', BUDGET), { groupNames: 'סופר' }),
+    )
+  })
+
+  it('זר אינו כותב כלום', async () => {
+    await assertFails(
+      updateDoc(doc(as(STRANGER), 'budgets', BUDGET), { groupNames: ['סופר'] }),
+    )
+  })
+})
+
 describe('מתי הרשומה נכנסה לאפליקציה', () => {
   it('חותמת זמן מתקבלת', async () => {
     await assertSucceeds(
