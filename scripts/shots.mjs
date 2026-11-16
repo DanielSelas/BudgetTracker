@@ -30,7 +30,7 @@ const COLUMN = 960
 const HEIGHT = 1900
 
 const SCREENS = [
-  'login', 'home', 'types', 'month', 'outlook', 'reserve', 'trip', 'goal', 'sheet', 'intro',
+  'login', 'home', 'types', 'month', 'outlook', 'breakdown', 'reserve', 'trip', 'goal', 'sheet', 'intro',
   'profile', 'commitments', 'import',
 ]
 

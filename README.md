@@ -11,7 +11,7 @@ An installable PWA. No developer account, no app store, no native build.
 ![React](https://img.shields.io/badge/React-19-2a78d6?style=flat-square&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-1f6447?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-eb6834?style=flat-square&logo=firebase&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-443%20%2B%20129%20rules-1f6447?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-457%20%2B%20129%20rules-1f6447?style=flat-square)
 
 The interface is in Hebrew and right to left throughout.
 
@@ -61,6 +61,16 @@ The interface is in Hebrew and right to left throughout.
 <td align="center"><b>Standing commitments</b><br/>Every recurring charge: amount, the day it moves, when it ends</td>
 <td align="center"><b>A month that will not hold</b><br/>Said mid month, in two levels, while something can still be done</td>
 <td align="center"><b>Import a statement</b><br/>The format and the columns are read from the file</td>
+</tr>
+<tr>
+<td width="33%"><img src="docs/screens/breakdown.png" alt="Where a month went" /></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td align="center"><b>Where a month went</b><br/>Opened from a bar in the history, by sector, without the standing charges</td>
+<td></td>
+<td></td>
 </tr>
 </table>
 
@@ -204,6 +214,25 @@ the rest.
 With no income the month has no base, every target is zero, and a balance would
 read as a large deficit that is not real. Those numbers are suspended until an
 income exists, and the screen leads with a prompt to enter one.
+
+### Where a month went
+
+Every bar in the history is a button, and it opens the breakdown of that month:
+a ring by sector with the figures listed under it, because areas of a circle
+cannot be compared by eye.
+
+Only money that was **chosen** is counted. A row born from a standing template
+is excluded, so rent, insurance and the electricity bill do not drown out the
+rest; what is left is the spending of that month. The sector comes from the
+merchant name at read time, through `merchantSector`, so the breakdown works on
+every month already recorded and nothing had to be stored for it. A merchant the
+app does not recognise falls under "אחר", which always sorts last.
+
+Above the ring, one sentence names the largest sector, and only when it passed
+**a third of the variable target**. The threshold is relative to the plan rather
+than to the other sectors: in a quiet month the largest sector is still the
+largest, and saying so would turn 500 ₪ into a warning. The ring itself is drawn
+every month, unusual or not, because the split is worth seeing either way.
 
 ---
 

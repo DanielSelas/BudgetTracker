@@ -16,6 +16,7 @@ import CaptureSetup from '../components/CaptureSetup'
 import UnplannedCard from '../components/UnplannedCard'
 import SummaryCard from '../components/SummaryCard'
 import MonthOutlook from '../components/MonthOutlook'
+import MonthBreakdown from '../components/MonthBreakdown'
 import MonthPicker from '../components/MonthPicker'
 import EntrySheet from '../components/EntrySheet'
 import EntryRow from '../components/EntryRow'
@@ -395,6 +396,28 @@ const SCREENS = {
       </div>
       <BottomNav active="month" onChange={noop} />
     </main>
+  ),
+  breakdown: (
+    <>
+      <main className="app"><div className="app-scroll" /></main>
+      <MonthBreakdown
+        month="2026-08"
+        baseAmount={20000}
+        onClose={noop}
+        entries={[
+          { category: 'leisure', name: 'מסעדות ובילויים', actualAmount: 1820 },
+          { category: 'leisure', name: 'ארומה', actualAmount: 380 },
+          { category: 'leisure', name: 'זארה', actualAmount: 740 },
+          { category: 'leisure', name: 'קסטרו', actualAmount: 310 },
+          { category: 'fixed', name: 'שופרסל', actualAmount: 1280 },
+          { category: 'fixed', name: 'סונול', actualAmount: 620 },
+          { category: 'fixed', name: 'סופר פארם', actualAmount: 240 },
+          { category: 'leisure', name: 'יס פלאנט', actualAmount: 180 },
+          { category: 'unplanned', name: 'מוסך אלי', actualAmount: 900 },
+          { category: 'fixed', name: 'שכר דירה', actualAmount: 5200, recurringId: 'r2' },
+        ]}
+      />
+    </>
   ),
   outlook: (
     <main className="app">

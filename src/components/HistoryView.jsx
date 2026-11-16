@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useHistory } from '../hooks/useHistory'
+import MonthBreakdown from './MonthBreakdown'
 import { CATEGORIES, monthKey } from '../lib/model'
 
 const GROUPS = [
@@ -14,7 +15,8 @@ const shortMonth = (key) => SHORT[Number(key.split('-')[1]) - 1]
 const BAR_HEIGHT = 160
 
 export default function HistoryView({ budgetId, fixedBase = 0 }) {
-  const { series, loading, error, hasData } = useHistory(budgetId, 6, fixedBase)
+  const { entries, series, loading, error, hasData } = useHistory(budgetId, 6, fixedBase)
+  const [opened, setOpened] = useState('')
   const current = monthKey()
 
   // הגבהים יחסיים לסכום הגדול ביותר שהופיע בטווח, כך שההשוואה בין חודשים נכונה
@@ -80,10 +82,14 @@ export default function HistoryView({ budgetId, fixedBase = 0 }) {
               {[50, 30, 20].map((pct) => (
                 <span key={pct} className="guide" style={{ bottom: `${(pct / 100) * BAR_HEIGHT}px` }} />
               ))}
+              {/* העמודה היא הכפתור: לחיצה פותחת את הפילוח של אותו חודש */}
               {series.map((point) => (
-                <div
+                <button
+                  type="button"
                   key={point.month}
                   className={`bars-col ${point.month === current ? 'current' : ''}`}
+                  aria-label={`פילוח ההוצאות ב${shortMonth(point.month)}`}
+                  onClick={() => setOpened(point.month)}
                 >
                   <div className="bars-group">
                     {GROUPS.map((g) => {
@@ -101,7 +107,7 @@ export default function HistoryView({ budgetId, fixedBase = 0 }) {
                     })}
                   </div>
                   <span className="m">{shortMonth(point.month)}</span>
-                </div>
+                </button>
               ))}
             </div>
           </section>
@@ -125,6 +131,15 @@ export default function HistoryView({ budgetId, fixedBase = 0 }) {
             </ul>
           </section>
         </>
+      )}
+
+      {opened && (
+        <MonthBreakdown
+          month={opened}
+          entries={entries.filter((entry) => entry.month === opened)}
+          baseAmount={series.find((point) => point.month === opened)?.baseAmount || 0}
+          onClose={() => setOpened('')}
+        />
       )}
     </div>
   )
