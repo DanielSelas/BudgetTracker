@@ -336,11 +336,16 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
               <button type="button" className="btn-text" onClick={() => setSharing(true)}>
                 הזמנת שותף
               </button>
+              {/* סכום הבסיס אינו ניהול תקציב אלא התוכנית עצמה, ושני בני
+                  הבית חולקים אותה. הוא היה חסום כאן בזמן שהמספר המקווקו
+                  בכרטיס הסיכום נשאר פתוח, והכללים מתירים את הכתיבה, כך
+                  שהחסימה הסתירה כפתור בלי למנוע דבר */}
+              <button type="button" className="btn-text" onClick={() => setEditingBase(true)}>
+                סכום הבסיס
+              </button>
+
               {isOwner && (
                 <>
-                  <button type="button" className="btn-text" onClick={() => setEditingBase(true)}>
-                    סכום הבסיס
-                  </button>
                   <button type="button" className="btn-text" onClick={() => setEditingBilling(true)}>
                     מועד חיוב
                   </button>
