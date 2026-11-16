@@ -141,3 +141,33 @@ describe('sectorColor', () => {
     expect(sectorColor('מסעדות ובתי קפה')).toBe(sectorColor('מסעדות ובתי קפה'))
   })
 })
+
+describe('זיהוי ענף משם שהוקלד ביד', () => {
+  it('שם של ענף הוא ענף, גם בלי בית עסק', () => {
+    const rows = [
+      entry({ name: 'תחבורה', actualAmount: 90 }),
+      entry({ name: 'חניה', actualAmount: 40 }),
+    ]
+    expect(monthBreakdown(rows).slices.map((slice) => slice.sector))
+      .toEqual(['תחבורה', 'חניה'])
+  })
+
+  it('"אוכל בחוץ" הוא מסעדות, לא "אחר"', () => {
+    const rows = [entry({ name: 'אוכל בחוץ', actualAmount: 1421 })]
+    expect(monthBreakdown(rows).slices[0].sector).toBe('מסעדות ובתי קפה')
+  })
+
+  it('"אוכל" לבדו נשאר לא מזוהה, כי הוא גם הסופר', () => {
+    expect(monthBreakdown([entry({ name: 'אוכל', actualAmount: 100 })])
+      .slices[0].sector).toBe(OTHER)
+  })
+
+  it('לא שובר זיהוי של בתי עסק אמיתיים', () => {
+    const rows = [
+      entry({ name: 'שופרסל דיל', actualAmount: 300 }),
+      entry({ name: 'פז יעלים', actualAmount: 200 }),
+    ]
+    expect(monthBreakdown(rows).slices.map((slice) => slice.sector))
+      .toEqual(['מזון ומשקאות', 'דלק ואנרגיה'])
+  })
+})
