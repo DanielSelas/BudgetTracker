@@ -2851,6 +2851,39 @@ input[type='file'] {
 
 .donut svg { display: block; width: 100%; height: 100%; }
 
+/* הטבעת מתמלאת במקום להופיע.
+
+   כל פלח הוא קו שאורכו הגלוי גדל מאפס לאורכו המלא, וההשהיה שלו
+   היא המקום שבו הוא מתחיל על המעגל. התוצאה היא יד אחת שמקיפה את
+   השעון, ולא אחת עשרה אנימציות במקביל. התזמון לינארי בכוונה: עקומה
+   הייתה מאיצה ומאטה בתוך כל פלח, והסיבוב היה מקרטע.
+
+   stroke-dashoffset הוא מאפיין שמונפש על ה-compositor ואינו גורם
+   לפריסה מחדש, ולכן זה חלק גם בטלפון ישן. */
+@keyframes donut-sweep {
+  from { stroke-dashoffset: var(--len); }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes donut-mid-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.donut .arc {
+  stroke-dashoffset: 0;
+  animation: donut-sweep var(--dur) linear var(--delay) backwards;
+}
+
+/* הסכום נכנס כשהטבעת כבר כמעט סגורה, אחרת הוא נקרא לפני שיש לו שלם */
+.donut-mid { animation: donut-mid-in 240ms ease-out var(--delay) backwards; }
+
+/* מי שביקש פחות תנועה מקבל את התמונה המוגמרת, לא גרסה מהירה שלה */
+@media (prefers-reduced-motion: reduce) {
+  .donut .arc,
+  .donut-mid { animation: none; }
+}
+
 /* הסכום במרכז: הטבעת מראה חלוקה, והמספר הזה הוא השלם שלה */
 .donut-mid {
   position: absolute;
@@ -2884,11 +2917,14 @@ input[type='file'] {
 
 .breakdown-list li:first-child { border-block-start: 0; }
 
+/* קו שיער סביב הנקודה: הגוונים הבהירים במשפחה כמעט נעלמים על
+   כרטיס לבן, והמסגרת מחזירה להם גבול בלי להכהות אותם */
 .breakdown-list .swatch {
   flex-shrink: 0;
   width: 10px;
   height: 10px;
   border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--color-divider);
 }
 
 .breakdown-name {

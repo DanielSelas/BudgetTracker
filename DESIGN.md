@@ -21,6 +21,17 @@ colors:
   cat-leisure: "#a8475a"
   cat-fund: "#6b53a8"
   cat-unplanned: "#8a6b1f"
+  sec-food-1: "#845922"
+  sec-food-2: "#ac7f49"
+  sec-food-3: "#c99b65"
+  sec-move-1: "#386695"
+  sec-move-2: "#5e8dbe"
+  sec-move-3: "#79a9db"
+  sec-body-1: "#945262"
+  sec-body-2: "#ce8797"
+  sec-life-1: "#3f774d"
+  sec-life-2: "#75ae81"
+  sec-play-1: "#9777af"
   dark-page: "#111214"
   dark-paper: "#1b1c1e"
   dark-ink: "#f3f6f8"
@@ -205,6 +216,22 @@ only as a dot: income `#277754`, fixed `#5a6a86`, variable `#a8475a`, deposits
 Fixed charges are deliberately the least saturated of the five. They are half the
 budget and the thing nobody chooses; the hues go to the money you can still
 influence.
+
+### Sector
+A second, separate set, used on one surface only: the breakdown of a past month.
+Eleven sectors are not eleven hues, because eleven colours at one lightness
+cannot be told apart by eye, and under colour blindness they collapse entirely.
+So there are **five families**, one hue each, and the sectors inside a family
+differ in lightness: food `#845922 · #ac7f49 · #c99b65`, transport
+`#386695 · #5e8dbe · #79a9db`, clothing and grooming `#945262 · #ce8797`,
+health and home `#3f774d · #75ae81`, leisure `#9777af`. Anything unrecognised is
+`--color-neutral-500`, a grey that does not pretend to be a sector.
+
+Grouping is also the truer reading: eating out and the supermarket should look
+related. The colour is fixed per sector and never derived from its rank, so the
+same sector is the same colour in every month. Identity always sits in the list
+under the ring, with a name and a figure, so colour supplements it and never
+carries it alone.
 
 ### Named Rules
 **The Three Places Rule.** A category colour appears in exactly three places: the

@@ -1,58 +1,49 @@
 import { useMemo } from 'react'
 import Sheet from './Sheet'
 import { monthLabel, shekels } from '../lib/format'
-import { OTHER, headlineSector, monthBreakdown } from '../lib/breakdown'
+import { OTHER, headlineSector, monthBreakdown, sectorColor } from '../lib/breakdown'
 
 const SIZE = 180
-const RADIUS = 80
-const HOLE = 48
+const MID = SIZE / 2
+/** רדיוס האמצע של הטבעת, והעובי שסביבו */
+const RING = 64
+const WIDTH = 32
+const CIRC = 2 * Math.PI * RING
+/** רווח בין פלחים, במידות ה-viewBox, כדי שגבול יהיה גבול ולא גוון */
+const GAP = 3
+/** כמה זמן לוקח לסיבוב המלא להתמלא */
+const SWEEP = 700
 
 /**
- * נקודה על המעגל. מתחיל בשתים עשרה ונע עם כיוון השעון, שזו הקריאה
- * המוסכמת של עוגה בכל שפה, כולל מימין לשמאל.
+ * הטבעת מצוירת בקווים ולא בגזרות.
+ *
+ * קו עם stroke-dasharray הוא גזרה שאפשר להאריך, ולכן המילוי הוא
+ * אנימציה אחת של אורך הקו במקום צורה שמצוירת מחדש בכל פריים.
+ * הפלח מסובב למקומו, ומתחיל בשתים עשרה ונע עם כיוון השעון, שזו
+ * הקריאה המוסכמת של עוגה בכל שפה, כולל מימין לשמאל.
  */
-const point = (fraction, radius) => {
-  const angle = fraction * 2 * Math.PI - Math.PI / 2
-  return [SIZE / 2 + radius * Math.cos(angle), SIZE / 2 + radius * Math.sin(angle)]
-}
-
-const arc = (from, to) => {
-  // פלח יחיד הוא טבעת שלמה, ו-arc מנקודה לעצמה אינו מצייר דבר
-  if (to - from >= 0.9999) {
-    return `M ${SIZE / 2} ${SIZE / 2 - RADIUS} A ${RADIUS} ${RADIUS} 0 1 1 ${SIZE / 2 - 0.01} ${SIZE / 2 - RADIUS}`
-      + ` L ${SIZE / 2 - 0.01} ${SIZE / 2 - HOLE} A ${HOLE} ${HOLE} 0 1 0 ${SIZE / 2} ${SIZE / 2 - HOLE} Z`
-  }
-  const big = to - from > 0.5 ? 1 : 0
-  const [ox, oy] = point(from, RADIUS)
-  const [ex, ey] = point(to, RADIUS)
-  const [ix, iy] = point(to, HOLE)
-  const [sx, sy] = point(from, HOLE)
-  return `M ${ox} ${oy} A ${RADIUS} ${RADIUS} 0 ${big} 1 ${ex} ${ey}`
-    + ` L ${ix} ${iy} A ${HOLE} ${HOLE} 0 ${big} 0 ${sx} ${sy} Z`
-}
-
-const shade = (slice, index) => (slice.sector === OTHER
-  ? 'var(--color-neutral-300)'
-  : `var(--color-neutral-${Math.max(400, 900 - index * 100)})`)
-
-/** הופך את הפלחים לגזרות רצופות, כל אחת ממקום סיומה של קודמתה */
-const ring = (slices) => slices.reduce((built, slice, index) => {
+const ring = (slices) => slices.reduce((built, slice) => {
   const from = built.length ? built[built.length - 1].to : 0
   const to = from + slice.share
-  built.push({ ...slice, to, d: arc(from, to), fill: shade(slice, index) })
+  const full = slice.share * CIRC
+  // פלח יחיד הוא טבעת שלמה ואין בה מה להפריד
+  const len = slices.length > 1 ? Math.max(full - GAP, Math.min(full, 1)) : full
+  built.push({
+    ...slice,
+    to,
+    len,
+    turn: from * 360,
+    fill: sectorColor(slice.sector),
+  })
   return built
 }, [])
 
 /**
  * על מה יצא הכסף בחודש שנבחר.
  *
- * הפלחים צבועים בסולם הנייטרלי מהכהה לבהיר לפי הגודל, ולא בצבע
- * לכל ענף. צבע במערכת הזו שמור לקטגוריה ולאקסנט, ואחד עשר גוונים
- * חדשים היו הופכים את הטבעת לקישוט. הדירוג הוא המידע, והסולם
- * מקודד אותו. בכהה הסולם מתהפך, ולכן הגדול נשאר בעל הניגוד הגבוה.
- *
- * והמספרים נקראים מהרשימה שמתחת ולא מהטבעת: אי אפשר להשוות שטחי
- * גזרה בעין, ולכן לכל שורה יש סכום ואחוז.
+ * המספרים נקראים מהרשימה שמתחת ולא מהטבעת: אי אפשר להשוות שטחי
+ * גזרה בעין, ולכן לכל שורה יש שם, סכום ואחוז. הצבע מקבץ ענפים
+ * קרובים למשפחה אחת, והוא תוספת לזהות ולא הזהות עצמה.
  */
 export default function MonthBreakdown({ month, entries, baseAmount = 0, onClose }) {
   const { slices, total } = useMemo(() => monthBreakdown(entries), [entries])
@@ -85,11 +76,40 @@ export default function MonthBreakdown({ month, entries, baseAmount = 0, onClose
 
             <div className="donut">
               <svg viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label={label}>
+                {/* מסילה דהויה מתחת, כדי שבזמן המילוי יהיה מה
+                    להתמלא ולא חור בעמוד */}
+                <circle
+                  cx={MID}
+                  cy={MID}
+                  r={RING}
+                  fill="none"
+                  stroke="var(--color-neutral-200)"
+                  strokeWidth={WIDTH}
+                />
+
+                {/* הטבעת מתמלאת בסיבוב אחד, וכל פלח מתחיל כשקודמו
+                    נגמר. המשך של תנועה אחת, לא אחת לכל פלח */}
                 {arcs.map((slice) => (
-                  <path key={slice.sector} d={slice.d} fill={slice.fill} />
+                  <circle
+                    key={slice.sector}
+                    className="arc"
+                    cx={MID}
+                    cy={MID}
+                    r={RING}
+                    fill="none"
+                    stroke={slice.fill}
+                    strokeWidth={WIDTH}
+                    strokeDasharray={`${slice.len} ${CIRC}`}
+                    transform={`rotate(${slice.turn - 90} ${MID} ${MID})`}
+                    style={{
+                      '--len': slice.len,
+                      '--delay': `${Math.round((slice.turn / 360) * SWEEP)}ms`,
+                      '--dur': `${Math.max(90, Math.round(slice.share * SWEEP))}ms`,
+                    }}
+                  />
                 ))}
               </svg>
-              <div className="donut-mid">
+              <div className="donut-mid" style={{ '--delay': `${SWEEP - 120}ms` }}>
                 <span className="cap">סך הכל</span>
                 <span className="num">{shekels(total)}</span>
               </div>

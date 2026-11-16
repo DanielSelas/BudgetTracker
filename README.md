@@ -228,6 +228,14 @@ merchant name at read time, through `merchantSector`, so the breakdown works on
 every month already recorded and nothing had to be stored for it. A merchant the
 app does not recognise falls under "אחר", which always sorts last.
 
+The ring is coloured by **family**, not one hue per sector: eleven hues at one
+lightness cannot be told apart, so there are five families, one hue each, and
+the sectors inside a family differ in lightness. Eating out and the supermarket
+reading as related is the point. A sector's colour is fixed and never derived
+from its rank, so the same sector looks the same in every month. It fills in one
+clockwise sweep when the sheet opens, and that sweep is skipped entirely for
+anyone who asked for less motion.
+
 Above the ring, one sentence names the largest sector, and only when it passed
 **a third of the variable target**. The threshold is relative to the plan rather
 than to the other sectors: in a quiet month the largest sector is still the

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { OTHER, chosenSpending, headlineSector, monthBreakdown } from '../src/lib/breakdown'
+import { OTHER, chosenSpending, headlineSector, monthBreakdown, sectorColor } from '../src/lib/breakdown'
+import { SECTOR_RULES } from '../src/lib/merchants'
 
 const entry = (over = {}) => ({
   category: 'leisure', name: 'משהו', actualAmount: 100, ...over,
@@ -100,5 +101,27 @@ describe('headlineSector', () => {
 
   it('שותק בלי בסיס, כי אין יעד להשוות אליו', () => {
     expect(headlineSector([entry({ name: 'מסעדות', actualAmount: 5000 })], 0)).toBeNull()
+  })
+})
+
+describe('sectorColor', () => {
+  it('נותן צבע לכל ענף שהמערכת מזהה', () => {
+    for (const rule of SECTOR_RULES) {
+      expect(sectorColor(rule.sector), rule.sector).toMatch(/^var\(--sec-/)
+    }
+  })
+
+  it('לא נותן לשני ענפים באותה משפחה את אותו צבע', () => {
+    const used = SECTOR_RULES.map((rule) => sectorColor(rule.sector))
+    expect(new Set(used).size).toBe(used.length)
+  })
+
+  it('"אחר" וענף לא מוכר נופלים לנייטרלי', () => {
+    expect(sectorColor(OTHER)).toBe('var(--color-neutral-500)')
+    expect(sectorColor('ענף שלא קיים')).toBe('var(--color-neutral-500)')
+  })
+
+  it('אותו ענף מקבל אותו צבע ללא תלות בדירוג', () => {
+    expect(sectorColor('מסעדות ובתי קפה')).toBe(sectorColor('מסעדות ובתי קפה'))
   })
 })
