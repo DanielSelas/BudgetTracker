@@ -13,13 +13,19 @@ describe('chosenSpending', () => {
     expect(chosenSpending(rows)[0].name).toBe('ארומה')
   })
 
-  it('מוציא הכנסה והפקדה, ומשאיר בלת״ם', () => {
+  it('מוציא הכנסה, הפקדה וקבועות, ומשאיר בלת״ם', () => {
     const rows = [
       entry({ category: 'income', name: 'משכורת' }),
       entry({ category: 'fund', name: 'קרן' }),
+      entry({ category: 'fixed', name: 'ביטוח' }),
       entry({ category: 'unplanned', name: 'תיקון רכב' }),
     ]
     expect(chosenSpending(rows).map((row) => row.category)).toEqual(['unplanned'])
+  })
+
+  it('מוציא קבועה שהוקלדה ביד, גם בלי תבנית', () => {
+    const rows = [entry({ category: 'fixed', name: 'ארנונה', recurringId: null })]
+    expect(chosenSpending(rows)).toHaveLength(0)
   })
 
   it('מתעלם מסכום אפס', () => {
@@ -97,6 +103,16 @@ describe('headlineSector', () => {
       entry({ name: 'זארה', actualAmount: 2600 }),
     ]
     expect(headlineSector(rows, base).sector).toBe('ביגוד והנעלה')
+  })
+
+  it('לעולם לא מכריז על "אחר", גם כשהוא רוב החודש', () => {
+    const rows = [
+      entry({ name: 'מתנה לאיתן', actualAmount: 4000 }),
+      entry({ name: 'חתונה אדם וקורל', actualAmount: 3000 }),
+      entry({ name: 'ארומה', actualAmount: 300 }),
+    ]
+    // "אחר" הוא ערימה של דברים שונים ולא ענף, ואין על מה להצביע בו
+    expect(headlineSector(rows, base)).toBeNull()
   })
 
   it('שותק בלי בסיס, כי אין יעד להשוות אליו', () => {

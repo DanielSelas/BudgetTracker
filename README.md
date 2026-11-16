@@ -221,9 +221,11 @@ Every bar in the history is a button, and it opens the breakdown of that month:
 a ring by sector with the figures listed under it, because areas of a circle
 cannot be compared by eye.
 
-Only money that was **chosen** is counted. A row born from a standing template
-is excluded, so rent, insurance and the electricity bill do not drown out the
-rest; what is left is the spending of that month. The sector comes from the
+Only money that was **chosen** is counted: variable spending and the unplanned,
+never the fixed. Rent, insurance and the electricity bill are not a decision
+made this month, and they would drown out everything that was. The user's own
+classification decides it, not the presence of a template, because a fixed cost
+typed by hand is still fixed. The sector comes from the
 merchant name at read time, through `merchantSector`, so the breakdown works on
 every month already recorded and nothing had to be stored for it. A merchant the
 app does not recognise falls under "אחר", which always sorts last.

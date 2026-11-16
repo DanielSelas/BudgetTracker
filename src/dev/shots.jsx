@@ -409,11 +409,14 @@ const SCREENS = {
           { category: 'leisure', name: 'ארומה', actualAmount: 380 },
           { category: 'leisure', name: 'זארה', actualAmount: 740 },
           { category: 'leisure', name: 'קסטרו', actualAmount: 310 },
-          { category: 'fixed', name: 'שופרסל', actualAmount: 1280 },
-          { category: 'fixed', name: 'סונול', actualAmount: 620 },
-          { category: 'fixed', name: 'סופר פארם', actualAmount: 240 },
+          { category: 'leisure', name: 'שופרסל', actualAmount: 1280 },
+          { category: 'leisure', name: 'סונול', actualAmount: 620 },
+          { category: 'leisure', name: 'סופר פארם', actualAmount: 240 },
           { category: 'leisure', name: 'יס פלאנט', actualAmount: 180 },
           { category: 'unplanned', name: 'מוסך אלי', actualAmount: 900 },
+          // שתי השורות האחרונות אמורות לא להופיע בפילוח: אחת קבועה
+          // שהוקלדה ביד, והשנייה נולדה מתבנית
+          { category: 'fixed', name: 'ביטוח רכב', actualAmount: 410 },
           { category: 'fixed', name: 'שכר דירה', actualAmount: 5200, recurringId: 'r2' },
         ]}
       />
