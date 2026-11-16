@@ -20,17 +20,23 @@ export default function MonthPicker({ month, onChange, subtitle, billingDay, cur
         →
       </button>
 
-      <button
-        type="button"
-        className="month-label"
-        onClick={() => onChange(now)}
-        disabled={isCurrent}
-        title={isCurrent ? '' : 'חזרה לחודש הנוכחי'}
-      >
-        <span className="m">{monthLabel(month)}</span>
-        {window && <span className="cycle num">{window}</span>}
-        {subtitle && <span className="sub">{subtitle}</span>}
-      </button>
+      {/* כותרת המסך. בלי h1 ניווט לפי כותרות נחת על הקטגוריה הראשונה
+          ודילג על היתרה, שהיא כל הסיבה שהמסך נפתח. הכותרת עוטפת את
+          הכפתור ולא יושבת בתוכו, כי צאצאי button הם מצגתיים ותפקיד
+          כותרת בתוכם נבלע */}
+      <h1 className="month-heading">
+        <button
+          type="button"
+          className="month-label"
+          onClick={() => onChange(now)}
+          disabled={isCurrent}
+          title={isCurrent ? '' : 'חזרה לחודש הנוכחי'}
+        >
+          <span className="m">{monthLabel(month)}</span>
+          {window && <span className="cycle num">{window}</span>}
+          {subtitle && <span className="sub">{subtitle}</span>}
+        </button>
+      </h1>
 
       <button
         type="button"

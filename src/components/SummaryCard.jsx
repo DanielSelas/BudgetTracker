@@ -8,9 +8,9 @@ import { shekels } from '../lib/format'
  * הכסף מתחלק, ושלושת המספרים שמתחת.
  */
 const SEGMENTS = [
-  { group: 'fixed', category: 'fixed' },
-  { group: 'leisure', category: 'leisure' },
-  { group: 'savings', category: 'fund' },
+  { group: 'fixed', category: 'fixed', label: 'קבועות' },
+  { group: 'leisure', category: 'leisure', label: 'משתנות' },
+  { group: 'savings', category: 'fund', label: 'הפקדות' },
 ]
 
 export default function SummaryCard({ summary, onEditBase }) {
@@ -18,37 +18,73 @@ export default function SummaryCard({ summary, onEditBase }) {
   // פשוט חוסר נתונים. עדיף להשהות את החישוב מאשר להציג מספר מטעה.
   const pending = summary.totalIncome === 0
 
-  const segments = SEGMENTS.map(({ group, category }) => ({
+  const segments = SEGMENTS.map(({ group, category, label }) => ({
     category,
+    group,
+    label,
     width: pending
       ? 0
       : Math.max(0, Math.min(100, (summary.groups[group].actual / summary.totalIncome) * 100)),
   })).filter((segment) => segment.width > 0)
 
+  const barLabel = `חלוקת ההכנסה: ${segments
+    .map((segment) => `${segment.label} ${shekels(summary.groups[segment.group].actual)}`)
+    .join(', ')}`
+
+  // המספר הגדול הוא מה שנשאר בתוך התוכנית, ולא הכנסות פחות הוצאות:
+  // הכנסה מעל הבסיס היא עודף שאמור להופקד, ולא רשות להוציא יותר.
+  // חיסור של כל ההוצאות מהבסיס היה שגוי בכיוון השני, כי הוצאות
+  // בלת״ם יוצאות מהעודף ולא מהתוכנית, ולכן נחסרות רק שלוש הקבוצות.
+  const planSpent = SEGMENTS.reduce((sum, { group }) => sum + summary.groups[group].actual, 0)
+  const planRemaining = summary.baseAmount - planSpent
+  const extra = summary.unplanned.remaining
+
   return (
     <section className="summary">
       <div className="summary-hero">
-        <span className="cap">נשאר החודש</span>
+        <span className="cap">נשאר מהתוכנית</span>
         {pending ? (
           <span className="amount pending">יחושב אחרי הזנת ההכנסה</span>
         ) : (
-          <span className={`amount num ${summary.balance < 0 ? 'negative' : ''}`}>
-            {shekels(summary.balance)}
+          <span className={`amount num ${planRemaining < 0 ? 'negative' : ''}`}>
+            {shekels(planRemaining)}
+          </span>
+        )}
+        {/* העודף נאמר כאן ולא נשמר לכרטיס שבתחתית: אחרת הוא נקרא
+            כאילו הוא חלק מהמספר הגדול, וזה בדיוק מה שאין לו רשות */}
+        {!pending && extra > 0 && (
+          <span className="extra">
+            ועוד <span className="num">{shekels(extra)}</span> שנכנסו מעבר לתוכנית
           </span>
         )}
       </div>
 
+      {/* הפס היה aria-hidden בלי חלופה, והגוונים שלו הותאמו זה לזה
+          במשקל חזותי בכוונה, כך שפלחים סמוכים נבדלים ב-1.03:1. צבע
+          לבדו אינו קריא כאן, ולכן יש גם שם נגיש וגם מקרא */}
       {!pending && (
-        <div className="split-bar" aria-hidden="true">
-          {segments.map((segment) => (
-            <span
-              key={segment.category}
-              className="split-seg"
-              data-category={segment.category}
-              style={{ width: `${segment.width}%` }}
-            />
-          ))}
-        </div>
+        <>
+          <div className="split-bar" role="img" aria-label={barLabel}>
+            {segments.map((segment) => (
+              <span
+                key={segment.category}
+                className="split-seg"
+                data-category={segment.category}
+                style={{ width: `${segment.width}%` }}
+              />
+            ))}
+          </div>
+
+          <ul className="split-legend">
+            {segments.map((segment) => (
+              <li key={segment.category}>
+                <span className="dot" data-category={segment.category} />
+                {segment.label}
+                <span className="num">{shekels(summary.groups[segment.group].actual)}</span>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       <div className="summary-tiles">

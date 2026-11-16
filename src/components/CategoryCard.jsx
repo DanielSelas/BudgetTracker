@@ -1,6 +1,6 @@
 import EntryItems from './EntryItems'
 import { shekels } from '../lib/format'
-import { BUDGET_GROUP_RATIOS, CATEGORIES, isOverageGood } from '../lib/model'
+import { CATEGORIES, isOverageGood } from '../lib/model'
 import { EXPENSE_PILLS } from '../lib/pills'
 
 /**
@@ -14,7 +14,6 @@ export default function CategoryCard({
   category, entries, group, authorOf, actions, onStopRecurring,
 }) {
   const { label, budgetGroup } = CATEGORIES[category]
-  const ratio = BUDGET_GROUP_RATIOS[budgetGroup]
 
   const total = entries.reduce((sum, entry) => sum + (entry.actualAmount || 0), 0)
   // הכנסה אינה קטגוריה של הוצאה, ולכן אין לאן להחליף ממנה
@@ -34,7 +33,6 @@ export default function CategoryCard({
         <span className="cat-title">
           <span className="dot" />
           <h2>{label}</h2>
-          {ratio && <span className="pct">{Math.round(ratio * 100)}%</span>}
         </span>
 
         {/* בהכנסה אין יעד, ולכן מוצג הסכום בלבד */}

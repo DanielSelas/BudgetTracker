@@ -44,7 +44,9 @@ import { parseCapture, suggestForCapture } from '../lib/capture'
 // קבוע ולא מערך חדש, כדי שתקציב בלי קבוצות שמורות לא יפסול מטמון
 const NO_GROUPS = []
 
-const ORDER = ['income', 'fixed', 'leisure', 'fund']
+// הכנסה אינה דבר שמנהלים מול יעד, והיא כבר האריח הראשון בסיכום.
+// ככרטיס היא הייתה כפילות שדוחפת את הקטגוריות האמיתיות למטה.
+const ORDER = ['fixed', 'leisure', 'fund']
 
 function Skeleton() {
   return (
@@ -233,18 +235,19 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
           </p>
         )}
 
-        {/* לפני הסיכום, כי זה הדבר היחיד במסך שמחכה לפעולה */}
-        <InboxCard
-          items={inbox}
-          groups={attachable}
-          onApprove={(item, category, groupKey) =>
-            approveCapture({ budgetId, uid, item, category, groupKey })}
-          onDismiss={(item) => dismissCapture(budgetId, item.id)}
-        />
-
         {loading ? <Skeleton /> : (
           <>
             <SummaryCard summary={summary} onEditBase={() => setEditingBase(true)} />
+
+            {/* אחרי הסיכום ולא לפניו: היתרה היא הסיבה שהמסך נפתח, וקליטה
+                שממתינה לא אמורה להחליף אותה בטופס סיווג */}
+            <InboxCard
+              items={inbox}
+              groups={attachable}
+              onApprove={(item, category, groupKey) =>
+                approveCapture({ budgetId, uid, item, category, groupKey })}
+              onDismiss={(item) => dismissCapture(budgetId, item.id)}
+            />
 
             {isPast && <MonthVerdict summary={summary} />}
 

@@ -58,7 +58,8 @@ const summary = {
 }
 const byCategory = { income: [], fixed: [], leisure: [], fund: [], unplanned: [] }
 entries.forEach((e) => byCategory[e.category].push(e))
-const ORDER = ['income', 'fixed', 'leisure', 'fund']
+// אותו סדר כמו ב-MonthView: הכנסה אינה כרטיס קטגוריה
+const ORDER = ['fixed', 'leisure', 'fund']
 
 const tripEntries = [
   { id: 'a', category: 'lodging', name: 'מלון באתונה', actualAmount: 3200, addedBy: 'u1', date: '2026-08-02' },

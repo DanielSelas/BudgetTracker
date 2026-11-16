@@ -35,7 +35,11 @@ export default function UpcomingCharges({ summary, templates, billingDay, onMana
       >
         <span className="chevron" aria-hidden="true">▾</span>
         <span className="upcoming-title">
-          {peak.needed > 0 ? 'צריך בחשבון' : 'החודש הקרוב'}
+          {/* התאריך קודם לסכום: בלעדיו הכותרת נושאת את אותן ספרות
+              כמו אריח ההוצאות, ונקראת ככפילות ולא כשאלה אחרת */}
+          {peak.needed > 0
+            ? `צריך בחשבון${peak.at ? ` ב-${formatDay(peak.at.when)}` : ''}`
+            : 'החודש הקרוב'}
         </span>
         <span className="entry-amount num">{shekels(peak.needed)}</span>
       </button>

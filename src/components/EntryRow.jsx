@@ -203,7 +203,14 @@ export default function EntryRow({
         <span className="row-author">{displayName(author.member, author.profile)}</span>
       )}
 
-      <button type="button" className="entry-amount button num" onClick={open}>
+      {/* בלי שם נגיש הכפתור הוכרז כמספר עירום, והיו שני עצירות טאב
+          זהות בכל שורה */}
+      <button
+        type="button"
+        className="entry-amount button num"
+        aria-label={`עריכת הסכום של ${entry.name}`}
+        onClick={open}
+      >
         {shekels(entry.actualAmount)}
       </button>
     </li>
