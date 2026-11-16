@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import Sheet from './Sheet'
 import { monthLabel, shekels } from '../lib/format'
-import { OTHER, headlineSector, monthBreakdown, sectorColor } from '../lib/breakdown'
+import { headlineSector, monthBreakdown, ringSlices, sliceColors } from '../lib/breakdown'
 
 const SIZE = 180
 const MID = SIZE / 2
@@ -22,7 +22,7 @@ const SWEEP = 700
  * הפלח מסובב למקומו, ומתחיל בשתים עשרה ונע עם כיוון השעון, שזו
  * הקריאה המוסכמת של עוגה בכל שפה, כולל מימין לשמאל.
  */
-const ring = (slices) => slices.reduce((built, slice) => {
+const ring = (slices, fills) => slices.reduce((built, slice) => {
   const from = built.length ? built[built.length - 1].to : 0
   const to = from + slice.share
   const full = slice.share * CIRC
@@ -33,7 +33,7 @@ const ring = (slices) => slices.reduce((built, slice) => {
     to,
     len,
     turn: from * 360,
-    fill: sectorColor(slice.sector),
+    fill: fills.get(slice.sector),
   })
   return built
 }, [])
@@ -48,7 +48,10 @@ const ring = (slices) => slices.reduce((built, slice) => {
 export default function MonthBreakdown({ month, entries, baseAmount = 0, onClose }) {
   const { slices, total } = useMemo(() => monthBreakdown(entries), [entries])
   const headline = useMemo(() => headlineSector(entries, baseAmount), [entries, baseAmount])
-  const arcs = useMemo(() => ring(slices), [slices])
+  // הטבעת מציירת את הגדולים, והרשימה שמתחת מפרטת את כולם
+  const shown = useMemo(() => ringSlices(slices), [slices])
+  const fills = useMemo(() => sliceColors([...slices, ...shown]), [slices, shown])
+  const arcs = useMemo(() => ring(shown, fills), [shown, fills])
 
   const label = `פילוח ההוצאות ב${monthLabel(month)}: ${
     slices.map((slice) => `${slice.sector} ${shekels(slice.amount)}`).join(', ')}`
@@ -116,9 +119,13 @@ export default function MonthBreakdown({ month, entries, baseAmount = 0, onClose
             </div>
 
             <ul className="breakdown-list">
-              {arcs.map((slice) => (
+              {slices.map((slice) => (
                 <li key={slice.sector}>
-                  <span className="swatch" style={{ background: slice.fill }} aria-hidden="true" />
+                  <span
+                    className="swatch"
+                    style={{ background: fills.get(slice.sector) }}
+                    aria-hidden="true"
+                  />
                   <span className="breakdown-name">{slice.sector}</span>
                   <span className="breakdown-pct num">{Math.round(slice.share * 100)}%</span>
                   <span className="entry-amount num">{shekels(slice.amount)}</span>
@@ -127,9 +134,11 @@ export default function MonthBreakdown({ month, entries, baseAmount = 0, onClose
             </ul>
 
             <p className="hint">
-              הוצאות משתנות ובלת״ם בלבד, לפי ענף בית העסק. קבועות אינן כאן:
-              שכר דירה, חשבונות וביטוח אינם בחירה שנעשתה החודש. עסק שאינו
-              מזוהה נאסף תחת "{OTHER}".
+              הוצאות משתנות ובלת״ם בלבד. קבועות אינן כאן: שכר דירה, חשבונות
+              וביטוח אינם בחירה שנעשתה החודש.{' '}
+              {arcs.length < slices.length
+                ? 'הטבעת מראה את הגדולים, והרשימה את כולם.'
+                : ''}
             </p>
           </>
         )}

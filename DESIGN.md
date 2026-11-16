@@ -224,8 +224,12 @@ cannot be told apart by eye, and under colour blindness they collapse entirely.
 So there are **five families**, one hue each, and the sectors inside a family
 differ in lightness: food `#845922 · #ac7f49 · #c99b65`, transport
 `#386695 · #5e8dbe · #79a9db`, clothing and grooming `#945262 · #ce8797`,
-health and home `#3f774d · #75ae81`, leisure `#9777af`. Anything unrecognised is
-`--color-neutral-500`, a grey that does not pretend to be a sector.
+health and home `#3f774d · #75ae81`, leisure `#9777af`. A slice with no sector, which is a name
+someone typed, takes a colour from the same eleven by a hash of that name, so
+it is the same colour every month; when two would land on the same one, the
+second moves to the next free colour, because two large slices in one hue are
+exactly what the ring exists to prevent. Only "other" and the collapsed tail
+are `--color-neutral-500`, a grey that does not pretend to be a sector.
 
 Grouping is also the truer reading: eating out and the supermarket should look
 related. The colour is fixed per sector and never derived from its rank, so the

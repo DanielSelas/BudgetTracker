@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { OTHER, chosenSpending, headlineSector, monthBreakdown, sectorColor } from '../src/lib/breakdown'
+import { OTHER, REST, chosenSpending, headlineSector, monthBreakdown, ringSlices, sectorColor, sliceColors } from '../src/lib/breakdown'
 import { SECTOR_RULES } from '../src/lib/merchants'
 
 const entry = (over = {}) => ({
@@ -50,13 +50,33 @@ describe('monthBreakdown', () => {
     expect(slices[0].sector).toBe('מסעדות ובתי קפה')
   })
 
-  it('אוסף עסק לא מוכר לאחר, ושם אותו אחרון גם כשהוא הגדול', () => {
+  it('שם שאינו מוכר מופיע בשמו ולא נבלע', () => {
     const { slices } = monthBreakdown([
       entry({ name: 'משהו שלא ברשימה', actualAmount: 900 }),
       entry({ name: 'ארומה', actualAmount: 100 }),
     ])
-    expect(slices.at(-1)).toMatchObject({ sector: OTHER, amount: 900 })
+    expect(slices.map((slice) => slice.sector))
+      .toEqual(['משהו שלא ברשימה', 'מסעדות ובתי קפה'])
+  })
+
+  it('מעדיף את מפתח הקיבוץ על השם, כמו מסך החודש', () => {
+    const { slices } = monthBreakdown([
+      entry({ name: 'קפה בחוץ ביום שני', groupKey: 'קפה בחוץ', actualAmount: 30 }),
+    ])
+    // כאן הענף מנצח בכל מקרה, ולכן נבדק דווקא שם שאין לו ענף
+    const typed = monthBreakdown([
+      entry({ name: 'מוסך אלי רמלה', groupKey: 'מוסך', actualAmount: 900 }),
+    ])
     expect(slices[0].sector).toBe('מסעדות ובתי קפה')
+    expect(typed.slices[0].sector).toBe('מוסך')
+  })
+
+  it('שורה בלי שם בכלל נופלת לאחר, והוא אחרון', () => {
+    const { slices } = monthBreakdown([
+      entry({ name: '', actualAmount: 900 }),
+      entry({ name: 'ארומה', actualAmount: 100 }),
+    ])
+    expect(slices.at(-1)).toMatchObject({ sector: OTHER, amount: 900 })
   })
 
   it('מחזיר ריק בלי רשומות', () => {
@@ -132,9 +152,17 @@ describe('sectorColor', () => {
     expect(new Set(used).size).toBe(used.length)
   })
 
-  it('"אחר" וענף לא מוכר נופלים לנייטרלי', () => {
+  it('"אחר" ו"שאר" נופלים לנייטרלי, כי הם ערימה ולא ענף', () => {
     expect(sectorColor(OTHER)).toBe('var(--color-neutral-500)')
-    expect(sectorColor('ענף שלא קיים')).toBe('var(--color-neutral-500)')
+    expect(sectorColor(REST)).toBe('var(--color-neutral-500)')
+    expect(sectorColor('')).toBe('var(--color-neutral-500)')
+  })
+
+  it('שם שהוקלד ביד מקבל צבע מהפלטה, ואותו צבע בכל פעם', () => {
+    const color = sectorColor('מתנה')
+    expect(color).toMatch(/^var\(--sec-/)
+    expect(sectorColor('מתנה')).toBe(color)
+    expect(sectorColor('רכב')).toMatch(/^var\(--sec-/)
   })
 
   it('אותו ענף מקבל אותו צבע ללא תלות בדירוג', () => {
@@ -159,7 +187,7 @@ describe('זיהוי ענף משם שהוקלד ביד', () => {
 
   it('"אוכל" לבדו נשאר לא מזוהה, כי הוא גם הסופר', () => {
     expect(monthBreakdown([entry({ name: 'אוכל', actualAmount: 100 })])
-      .slices[0].sector).toBe(OTHER)
+      .slices[0].sector).toBe('אוכל')
   })
 
   it('לא שובר זיהוי של בתי עסק אמיתיים', () => {
@@ -169,5 +197,100 @@ describe('זיהוי ענף משם שהוקלד ביד', () => {
     ]
     expect(monthBreakdown(rows).slices.map((slice) => slice.sector))
       .toEqual(['מזון ומשקאות', 'דלק ואנרגיה'])
+  })
+})
+
+describe('איחוד לפי מילה ראשונה', () => {
+  it('מאחד "מתנה לאיתן" ו"מתנה לדוזי" ל"מתנה"', () => {
+    const { slices } = monthBreakdown([
+      entry({ name: 'מתנה לאיתן', actualAmount: 200 }),
+      entry({ name: 'מתנה לדוזי', actualAmount: 130 }),
+    ])
+    expect(slices).toEqual([{ sector: 'מתנה', amount: 330, share: 1 }])
+  })
+
+  it('לא מאחד שם יחיד', () => {
+    const { slices } = monthBreakdown([
+      entry({ name: 'מתנה לאיתן', actualAmount: 200 }),
+      entry({ name: 'רכב', actualAmount: 100 }),
+    ])
+    expect(slices.map((slice) => slice.sector)).toEqual(['מתנה לאיתן', 'רכב'])
+  })
+
+  it('לא מאחד לפי מילה משותפת שאינה ראשונה', () => {
+    const { slices } = monthBreakdown([
+      entry({ name: 'ציוד בחוץ', actualAmount: 200 }),
+      entry({ name: 'משהו בחוץ', actualAmount: 100 }),
+    ])
+    expect(slices).toHaveLength(2)
+  })
+
+  it('לא מאחד ענפים מוכרים', () => {
+    const { slices } = monthBreakdown([
+      entry({ name: 'ארומה', actualAmount: 200 }),
+      entry({ name: 'מסעדת ליבירה', actualAmount: 100 }),
+      entry({ name: 'שופרסל', actualAmount: 100 }),
+    ])
+    expect(slices.map((slice) => slice.sector))
+      .toEqual(['מסעדות ובתי קפה', 'מזון ומשקאות'])
+  })
+})
+
+describe('ringSlices', () => {
+  // שמות עם מילה ראשונה שונה, אחרת האיחוד היה מכווץ אותם לפלח אחד
+  const many = (count) => Array.from({ length: count }, (unused, index) =>
+    entry({ name: `ע${index} חנות`, actualAmount: 100 - index }))
+
+  it('מחזיר הכל כשיש עד שמונה', () => {
+    const { slices } = monthBreakdown(many(8))
+    expect(ringSlices(slices)).toHaveLength(8)
+  })
+
+  it('לא אוסף פלח בודד, כי זה רק מוחק לו את השם', () => {
+    const { slices } = monthBreakdown(many(9))
+    expect(ringSlices(slices)).toHaveLength(9)
+    expect(ringSlices(slices).at(-1).sector).not.toBe(REST)
+  })
+
+  it('אוסף את הזנב לפלח אחד, בלי לאבד כסף', () => {
+    const { slices, total } = monthBreakdown(many(12))
+    const ring = ringSlices(slices)
+    expect(ring).toHaveLength(9)
+    expect(ring.at(-1).sector).toBe(REST)
+    expect(ring.reduce((sum, slice) => sum + slice.amount, 0)).toBe(total)
+  })
+
+  it('הרשימה המלאה אינה נוגעת בזנב', () => {
+    const { slices } = monthBreakdown(many(12))
+    expect(slices).toHaveLength(12)
+  })
+})
+
+describe('sliceColors', () => {
+  it('לא נותן לשני פלחים באותו חודש את אותו צבע', () => {
+    const { slices } = monthBreakdown([
+      entry({ name: 'ארומה', actualAmount: 500 }),
+      entry({ name: 'שופרסל', actualAmount: 400 }),
+      entry({ name: 'מוסך אלי', actualAmount: 300 }),
+      entry({ name: 'רכב', actualAmount: 200 }),
+      entry({ name: 'מתנה לאיתן', actualAmount: 100 }),
+      entry({ name: 'בילי וגרי', actualAmount: 90 }),
+    ])
+    const fills = sliceColors(slices)
+    expect(new Set(fills.values()).size).toBe(slices.length)
+  })
+
+  it('ענף מוכר שומר על הצבע הקבוע שלו', () => {
+    const { slices } = monthBreakdown([
+      entry({ name: 'ארומה', actualAmount: 100 }),
+      entry({ name: 'משהו ביד', actualAmount: 90 }),
+    ])
+    expect(sliceColors(slices).get('מסעדות ובתי קפה'))
+      .toBe(sectorColor('מסעדות ובתי קפה'))
+  })
+
+  it('"שאר" אפור גם כשהוא בטבעת בלבד', () => {
+    const slices = [{ sector: 'ארומה' }, { sector: REST }]
+    expect(sliceColors(slices).get(REST)).toBe('var(--color-neutral-500)')
   })
 })

@@ -413,6 +413,10 @@ const SCREENS = {
           { category: 'leisure', name: 'סונול', actualAmount: 620 },
           { category: 'leisure', name: 'סופר פארם', actualAmount: 240 },
           { category: 'leisure', name: 'יס פלאנט', actualAmount: 180 },
+          // שמות שהוקלדו ביד: שניים מהם מתאחדים ל"מתנה"
+          { category: 'leisure', name: 'מתנה לאיתן', actualAmount: 300 },
+          { category: 'leisure', name: 'מתנה לדוזי', actualAmount: 130 },
+          { category: 'leisure', name: 'רכב', actualAmount: 1410 },
           { category: 'unplanned', name: 'מוסך אלי', actualAmount: 900 },
           // שתי השורות האחרונות אמורות לא להופיע בפילוח: אחת קבועה
           // שהוקלדה ביד, והשנייה נולדה מתבנית

@@ -226,9 +226,19 @@ never the fixed. Rent, insurance and the electricity bill are not a decision
 made this month, and they would drown out everything that was. The user's own
 classification decides it, not the presence of a template, because a fixed cost
 typed by hand is still fixed. The sector comes from the
-merchant name at read time, through `merchantSector`, so the breakdown works on
-every month already recorded and nothing had to be stored for it. A merchant the
-app does not recognise falls under "אחר", which always sorts last.
+name at read time, through `merchantSector`, so the breakdown works on every
+month already recorded and nothing had to be stored for it. The sector's own
+name counts as a match, not only a shop's: a row typed by hand carries the
+category in the writer's head, and "transport" falling through because it is
+not Egged was simply a bug.
+
+A name with no sector is **not swept into "other"**. It becomes its own slice,
+under the grouping key the month screen already shows it by, so the ring and
+the month agree. Names sharing a first word merge into it, which turns two
+"gift for X" rows into one "gift" slice: only the first word, and only when two
+or more share it, because any-shared-word would have merged "eating out" with
+"coffee out". The ring draws the eight largest and collapses what is left into
+one, while the list under it always names every slice.
 
 The ring is coloured by **family**, not one hue per sector: eleven hues at one
 lightness cannot be told apart, so there are five families, one hue each, and
