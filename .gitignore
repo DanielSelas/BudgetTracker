@@ -31,3 +31,9 @@ firestore-debug.log
 
 dist
 .firebase
+
+# סקילים של סוכני קוד. נמשכים מהרשת ואינם קוד של האפליקציה, ולכן
+# לא נשמרים כאן. skills-lock.json כן נשמר, וממנו אפשר לשחזר הכל
+.agents/
+.claude/skills/
+.claude/agents/
