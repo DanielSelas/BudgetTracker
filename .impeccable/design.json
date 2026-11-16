@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-16T00:00:00Z",
+  "title": "Design System: BudgetTracker",
+  "extensions": {
+    "colorMeta": {
+      "ink-blue": {
+        "role": "primary",
+        "displayName": "Ink Blue",
+        "canonical": "#1d3f9b",
+        "tonalRamp": [
+          "#eef2fd",
+          "#dbe4fb",
+          "#b7c8f6",
+          "#7f9dec",
+          "#4a72de",
+          "#2b53c0",
+          "#1d3f9b",
+          "#16306f",
+          "#112249"
+        ]
+      },
+      "ledger-green": {
+        "role": "secondary",
+        "displayName": "Ledger Green",
+        "canonical": "#1f6447",
+        "tonalRamp": [
+          "#e9f7ef",
+          "#cfecdc",
+          "#a3d9bd",
+          "#6cbd95",
+          "#3f9e73",
+          "#277754",
+          "#1f6447",
+          "#174b36",
+          "#103324"
+        ]
+      },
+      "stone": {
+        "role": "neutral",
+        "displayName": "Stone",
+        "canonical": "#63635b",
+        "tonalRamp": [
+          "#ffffff",
+          "#f0f0ee",
+          "#e0e0dc",
+          "#c2c2bc",
+          "#7a7a73",
+          "#63635b",
+          "#4e4e48",
+          "#33332e",
+          "#1f1f1c"
+        ]
+      },
+      "stone-dark": {
+        "role": "neutral",
+        "displayName": "Stone (dark scheme)",
+        "canonical": "#a3a9b0",
+        "tonalRamp": [
+          "#1b1c1e",
+          "#24262a",
+          "#303338",
+          "#474b52",
+          "#7b8188",
+          "#a3a9b0",
+          "#c8cdd3",
+          "#e4e8ec",
+          "#f3f6f8"
+        ]
+      },
+      "page": {
+        "role": "neutral",
+        "displayName": "Page",
+        "canonical": "#f4f4f2",
+        "tonalRamp": [
+          "#f4f4f2",
+          "#111214"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Danger",
+        "canonical": "#a52222",
+        "tonalRamp": [
+          "#a52222",
+          "#f08a8a"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Balance",
+        "purpose": "The month balance in IBM Plex Sans, and only that. The reason the screen opens."
+      },
+      "headline": {
+        "displayName": "Screen Title",
+        "purpose": "Month name and screen headings in Heebo 600."
+      },
+      "title": {
+        "displayName": "Card Heading",
+        "purpose": "Sheet and card headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Row names and field text at the 15px root size."
+      },
+      "label": {
+        "displayName": "Caption",
+        "purpose": "Captions and meta text in stone-600, 5.5:1 on the page."
+      },
+      "numeric": {
+        "displayName": "Figures",
+        "purpose": "Every money figure, through .num: IBM Plex Sans with tabular figures. The shekel sign falls back to Heebo, which is intended."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "The system monospace stack, for <code> and the invite code field only. Not a brand face."
+      }
+    },
+    "shadows": [
+      {
+        "name": "hairline",
+        "value": "0 0 0 1px var(--color-neutral-300)",
+        "purpose": "Every card at rest. A drawn edge, not a lift."
+      },
+      {
+        "name": "floating",
+        "value": "0 0 0 1px var(--color-neutral-300), 0 4px 14px rgb(18 18 17 / 7%)",
+        "purpose": "The bottom navigation. In dark the soft part becomes 0 6px 20px at 45% black."
+      },
+      {
+        "name": "lifted",
+        "value": "0 0 0 1px var(--color-neutral-300), 0 18px 48px rgb(18 18 17 / 18%)",
+        "purpose": "Sheets and dialogs over a scrim. In dark, 0 24px 60px at 65% black."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-soft",
+        "value": "cubic-bezier(0.2, 0.7, 0.3, 1)",
+        "purpose": "The system's only easing token. Fast out, long settle, matching the calm adjective."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "column",
+        "value": "480px",
+        "purpose": "Sheet max width. Phone first; a wide window centres the phone column."
+      },
+      {
+        "name": "nav",
+        "value": "440px",
+        "purpose": "Floating bottom navigation max width."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one committing action on a screen or sheet.",
+      "html": "<button class=\"ds-btn-primary\">שמירה</button>",
+      "css": ".ds-btn-primary { min-height: 54px; padding: 0 24px; border: 0; border-radius: 999px; background: #2e2b25; color: #f5ead8; font-family: Heebo, system-ui, sans-serif; font-size: 16px; font-weight: 700; } .ds-btn-primary:hover { background: #474238; } .ds-btn-primary:active { background: #645c50; }"
+    },
+    {
+      "name": "Group Chip",
+      "kind": "chip",
+      "refersTo": "chip-group",
+      "description": "Attaches a row to an existing charge, such as the weekly grocery run. Selected inverts to near-black.",
+      "html": "<button class=\"ds-chip\">סופר<span class=\"ds-chip-total\">1,240 ₪</span></button><button class=\"ds-chip ds-chip-on\">דלק</button>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px; border: 0; border-radius: 999px; background: #eee7db; color: #645c50; font-family: Heebo, system-ui, sans-serif; font-size: 13px; font-weight: 700; } .ds-chip-on { background: #2e2b25; color: #f5ead8; } .ds-chip-total { font-variant-numeric: tabular-nums; opacity: 0.7; }"
+    },
+    {
+      "name": "Summary Card",
+      "kind": "card",
+      "refersTo": "card-summary",
+      "description": "The signature component: caption, balance, segmented bar, three data columns that are deliberately not cards.",
+      "html": "<section class=\"ds-summary\"><div><span class=\"ds-cap\">נשאר החודש</span><div class=\"ds-amount\">7,170 ₪</div></div><div class=\"ds-bar\"><i style=\"width:42%;background:#d67f48\"></i><i style=\"width:12%;background:oklch(0.6 0.08 18)\"></i><i style=\"width:16%;background:oklch(0.55 0.06 235)\"></i></div></section>",
+      "css": ".ds-summary { background: #f9f4ed; border-radius: 20px; padding: 22px 20px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 1px 2px rgba(46,43,37,0.14); direction: rtl; font-family: Heebo, system-ui, sans-serif; } .ds-cap { font-size: 13px; color: #82796a; } .ds-amount { font-size: 44px; font-weight: 500; line-height: 1.1; letter-spacing: -1px; color: #201e1d; font-variant-numeric: tabular-nums; } .ds-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: #eee7db; } .ds-bar i { display: block; }"
+    },
+    {
+      "name": "Bottom Navigation",
+      "kind": "nav",
+      "refersTo": "nav-bottom",
+      "description": "A floating pill of three equal segments above the safe area; the active segment takes a light ground.",
+      "html": "<nav class=\"ds-nav\"><button class=\"ds-nav-on\">החודש</button><button>היסטוריה</button><button>תקציבים</button></nav>",
+      "css": ".ds-nav { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: #eee7db; box-shadow: 0 3px 10px rgba(46,43,37,0.16); direction: rtl; font-family: Heebo, system-ui, sans-serif; } .ds-nav button { flex: 1; min-height: 44px; border: 0; border-radius: 999px; background: none; color: #645c50; font-size: 15px; font-weight: 700; } .ds-nav .ds-nav-on { background: #f9f4ed; color: #201e1d; }"
+    },
+    {
+      "name": "Amount Input",
+      "kind": "input",
+      "refersTo": "amount-input",
+      "description": "The hero of the entry sheet: borderless, centred, 52px. A number being typed, not a field in a form.",
+      "html": "<input class=\"ds-amount-input\" value=\"₪0\" />",
+      "css": ".ds-amount-input { width: 100%; border: 0; background: transparent; padding: 0; font-family: Heebo, system-ui, sans-serif; font-size: 52px; font-weight: 500; letter-spacing: -1px; line-height: 1.1; color: #201e1d; caret-color: #2e2b25; direction: rtl; text-align: center; font-variant-numeric: tabular-nums; } .ds-amount-input::placeholder { color: #a19786; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "נייר ודיו (Paper and Ink)",
+    "overview": "A measuring instrument, not a lifestyle app. The screen opens so that someone standing in a shop, one handed, in daylight, can read one number and put the phone away.\n\nPaper means a real surface: a white card on a light page, with enough tonal step to be seen and a hairline that draws the edge. Ink means the interface itself is achromatic; the only colour is information.\n\nIt replaces Organic, a cream and terracotta world that read as childish. The three traits that carried that reading are gone: 28px corners, a cream page where no surface could separate from another, and weight 700 on everything. The discipline that was already right carried over unchanged.",
+    "keyCharacteristics": [
+      "White cards on a near-neutral page, separated by a hairline rather than a shadow",
+      "An achromatic interface; colour is reserved for category and for one accent",
+      "14px cards, 8px controls, and the only circle left is an avatar",
+      "Three weights that mean something: 400 body, 500 chip, 600 heading",
+      "Numerals in their own typeface, tabular, so money reads as measurement",
+      "One palette file drives both schemes; the neutral ramp inverts, it does not swap",
+      "Right to left throughout, phone first, AA contrast as a product requirement"
+    ],
+    "rules": [
+      {
+        "name": "The Three Places Rule",
+        "body": "A category colour appears in exactly three places: the dot beside the category name, the progress bar, and the segment in the summary bar. Never a background, never a tag, never body text.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Job Rule",
+        "body": "The accent means 'you can act on this'. If a thing is not interactive, it is not ink blue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Inverting Ramp Rule",
+        "body": "Dark mode redefines colour tokens and nothing else. neutral-100 is always the surface and neutral-900 is always the ink, in both schemes, so a component written once is correct in both. The one exception is --nav-active.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Weights Rule",
+        "body": "400 is body, 500 is a chip, 600 is a heading or an emphasised number. 700 does not appear anywhere.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "tabular-nums on :root and on .num, which also carries the numeral face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline Rule",
+        "body": "A card is drawn, not lifted. A shadow means the thing is physically above the page and can be dismissed.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep category colour to the dot, the progress bar and the summary segment.",
+      "Do put every figure in .num, which carries both the numeral face and tabular figures.",
+      "Do define colour only in src/index.css, in both the :root block and the dark block.",
+      "Do use logical properties and never left or right.",
+      "Do reach for the hairline to separate a surface, and a shadow only for something that floats.",
+      "Do keep touch targets at 54px for a primary action and no less than 34px for a chip.",
+      "Do keep the balance the largest thing on the month screen."
+    ],
+    "donts": [
+      "Don't use font-weight 700. The scale is 400, 500, 600.",
+      "Don't introduce a third accent. Ink blue is interaction, green is good.",
+      "Don't put a category colour behind text or into a tag.",
+      "Don't add a hover elevation to a card.",
+      "Don't return to a cream or beige page.",
+      "Don't hardcode a hex value in a component; every colour has a dark counterpart."
+    ]
+  }
+}

@@ -1,78 +1,115 @@
 /*
- * מערכת העיצוב "Organic". חם, עגול, רגוע.
- * רקע קרם, טרקוטה כאקסנט ראשי, מרווה כקול שני.
+ * מערכת העיצוב "נייר ודיו". מדויק, שטוח, קריא בשמש.
+ *
+ * שלושה עקרונות, ומהם נגזר כל השאר:
+ *
+ * משטח נקרא כמשטח. כרטיס לבן על נייר בהיר, עם הפרש בהיר מספיק
+ * להבחנה (1.1:1) וקו שיער שמצייר את הגבול. בגרסה הקודמת הכרטיס
+ * והדף נבדלו ב-1.05:1 והצל היה הדבר היחיד שהפריד ביניהם, ולכן
+ * הכרטיסים נראו כמו כתמים על נייר ולא כמו עצמים.
+ *
+ * צבע הוא מידע. חוץ מהדיו עצמו, הצבע היחיד על המסך הוא צבע
+ * קטגוריה, והוא מופיע בשלושה מקומות בלבד. אקסנט אחד, כחול דיו,
+ * שמור לאינטראקציה: קישור, מיקוד, טווח החיוב.
+ *
+ * משקל הוא הדגשה. בגרסה הקודמת כמעט הכל היה 700, ולכן שום דבר לא
+ * היה מודגש. כאן 400 לגוף, 600 לכותרת, ו-500 לגלולה.
+ *
+ * והמספרים הם הסיבה שהמסך נפתח, ולכן יש להם גופן משלהם.
  */
 :root {
-  --color-bg: #f5ead8;
-  --color-surface: #ebddc5;
-  --color-text: #201e1d;
-  --color-accent: #c67139;
-  --color-accent-2: #7a8a5e;
-  --color-divider: color-mix(in srgb, #201e1d 16%, transparent);
+  /* ========== נייר ודיו ========== */
 
-  --color-neutral-100: #f9f4ed;
-  --color-neutral-200: #eee7db;
-  --color-neutral-300: #dcd3c4;
-  --color-neutral-400: #c0b6a5;
-  --color-neutral-500: #a19786;
-  --color-neutral-600: #82796a;
-  --color-neutral-700: #645c50;
-  --color-neutral-800: #474238;
-  --color-neutral-900: #2e2b25;
+  --color-bg: #f4f4f2;
+  --color-text: #121211;
+  /* כחול דיו. התפקיד היחיד שלו הוא אינטראקציה, ולכן הוא אינו
+     מתנגש באף צבע קטגוריה: "קבועות" הוא אפור-כחול חסר רוויה,
+     אותה משפחה בלי התחרות */
+  --color-accent: #1d3f9b;
+  --color-accent-2: #1f6447;
+  --color-divider: color-mix(in srgb, #121211 12%, transparent);
 
-  --color-accent-100: #fff2eb;
-  --color-accent-200: #ffe1d0;
-  --color-accent-300: #ffc6a5;
-  --color-accent-400: #f6a06b;
-  --color-accent-500: #d67f48;
-  --color-accent-600: #b2622d;
-  --color-accent-700: #8c491a;
-  --color-accent-800: #643312;
-  --color-accent-900: #402310;
+  /* הסולם הנייטרלי. 100 הוא המשטח ו-900 הוא הדיו, וההיפוך במצב
+     כהה שומר על המשמעות הזו: הקוד שמשתמש בהם אינו יודע מה מואר */
+  --color-neutral-100: #ffffff;
+  --color-neutral-200: #f0f0ee;
+  --color-neutral-300: #e0e0dc;
+  --color-neutral-400: #c2c2bc;
+  --color-neutral-500: #7a7a73;
+  --color-neutral-600: #63635b;
+  --color-neutral-700: #4e4e48;
+  --color-neutral-800: #33332e;
+  --color-neutral-900: #1f1f1c;
 
-  --color-accent-2-100: #f0fae1;
-  --color-accent-2-200: #e1eecc;
-  --color-accent-2-300: #ccdbb2;
-  --color-accent-2-400: #aebf92;
-  --color-accent-2-500: #8fa073;
-  --color-accent-2-600: #728157;
-  --color-accent-2-700: #56633f;
-  --color-accent-2-800: #3d472b;
-  --color-accent-2-900: #272e1b;
+  --color-accent-100: #eef2fd;
+  --color-accent-200: #dbe4fb;
+  --color-accent-300: #b7c8f6;
+  --color-accent-400: #7f9dec;
+  --color-accent-500: #4a72de;
+  --color-accent-600: #2b53c0;
+  --color-accent-700: #1d3f9b;
+  --color-accent-800: #16306f;
+  --color-accent-900: #112249;
 
-  --color-danger: oklch(0.45 0.16 25);
+  /* הירוק הוא "טוב": יעד שהושג, הפקדה, הכנסה */
+  --color-accent-2-100: #e9f7ef;
+  --color-accent-2-200: #cfecdc;
+  --color-accent-2-300: #a3d9bd;
+  --color-accent-2-400: #6cbd95;
+  --color-accent-2-500: #3f9e73;
+  --color-accent-2-600: #277754;
+  --color-accent-2-700: #1f6447;
+  --color-accent-2-800: #174b36;
+  --color-accent-2-900: #103324;
 
-  /* צבעי קטגוריה. אותו משקל ויזואלי, גוון לכל קטגוריה. */
+  --color-danger: #a52222;
 
-  --cat-unplanned-bg: oklch(0.93 0.045 85);
-  --cat-unplanned-base: oklch(0.66 0.11 85);
-  --cat-unplanned-ink: oklch(0.42 0.09 85);
+  /* צבעי קטגוריה. אותו משקל ויזואלי, גוון לכל קטגוריה, וכולם
+     עומדים ב-AA כטקסט ולא רק כנקודה */
+  --cat-income: #277754;
+  --cat-fixed: #5a6a86;
+  --cat-leisure: #a8475a;
+  --cat-fund: #6b53a8;
+  --cat-unplanned: #8a6b1f;
 
-  --shadow-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
-  --shadow-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
-  --shadow-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
+  /* ========== עומק ========== */
 
-  --radius-card: 28px;
-  --radius-inner: 20px;
-  --radius-pill: 999px;
+  /* קו שיער ולא צל. ההפרדה היא גבול מצויר, והצל נשאר למה שבאמת
+     מרחף מעל הדף: מגירה, דיאלוג, הניווט */
+  --shadow-sm: 0 0 0 1px var(--color-neutral-300);
+  --shadow-md: 0 0 0 1px var(--color-neutral-300), 0 4px 14px rgb(18 18 17 / 7%);
+  --shadow-lg: 0 0 0 1px var(--color-neutral-300), 0 18px 48px rgb(18 18 17 / 18%);
 
-  /* פונט אחד לכל האפליקציה. שני פונטים יצרו שתי שפות על אותו מסך,
+  /* ========== צורה ========== */
+
+  /* פינות הדוקות. 28px על כרטיס ברוחב טלפון היה המקור הבולט ביותר
+     לתחושה הילדותית, וגלולה מלאה על גלולה בגובה 34 הפכה אותה
+     לסוכרייה */
+  --radius-card: 14px;
+  --radius-card-2: 10px;
+  --radius-inner: 10px;
+  --radius-pill: 8px;
+
+  /* ========== טיפוגרפיה ========== */
+
+  /* פונט אחד לעברית. שני פונטים יצרו שתי שפות על אותו מסך,
      ובעברית ההבדל בולט הרבה יותר מאשר בלטינית */
   --font-heading: 'Heebo', system-ui, sans-serif;
   --font-body: 'Heebo', system-ui, sans-serif;
 
-  /* צבע הקטגוריה מופיע בשלושה מקומות בלבד: הנקודה שליד השם, פס
-     ההתקדמות, והפלח בפס הסיכום. לא ברקעים ולא בתגיות */
-  --cat-income: var(--color-accent-2-600);
-  --cat-fixed: var(--color-accent-500);
-  --cat-leisure: oklch(0.6 0.08 18);
-  --cat-fund: oklch(0.55 0.06 235);
-  --cat-unplanned: oklch(0.65 0.08 85);
+  /* הכלל הזה אינו חל על ספרות, והן המחצית החשובה של כל מסך כאן.
+     IBM Plex Sans נותן להן נוכחות של מכשיר מדידה: ספרה שאי אפשר
+     לבלבל בינה לאחרת. עברית נשארת Heebo, וגם ₪ נופל אליה */
+  --font-num: 'IBM Plex Sans', 'Heebo', system-ui, sans-serif;
 
-  /* מידות שחוזרות בכל המסכים */
+  /* ========== מידות ========== */
+
   --screen-pad: 20px;
   --card-pad: 20px;
-  --radius-card-2: 20px;
+
+  /* המקטע הפעיל בניווט מורם מעל הסרגל. במצב כהה "מורם" הוא בהיר
+     יותר ולא כהה יותר, ולכן זה טוקן ולא הסולם הנייטרלי ישירות */
+  --nav-active: var(--color-neutral-100);
 
   --ease-soft: cubic-bezier(0.2, 0.7, 0.3, 1);
 
@@ -87,6 +124,73 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
+
+/*
+ * מצב כהה. רק הצבעים מוגדרים מחדש, כי הצורה והטיפוגרפיה אינן
+ * תלויות בתאורה.
+ *
+ * הסולם מתהפך ולא מתחלף: 100 נשאר "המשטח" ו-900 נשאר "הדיו", ולכן
+ * כפתור ראשי הוא עדיין neutral-900 על neutral-100 והקוד ב-App.css
+ * אינו יודע שמשהו השתנה. זו הסיבה שהמצב הכהה הוא קובץ אחד ולא
+ * מעבר על כל רכיב.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #111214;
+    --color-text: #f3f6f8;
+    --color-accent: #8fb0ef;
+    --color-accent-2: #6cbd95;
+    --color-divider: color-mix(in srgb, #f3f6f8 14%, transparent);
+
+    --color-neutral-100: #1b1c1e;
+    --color-neutral-200: #24262a;
+    --color-neutral-300: #303338;
+    --color-neutral-400: #474b52;
+    --color-neutral-500: #7b8188;
+    --color-neutral-600: #a3a9b0;
+    --color-neutral-700: #c8cdd3;
+    --color-neutral-800: #e4e8ec;
+    --color-neutral-900: #f3f6f8;
+
+    --color-accent-100: #10203f;
+    --color-accent-200: #16305e;
+    --color-accent-300: #1e4590;
+    --color-accent-400: #3a68c9;
+    --color-accent-500: #6a92e8;
+    --color-accent-600: #8fb0ef;
+    --color-accent-700: #b8cdf6;
+    --color-accent-800: #d7e3fa;
+    --color-accent-900: #ecf2fe;
+
+    --color-accent-2-100: #0f2a1f;
+    --color-accent-2-200: #15402f;
+    --color-accent-2-300: #1d5c43;
+    --color-accent-2-400: #2f8a63;
+    --color-accent-2-500: #4aa87c;
+    --color-accent-2-600: #6cbd95;
+    --color-accent-2-700: #8fd1ae;
+    --color-accent-2-800: #b6e3ca;
+    --color-accent-2-900: #daf1e5;
+
+    --color-danger: #f08a8a;
+
+    --cat-income: #6cbd95;
+    --cat-fixed: #9aa8c4;
+    --cat-leisure: #e58fa0;
+    --cat-fund: #b49bf0;
+    --cat-unplanned: #d9b85c;
+
+    /* על רקע כהה צל אינו נראה, ולכן ההפרדה היא קו בלבד, והמרחף
+       מקבל צל שחור עמוק שמחשיך את מה שמתחתיו */
+    --shadow-sm: 0 0 0 1px var(--color-neutral-300);
+    --shadow-md: 0 0 0 1px var(--color-neutral-300), 0 6px 20px rgb(0 0 0 / 45%);
+    --shadow-lg: 0 0 0 1px var(--color-neutral-300), 0 24px 60px rgb(0 0 0 / 65%);
+
+    --nav-active: var(--color-neutral-300);
+
+    color-scheme: dark;
+  }
 }
 
 *,
@@ -108,16 +212,21 @@ body {
   min-height: 100svh;
 }
 
+/* 600 ולא 700: כותרת צריכה להיות כבדה יותר מהגוף, לא כבדה ככל
+   האפשר. ההבדל בין 400 ל-600 קריא, וההבדל בין 600 ל-700 רק מוסיף
+   רעש */
 h1, h2, h3, h4 {
   margin: 0;
   font-family: var(--font-heading);
-  font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: -0.3px;
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.4px;
 }
 
-/* מספרי כסף ברוחב ספרה אחיד, כך שהעמודות לא זזות בזמן הקלדה */
+/* מספרי כסף בגופן שלהם וברוחב ספרה אחיד, כך שהעמודות לא זזות
+   בזמן הקלדה */
 .num {
+  font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum';
 }
@@ -130,12 +239,12 @@ code {
 :focus { outline: none; }
 
 :focus-visible {
-  outline: 2px solid var(--color-neutral-900);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 25%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

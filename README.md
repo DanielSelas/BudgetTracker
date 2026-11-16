@@ -7,11 +7,11 @@
 **A shared budget for two people, built around the 50/30/20 rule.**
 An installable PWA. No developer account, no app store, no native build.
 
-[![Live](https://img.shields.io/badge/live-budget--tracker-c67139?style=flat-square)](https://budget-tracker-virid-one.vercel.app)
+[![Live](https://img.shields.io/badge/live-budget--tracker-1d3f9b?style=flat-square)](https://budget-tracker-virid-one.vercel.app)
 ![React](https://img.shields.io/badge/React-19-2a78d6?style=flat-square&logo=react&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-8-7a8a5e?style=flat-square&logo=vite&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-1f6447?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-eb6834?style=flat-square&logo=firebase&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-213%20%2B%20108%20rules-1baf7a?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-430%20%2B%20129%20rules-1f6447?style=flat-square)
 
 The interface is in Hebrew and right to left throughout.
 

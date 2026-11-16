@@ -177,8 +177,13 @@ export default function GoalView({ budgetId, budget, uid, onDeleted }) {
         )}
       </div>
 
-      <button type="button" className="fab" onClick={() => setSheet('deposit')}>
-        <span className="plus">+</span> הפקדה
+      <button
+        type="button"
+        className="fab"
+        aria-label="הוספת הפקדה"
+        onClick={() => setSheet('deposit')}
+      >
+        <span className="plus" aria-hidden="true">+</span>
       </button>
 
       {sheet && (

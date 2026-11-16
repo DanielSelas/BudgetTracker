@@ -97,7 +97,7 @@ function Month() {
           <button type="button" className="btn-text danger-text">מחיקה</button>
         </div>
       </div>
-      <button type="button" className="fab"><span className="plus">+</span> הוצאה</button>
+      <button type="button" className="fab" aria-label="הוספת הוצאה"><span className="plus" aria-hidden="true">+</span></button>
       <BottomNav active="month" onChange={noop} />
     </main>
   )
@@ -238,7 +238,7 @@ function Trip() {
           </section>
         ))}
       </div>
-      <button type="button" className="fab"><span className="plus">+</span> הוצאה</button>
+      <button type="button" className="fab" aria-label="הוספת הוצאה"><span className="plus" aria-hidden="true">+</span></button>
       <BottomNav active="month" onChange={noop} type="trip" />
     </main>
   )
@@ -323,7 +323,7 @@ function Goal() {
           </section>
         ))}
       </div>
-      <button type="button" className="fab"><span className="plus">+</span> הפקדה</button>
+      <button type="button" className="fab" aria-label="הוספת הפקדה"><span className="plus" aria-hidden="true">+</span></button>
       <BottomNav active="month" onChange={noop} type="goal" />
     </main>
   )

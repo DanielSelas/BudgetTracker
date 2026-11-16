@@ -76,9 +76,9 @@ button:disabled {
   padding: 0 24px;
   border-radius: var(--radius-pill);
   background: var(--color-neutral-900);
-  color: var(--color-bg);
+  color: var(--color-neutral-100);
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .btn-primary:hover:not(:disabled) { background: var(--color-neutral-800); }
@@ -91,7 +91,7 @@ button:disabled {
   border-radius: var(--radius-pill);
   background: transparent;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .btn-secondary:hover:not(:disabled) { background: var(--color-neutral-200); }
@@ -151,7 +151,7 @@ button:disabled {
      מגיע עם רוחב מובנה רחב שפורץ את המגירה */
   min-width: 0;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-neutral-700);
 }
 
@@ -182,7 +182,7 @@ button:disabled {
   text-align: center;
   letter-spacing: 4px;
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .stack {
@@ -207,7 +207,7 @@ button:disabled {
 
 .login-inner h1 {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.5px;
   margin: 0;
 }
@@ -286,7 +286,7 @@ button:disabled {
 /* כותרת קבוצה: קטנה ורגועה, כי היא מסמנת חלוקה ולא פותחת נושא */
 .group-title {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.4px;
   color: var(--color-neutral-600);
   padding-top: 6px;
@@ -336,7 +336,7 @@ button:disabled {
 
 /* הפס בכרטיס התקציב ניטרלי ולא צבעוני: אין כאן קטגוריה, רק כמה
    מההכנסה כבר נוצל */
-.bar-fill.used { background: var(--color-neutral-800); }
+.bar-fill.used { background: var(--color-neutral-700); }
 
 .budget-card-top {
   display: flex;
@@ -347,7 +347,7 @@ button:disabled {
 
 .budget-name {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -361,7 +361,7 @@ button:disabled {
   padding: 5px 12px;
   border-radius: var(--radius-pill);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   white-space: nowrap;
   background: var(--color-neutral-700);
   color: var(--color-neutral-100);
@@ -395,7 +395,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   flex-shrink: 0;
 }
 
@@ -471,7 +471,7 @@ button:disabled {
   border-radius: var(--radius-pill);
   padding: 8px 18px;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 3px;
   user-select: all;
 }
@@ -488,7 +488,7 @@ button:disabled {
   border-radius: var(--radius-pill);
   background: var(--color-bg);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--color-accent-2-800);
 }
 
@@ -527,7 +527,7 @@ button:disabled {
 
 .month-label .m {
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .month-label .sub {
@@ -568,10 +568,11 @@ button:disabled {
 }
 
 .summary-hero .amount {
-  font-size: 44px;
-  font-weight: 500;
-  line-height: 1.1;
-  letter-spacing: -1px;
+  font-family: var(--font-num);
+  font-size: 46px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -1.6px;
 }
 
 .summary-hero .amount.negative { color: var(--color-danger); }
@@ -605,7 +606,7 @@ button:disabled {
 
 .summary-tiles .val {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
   text-align: start;
 }
 
@@ -683,7 +684,7 @@ button:disabled {
 
 .cat-title h2 {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .stack-title {
@@ -726,8 +727,8 @@ button:disabled {
   color: var(--color-neutral-600);
 }
 
-.cat-state.danger { color: var(--color-danger); font-weight: 700; }
-.cat-state.good { color: var(--color-accent-2-700); font-weight: 700; }
+.cat-state.danger { color: var(--color-danger); font-weight: 600; }
+.cat-state.good { color: var(--color-accent-2-700); font-weight: 600; }
 
 .cat-card .note {
   margin: 0;
@@ -745,7 +746,7 @@ button:disabled {
 .bar-fill {
   height: 100%;
   border-radius: var(--radius-pill);
-  background: var(--dot, var(--color-neutral-800));
+  background: var(--dot, var(--color-neutral-700));
   transition: width 320ms var(--ease-soft);
 }
 
@@ -904,7 +905,7 @@ button:disabled {
   padding: 0 16px;
   border-radius: var(--radius-pill);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .inline-edit .mini.save { background: var(--color-neutral-900); color: var(--color-bg); }
@@ -964,7 +965,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 1.05rem;
 }
 
@@ -990,8 +991,8 @@ button:disabled {
 .month-cell[aria-pressed='true'] {
   background: var(--color-neutral-900);
   border-color: var(--color-neutral-900);
-  color: #fff;
-  font-weight: 700;
+  color: var(--color-neutral-100);
+  font-weight: 600;
 }
 
 .month-cell:disabled {
@@ -1076,7 +1077,7 @@ button:disabled {
   width: 58px;
   height: 58px;
   padding: 0;
-  border-radius: 50%;
+  border-radius: 18px;
   background: var(--color-neutral-900);
   color: var(--color-bg);
   font-size: 28px;
@@ -1089,7 +1090,6 @@ button:disabled {
 
 .fab:hover { background: var(--color-neutral-800); }
 .fab .plus { font-size: 28px; line-height: 1; }
-.fab .fab-label { display: none; }
 
 /* ========== ניווט תחתון ========== */
 
@@ -1114,7 +1114,7 @@ button:disabled {
   padding: 11px 0;
   border-radius: var(--radius-pill);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--color-neutral-700);
 }
 
@@ -1185,7 +1185,7 @@ button:disabled {
 .chat-compose .btn-primary { padding: 0 20px; flex-shrink: 0; }
 
 .bottom-nav button[aria-current='page'] {
-  background: var(--color-neutral-100);
+  background: var(--nav-active);
   box-shadow: var(--shadow-sm);
   color: var(--color-text);
 }
@@ -1196,7 +1196,7 @@ button:disabled {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: rgb(46 43 37 / 55%);
+  background: color-mix(in srgb, #000 55%, transparent);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -1260,11 +1260,11 @@ button:disabled {
   flex-shrink: 0;
 }
 
-.sheet h2 { font-size: 22px; font-weight: 700; }
+.sheet h2 { font-size: 22px; font-weight: 600; }
 
 .sheet h3 {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.4px;
   color: var(--color-neutral-600);
   padding-top: 6px;
@@ -1291,7 +1291,7 @@ button:disabled {
   min-height: 40px;
   border-radius: var(--radius-pill);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   background: none;
   color: var(--color-neutral-700);
   white-space: nowrap;
@@ -1385,9 +1385,10 @@ button:disabled {
   border: 0;
   background: transparent;
   padding: 0;
+  font-family: var(--font-num);
   font-size: 52px;
-  font-weight: 500;
-  letter-spacing: -1px;
+  font-weight: 600;
+  letter-spacing: -1.8px;
   line-height: 1.1;
   color: var(--color-text);
   caret-color: var(--color-neutral-900);
@@ -1434,7 +1435,7 @@ button:disabled {
   border: 0;
   background: transparent;
   font: inherit;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text);
   text-align: left;
   direction: ltr;
@@ -1523,7 +1524,7 @@ button:disabled {
   text-align: right;
 }
 
-.dialog h2 { font-size: 20px; font-weight: 700; }
+.dialog h2 { font-size: 20px; font-weight: 600; }
 .dialog p { margin: 0; font-size: 14px; color: var(--color-neutral-700); }
 
 .sheet-backdrop.middle { align-items: center; padding: 20px; }
@@ -1602,7 +1603,7 @@ button:disabled {
   color: var(--color-neutral-600);
 }
 
-.bars-col.current .m { font-weight: 700; color: var(--color-text); }
+.bars-col.current .m { font-weight: 600; color: var(--color-text); }
 
 /* שורות ולא כרטיסים: שלוש שורות באותו כרטיס, מופרדות בקו */
 .avg-list {
@@ -1699,7 +1700,7 @@ button:disabled {
   padding: 0 16px;
   border-radius: var(--radius-pill);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .toast-actions .go { background: var(--color-neutral-900); color: var(--color-bg); }
@@ -1725,7 +1726,7 @@ button:disabled {
 
 .prompt-title {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .prompt-body {
@@ -1743,7 +1744,7 @@ button:disabled {
   background: var(--color-neutral-900);
   color: var(--color-bg);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* ========== בורר סוג תקציב ========== */
@@ -1801,7 +1802,7 @@ select.input {
 
 .trip-head h1 {
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .trip-head .muted {
@@ -1956,7 +1957,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   background: var(--color-neutral-200);
   color: var(--color-neutral-700);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -2025,7 +2026,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   display: grid;
   place-items: center;
   font-size: 30px;
-  background: var(--dot, var(--color-neutral-800));
+  background: var(--dot, var(--color-neutral-700));
   color: var(--color-neutral-100);
   border: 3px solid var(--color-bg);
 }
@@ -2044,7 +2045,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   border-radius: var(--radius-pill);
   background: var(--color-neutral-200);
   color: var(--color-neutral-800);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .intro-chip.big { font-size: 22px; }
@@ -2075,7 +2076,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-neutral-800);
 }
 
@@ -2111,7 +2112,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: flex-start;
 }
 
-.intro-reserve .intro-track { width: 100%; background: var(--dot, var(--color-neutral-800)); }
+.intro-reserve .intro-track { width: 100%; background: var(--dot, var(--color-neutral-700)); }
 
 .intro-reserve-tag {
   align-self: flex-start;
@@ -2119,7 +2120,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   border-radius: var(--radius-pill);
   background: var(--color-neutral-200);
   color: var(--color-neutral-800);
-  font-weight: 700;
+  font-weight: 500;
   font-size: 14px;
 }
 
@@ -2463,7 +2464,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   box-shadow: var(--shadow-sm);
 }
 
-.ending-card h2 { margin: 0; font-size: 16px; font-weight: 700; }
+.ending-card h2 { margin: 0; font-size: 16px; font-weight: 600; }
 
 /* ========== מה עומד לרדת ========== */
 
@@ -2490,7 +2491,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   flex: 1;
   min-width: 0;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .upcoming[data-open] .chevron { transform: rotate(180deg); }
@@ -2513,7 +2514,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 /* השורה התחתונה היא התשובה, ולכן היא בולטת מהשאר */
 .upcoming-foot.total {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 16px;
   color: var(--color-text);
   padding-top: 8px;
@@ -2545,7 +2546,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   background: var(--color-neutral-200);
   color: var(--color-neutral-700);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -2585,14 +2586,17 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .merchant:last-child { border-bottom: none; padding-bottom: 0; }
 
 /* חיוב חריג: סימון שמושך את העין בלי לצבוע את השורה כשגיאה, כי
-   חריג אינו טעות אלא שאלה */
+   חריג אינו טעות אלא שאלה.
+   ענבר ולא כחול דיו: הכחול אומר "אפשר ללחוץ", וזו אינה פעולה אלא
+   מצב. ושני פיקסלים ולא שלושה, כי סימון שוליים בספר חשבונות הוא
+   קו דק בצד השורה ולא פס על כרטיס */
 .merchant[data-unusual] {
-  border-inline-start: 3px solid var(--color-accent);
+  border-inline-start: 2px solid var(--cat-unplanned);
   padding-inline-start: 10px;
-  margin-inline-start: -13px;
+  margin-inline-start: -12px;
 }
 
-.merchant[data-unusual] > .type-hint { color: var(--color-accent); }
+.merchant[data-unusual] > .type-hint { color: var(--cat-unplanned); }
 
 .merchant-head {
   display: flex;
@@ -2621,7 +2625,7 @@ input[type='file'] {
   background: var(--color-neutral-100);
 }
 
-.inbox-card h2 { margin: 0; font-size: 16px; font-weight: 700; }
+.inbox-card h2 { margin: 0; font-size: 16px; font-weight: 600; }
 
 .inbox-list {
   display: flex;
@@ -2715,7 +2719,7 @@ input[type='file'] {
 /* תווית קצרה מעל קבוצת גלולות, כשצריך לומר מה בוחרים */
 .inbox-label {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--color-neutral-600);
 }
 
