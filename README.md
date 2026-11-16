@@ -11,7 +11,7 @@ An installable PWA. No developer account, no app store, no native build.
 ![React](https://img.shields.io/badge/React-19-2a78d6?style=flat-square&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-1f6447?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-eb6834?style=flat-square&logo=firebase&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-430%20%2B%20129%20rules-1f6447?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-443%20%2B%20129%20rules-1f6447?style=flat-square)
 
 The interface is in Hebrew and right to left throughout.
 
@@ -38,7 +38,7 @@ The interface is in Hebrew and right to left throughout.
 <td><img src="docs/screens/goal.png" alt="A saving goal" /></td>
 </tr>
 <tr>
-<td align="center"><b>The month</b><br/>Balance, base amount, targets per group</td>
+<td align="center"><b>The month</b><br/>What is left of the plan, and a target per group</td>
 <td align="center"><b>A trip</b><br/>One frame, its own categories, no months</td>
 <td align="center"><b>A saving goal</b><br/>A target to fill, deposits and withdrawals</td>
 </tr>
@@ -53,10 +53,14 @@ The interface is in Hebrew and right to left throughout.
 <td align="center"><b>Profile</b><br/>One name and one colour, everywhere</td>
 </tr>
 <tr>
-<td colspan="3"><img src="docs/screens/commitments.png" alt="Standing commitments" width="33%" /></td>
+<td><img src="docs/screens/commitments.png" alt="Standing commitments" /></td>
+<td><img src="docs/screens/outlook.png" alt="A month that will not hold" /></td>
+<td><img src="docs/screens/import.png" alt="Importing a statement" /></td>
 </tr>
 <tr>
-<td colspan="3" align="center"><b>Standing commitments</b><br/>Every recurring charge in one place: amount, the day it moves, and when it ends</td>
+<td align="center"><b>Standing commitments</b><br/>Every recurring charge: amount, the day it moves, when it ends</td>
+<td align="center"><b>A month that will not hold</b><br/>Said mid month, in two levels, while something can still be done</td>
+<td align="center"><b>Import a statement</b><br/>The format and the columns are read from the file</td>
 </tr>
 </table>
 
@@ -84,7 +88,8 @@ The interface is in Hebrew and right to left throughout.
 | **Works offline** | Opens and shows data without a connection. Writes sync when it returns. |
 | **Who entered what** | A coloured avatar on every row. |
 | **Quick capture** | One Shortcut, or a double tap on the back of the phone: say "50 shufersal" and it waits in an inbox at the top of the month for one tap to approve. The category is guessed from the merchant name through the same sector table the importer uses, never from what you classified before. No server and no token, because the browser that opens the link is already signed in. See [docs/quick-capture.md](docs/quick-capture.md). |
-| **End of month nudge** | On your billing date: what is left to deposit, or where you overspent. |
+| **A month that will not hold** | Said while the month is running, not after it closes, because every standing charge is already a row on day one. Two levels: the plan is broken, or the month is eating savings. Silent until each person's income is in, so a half entered month never raises a false alarm. |
+| **Notifications** | On your billing date, what is left to deposit or where you overspent. Mid month, once, only when the month is already past the income. |
 | **One profile** | A name and a colour that belong to the person, identical in every budget. |
 
 ---
@@ -166,9 +171,35 @@ and the derivation above is used, exactly as before.
 A set base is still capped by the actual income: you cannot plan to divide money
 that never arrived.
 
+The figure the month screen leads with is **what is left of the plan**: the base
+minus what the three groups spent. Not income minus expenses, which counts money
+above the base as spendable and is the one thing a chosen base exists to prevent.
+Unplanned spending comes out of the remainder rather than the plan, so it is not
+subtracted twice, and the remainder is stated under the figure instead of being
+folded into it.
+
 Overspending fixed or variable is marked in red. **Overspending deposits is
 not**, because paying in more than the target is the point, and it is shown as
 "beyond target" instead.
+
+### Saying it mid month
+
+A verdict used to appear only once a month had closed, on the argument that
+"you overspent" mid month is a point in time rather than a finding. That argument
+does not survive how the app works: every standing charge is written as a row the
+moment the month opens, so rent, insurance and both salaries are already counted
+on day one and the comparison is fair from the start.
+
+It holds in one direction. Spending only grows, so **this will not hold** is
+certain and cannot reverse, while "this will hold" is a forecast and is never
+said. Two levels, the same thresholds the end of month summary uses: the plan is
+broken when spending passed the base, and the month eats savings when it passed
+the income.
+
+It stays silent until there is one income entry per member. Income varies from
+month to month, and in a budget for two a single salary entered looks exactly
+like a broken month. One false alarm is enough for both people to stop believing
+the rest.
 
 With no income the month has no base, every target is zero, and a balance would
 read as a large deficit that is not real. Those numbers are suspended until an
@@ -176,10 +207,32 @@ income exists, and the screen leads with a prompt to enter one.
 
 ---
 
+## How it looks
+
+The visual system is **נייר ודיו**, paper and ink: white cards on a near neutral
+page, separated by a hairline rather than a shadow, with an achromatic interface
+where the only colour is information. Category colour appears in exactly three
+places, the dot, the progress bar and the summary segment, and one ink blue
+accent means "you can act on this" and nothing else. Figures are set in their
+own face, tabular, so money reads as measurement.
+
+The confirmed scene is a phone, several times a day, one handed, often in
+daylight, which is why **WCAG AA contrast is a requirement here rather than a
+courtesy**. One file, `src/index.css`, defines colour for both schemes, and the
+neutral ramp inverts rather than swapping: `--color-neutral-100` is always the
+surface and `--color-neutral-900` always the ink, so a component written once is
+correct in light and dark alike.
+
+It is recorded in [DESIGN.md](DESIGN.md), and the product truth it serves in
+[PRODUCT.md](PRODUCT.md).
+
+---
+
 ## Data model
 
 ```
-budgets/household_home_bc43zy    name, ownerUid, ownerEmail, type, billingDay, baseAmount, groupNames
+budgets/household_home_bc43zy    name, ownerUid, ownerEmail, type, billingDay, baseAmount,
+                                 groupNames, outlookWarned
   members/{uid}                  membership itself; each person creates only their own
   recurring/fixed-rent-k3n9x2    a template a monthly row is derived from
   entries/2026-09_fixed_rent_a7f3   month, date, addedAt, category, budgetGroup, amounts, addedBy
@@ -229,12 +282,19 @@ not the one in your own token.
 
 ---
 
-## End of month nudge
+## Notifications
 
 On your billing date, when the cycle that just ended is final, every member gets
 a notification. It has three versions, because a month ends in three different
 ways: money left to deposit, spending beyond a target, or spending beyond the
 income itself.
+
+On any other day the same job sends the mid month warning, and only its severe
+level: spending has already passed the income. A broken plan stays on screen,
+being information rather than something worth interrupting someone for. It is
+sent **once per month**, guarded by `outlookWarned` on the budget document,
+because the same warning arriving for thirty days running is noise people turn
+off.
 
 The date matters. A summary sent on the 30th would describe a month whose largest
 part, the card charges, had not landed yet.
@@ -281,7 +341,8 @@ Values come from Firebase Console → Project settings → Your apps.
 | `npm run test:rules` | Security rules against the emulator (needs Java) |
 | `npm run lint` | oxlint, with `no-undef` on |
 | `npm run deploy:rules` | Push security rules and indexes to Firestore |
-| `npm run nudge` | Run the month end sender locally (needs a service account) |
+| `npm run nudge` | Run the notification sender locally (needs a service account) |
+| `npm run shots` | Recapture every screenshot in `docs/screens/` |
 
 ### Testing
 
@@ -338,10 +399,12 @@ src/
   sw.js          service worker: caching and background notifications
   index.css      design tokens
   App.css        component styles
-scripts/         the month end sender
+scripts/         the notification sender, and the screenshot capture
 tests/           logic, rules and render tests
 docs/screens/    the screenshots in this file
 firestore.rules  security rules
+DESIGN.md        the visual system
+PRODUCT.md       who it is for, and what it is for
 ```
 
 The screenshots come from `shots.html`, which is served only by the dev server and
