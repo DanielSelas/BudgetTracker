@@ -1,7 +1,12 @@
 /**
- * תזכורת סוף חודש. רץ מ-GitHub Actions פעם ביום, ופועל רק ביום האחרון
- * של החודש לפי שעון ישראל. אם נשאר כסף שלא הוצא, שולח לכל חבר בתקציב
- * התראה עם קישור שפותח ישירות הפקדה לקרן.
+ * תזכורות. רץ מ-GitHub Actions פעם ביום, ועושה שני דברים שונים.
+ *
+ * האחד, סיכום במועד החיוב: אם נשאר כסף שלא הוצא, שולח לכל חבר
+ * בתקציב התראה עם קישור שפותח ישירות הפקדה לקרן.
+ *
+ * והשני, אזהרה באמצע החודש כשהוא כבר לא יחזיק. נשלחת פעם אחת לחודש
+ * ולא בכל יום, ורק ברמה החמורה, כלומר כשההוצאות עברו את ההכנסות.
+ * שבירת התוכנית נאמרת במסך בלבד: היא מידע, ולא דבר שמעירים עליו.
  *
  * דורש שני משתני סביבה:
  *   FIREBASE_SERVICE_ACCOUNT  תוכן ה-JSON של מפתח השירות
@@ -10,7 +15,7 @@
 import { cert, initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getMessaging } from 'firebase-admin/messaging'
-import { overspentGroups, summarizeMonth } from '../src/lib/model.js'
+import { monthOutlook, overspentGroups, summarizeMonth } from '../src/lib/model.js'
 
 const TIME_ZONE = 'Asia/Jerusalem'
 const dateIn = (date) =>
@@ -93,6 +98,23 @@ export function nudgeFor({ member, budget, summary }) {
   }
 }
 
+/**
+ * ההודעה של אמצע החודש. בלשון הווה ולא עבר, כי עוד אפשר לעשות
+ * משהו, וזה כל ההבדל בינה לבין סיכום סוף החודש.
+ */
+export function outlookNudge({ member, budget, outlook }) {
+  const name = member.displayName?.trim()
+  const greeting = name ? `היי ${name}, ` : ''
+  const worst = outlook.worst
+  const where = worst ? ` הכי הרבה ב${GROUP_LABEL[worst.group] || worst.group}.` : ''
+
+  return {
+    title: `"${budget.name}" לא יחזיק החודש`,
+    body: `${greeting}כבר יצא ${shekels(outlook.gap)} יותר ממה שנכנס.${where}`,
+    link: `/?nudge=review&budget=${budget.id}`,
+  }
+}
+
 async function main() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT
   // חוסר הגדרה אינו תקלה: הוא אומר שהתכונה לא הודלקה. יציאה נקייה
@@ -115,40 +137,15 @@ async function main() {
   let sent = 0
   let skipped = 0
 
-  for (const budgetDoc of budgets.docs) {
-    const budget = { id: budgetDoc.id, ...budgetDoc.data() }
-
-    const month = dueToday({ billingDay: budget.billingDay, ...context })
-      ?? (force ? context.month : null)
-    if (!month) {
-      skipped += 1
-      continue
-    }
-
-    const entries = await db.collection('budgets').doc(budget.id).collection('entries')
-      .where('month', '==', month)
-      .get()
-
-    const summary = summarizeMonth(entries.docs.map((doc) => doc.data()), {
-      fixedBase: budget.baseAmount,
-    })
-
-    // בלי הכנסה אין מה לסכם בכלל. יתרה שלילית או חריגה מיעד דווקא
-    // כן נשלחות: זה בדיוק המידע ששווה לדעת בסוף החודש.
-    const worthSending = summary.totalIncome > 0
-      && (summary.balance !== 0 || overspentGroups(summary).length > 0)
-    if (!worthSending) {
-      skipped += 1
-      continue
-    }
-
-    const members = await budgetDoc.ref.collection('members').get()
+  // שליחה לכל המכשירים של כל חבר, ואותו ניקוי אסימונים בשני המסלולים
+  const notify = async (members, build) => {
+    let count = 0
     for (const memberDoc of members.docs) {
       const member = memberDoc.data()
       const devices = await db.collection('users').doc(memberDoc.id).collection('devices').get()
       if (devices.empty) continue
 
-      const payload = nudgeFor({ member, budget, summary })
+      const payload = build(member)
       for (const device of devices.docs) {
         try {
           await messaging.send({
@@ -156,7 +153,7 @@ async function main() {
             data: payload,
             webpush: { headers: { Urgency: 'normal', TTL: '86400' } },
           })
-          sent += 1
+          count += 1
         } catch (error) {
           // מכשיר שהוסר או שהאסימון שלו פג. מנקים כדי לא לנסות שוב מחר.
           if (
@@ -171,6 +168,66 @@ async function main() {
         }
       }
     }
+    return count
+  }
+
+  const entriesOf = async (budgetId, month) => {
+    const snapshot = await db.collection('budgets').doc(budgetId).collection('entries')
+      .where('month', '==', month)
+      .get()
+    return snapshot.docs.map((doc) => doc.data())
+  }
+
+  for (const budgetDoc of budgets.docs) {
+    const budget = { id: budgetDoc.id, ...budgetDoc.data() }
+
+    const closing = dueToday({ billingDay: budget.billingDay, ...context })
+      ?? (force ? context.month : null)
+
+    // מסלול ראשון: המחזור נסגר היום, ולכן זה סיכום של חודש שהסתיים
+    if (closing) {
+      const summary = summarizeMonth(await entriesOf(budget.id, closing), {
+        fixedBase: budget.baseAmount,
+      })
+
+      // בלי הכנסה אין מה לסכם בכלל. יתרה שלילית או חריגה מיעד דווקא
+      // כן נשלחות: זה בדיוק המידע ששווה לדעת בסוף החודש.
+      const worthSending = summary.totalIncome > 0
+        && (summary.balance !== 0 || overspentGroups(summary).length > 0)
+      if (!worthSending) {
+        skipped += 1
+        continue
+      }
+
+      const members = await budgetDoc.ref.collection('members').get()
+      sent += await notify(members, (member) => nudgeFor({ member, budget, summary }))
+      continue
+    }
+
+    // מסלול שני: אמצע החודש. פעם אחת לחודש ולא בכל יום, אחרת זו
+    // אותה אזהרה שחוזרת שלושים פעם והופכת לרעש שמכבים
+    if (budget.outlookWarned === context.month) {
+      skipped += 1
+      continue
+    }
+
+    const entries = await entriesOf(budget.id, context.month)
+    const members = await budgetDoc.ref.collection('members').get()
+    const summary = summarizeMonth(entries, { fixedBase: budget.baseAmount })
+    const outlook = monthOutlook(summary, {
+      incomeCount: entries.filter((entry) => entry.category === 'income').length,
+      memberCount: members.size,
+    })
+
+    // רק הרמה החמורה נדחפת לטלפון. שבירת התוכנית נשארת במסך
+    if (outlook?.level !== 'income') {
+      skipped += 1
+      continue
+    }
+
+    sent += await notify(members, (member) => outlookNudge({ member, budget, outlook }))
+    // מסומן אחרי השליחה: כישלון שליחה לא אמור לבלוע את האזהרה לחודש
+    await budgetDoc.ref.update({ outlookWarned: context.month })
   }
 
   console.log(`${context.month}, יום ${context.day}: נשלחו ${sent} התראות, ${skipped} תקציבים דולגו.`)

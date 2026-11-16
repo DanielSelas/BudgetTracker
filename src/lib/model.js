@@ -345,6 +345,54 @@ export function incomeOverage(summary, addedAmount = 0) {
   }
 }
 
+/** מה יצא בתוך התוכנית: שלוש הקבוצות, בלי בלת״ם. */
+export function planSpent(summary) {
+  if (!summary?.groups) return 0
+  return Object.keys(BUDGET_GROUP_RATIOS)
+    .reduce((sum, group) => sum + (summary.groups[group]?.actual || 0), 0)
+}
+
+/** כמה נשאר בתוך התוכנית. בלת״ם יוצא מהעודף ולכן אינו נחסר כאן. */
+export function planRemaining(summary) {
+  return (summary?.baseAmount || 0) - planSpent(summary)
+}
+
+/**
+ * האם החודש כבר לא יחזיק, ולמה.
+ *
+ * אפשר לומר את זה באמצע החודש ולא רק בסופו, כי כל חיוב קבוע מתממש
+ * לשורה ברגע שהחודש נפתח: שכר הדירה, הביטוחים והמשכורות כבר בפנים
+ * ביום הראשון. לכן ההשוואה הוגנת מהיום הראשון, ולא נקודת זמן.
+ *
+ * והיא תקפה רק לכיוון אחד. הוצאות רק עולות, ולכן "לא יחזיק" הוא
+ * ודאי ולא יתהפך, בעוד ש"יחזיק" הוא ניחוש ולכן לא נאמר כאן לעולם.
+ *
+ * שני ספים, כמו בסיכום של סוף החודש: שבירת התוכנית פירושה שהעודף
+ * שיועד להפקדה נאכל, וחריגה מההכנסה פירושה שנאכל החיסכון.
+ *
+ * ושותק עד שיש הכנסה אחת לכל חבר בתקציב, כי עד אז צד ההכנסה חלקי
+ * וכל חריגה שתוצג היא רעש.
+ */
+export function monthOutlook(summary, { incomeCount = 0, memberCount = 1 } = {}) {
+  if (!summary || summary.totalIncome <= 0) return null
+
+  // הכנסה משתנה מחודש לחודש, ולכן אין להתריע כל עוד צד ההכנסה חלקי:
+  // בתקציב של שניים, משכורת אחת שהוזנה נראית כמו חודש שנשבר, וזו
+  // אזהרת שווא. אזהרת שווא אחת מספיקה כדי שיפסיקו להאמין לכולן.
+  if (incomeCount < Math.max(1, memberCount)) return null
+
+  const worst = overspentGroups(summary)[0] || null
+  const over = incomeOverage(summary)
+  if (over) return { level: 'income', gap: over.gap, worst }
+
+  const remaining = planRemaining(summary)
+  if (summary.baseAmount > 0 && remaining < 0) {
+    return { level: 'plan', gap: -remaining, worst }
+  }
+
+  return null
+}
+
 /** באילו קבוצות חרגתם מהיעד, מהגדולה לקטנה. */
 export function overspentGroups(summary) {
   if (!summary?.groups) return []

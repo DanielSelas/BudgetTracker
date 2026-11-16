@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { monthContext, nudgeFor } from '../scripts/month-end-nudge.mjs'
+import { monthContext, nudgeFor, outlookNudge } from '../scripts/month-end-nudge.mjs'
 
 // כל הזמנים ב-UTC. ישראל היא UTC+2 בחורף ו-UTC+3 בקיץ.
 const at = (iso) => new Date(iso)
@@ -189,5 +189,31 @@ describe('מתי מסכמים, לפי מועד החיוב', () => {
     const { dueToday } = await import('../scripts/month-end-nudge.mjs')
     expect(dueToday({ month: '2026-09', day: 30, isLastDay: true })).toBe('2026-09')
     expect(dueToday({ month: '2026-09', day: 20, isLastDay: false })).toBeNull()
+  })
+})
+
+describe('outlookNudge', () => {
+  const budget = { id: 'b1', name: 'משק הבית' }
+
+  it('מנוסח בלשון הווה, ולא כסיכום של חודש שנגמר', () => {
+    const payload = outlookNudge({
+      member: { displayName: 'דניאל' },
+      budget,
+      outlook: { level: 'income', gap: 1400, worst: { group: 'leisure' } },
+    })
+    expect(payload.title).toContain('לא יחזיק')
+    expect(payload.body).toContain('דניאל')
+    expect(payload.body).toContain('הוצאות משתנות')
+    expect(payload.link).toBe('/?nudge=review&budget=b1')
+  })
+
+  it('עובד גם בלי שם ובלי קבוצה חורגת', () => {
+    const payload = outlookNudge({
+      member: {},
+      budget,
+      outlook: { level: 'income', gap: 300, worst: null },
+    })
+    expect(payload.body).not.toContain('undefined')
+    expect(payload.body).not.toContain('היי ,')
   })
 })

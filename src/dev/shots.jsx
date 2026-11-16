@@ -15,6 +15,7 @@ import InboxCard from '../components/InboxCard'
 import CaptureSetup from '../components/CaptureSetup'
 import UnplannedCard from '../components/UnplannedCard'
 import SummaryCard from '../components/SummaryCard'
+import MonthOutlook from '../components/MonthOutlook'
 import MonthPicker from '../components/MonthPicker'
 import EntrySheet from '../components/EntrySheet'
 import EntryRow from '../components/EntryRow'
@@ -391,6 +392,15 @@ const SCREENS = {
           onDismiss={noop}
         />
         <SummaryCard summary={summary} />
+      </div>
+      <BottomNav active="month" onChange={noop} />
+    </main>
+  ),
+  outlook: (
+    <main className="app">
+      <div className="app-scroll">
+        <MonthOutlook outlook={{ level: 'income', gap: 1420, worst: { group: 'leisure' } }} />
+        <MonthOutlook outlook={{ level: 'plan', gap: 860, worst: { group: 'fixed' } }} />
       </div>
       <BottomNav active="month" onChange={noop} />
     </main>

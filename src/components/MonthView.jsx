@@ -4,6 +4,7 @@ import InboxCard from './InboxCard'
 import CaptureSetup from './CaptureSetup'
 import SummaryCard from './SummaryCard'
 import MonthVerdict from './MonthVerdict'
+import MonthOutlook from './MonthOutlook'
 import EndingSoon from './EndingSoon'
 import UpcomingCharges from './UpcomingCharges'
 import Commitments from './Commitments'
@@ -24,7 +25,9 @@ import InvitePanel from './InvitePanel'
 import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
 import { createTemplate, endingSoon, skipMonth, upcomingCharge } from '../lib/recurring'
-import { CATEGORIES, activeMonth, isMonthClosed, summarizeMonth, todayDate } from '../lib/model'
+import {
+  CATEGORIES, activeMonth, isMonthClosed, monthOutlook, summarizeMonth, todayDate,
+} from '../lib/model'
 import { groupOptions, usedGroups, withRemembered } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
 import { useProfiles } from '../hooks/useProfiles'
@@ -250,6 +253,18 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
             />
 
             {isPast && <MonthVerdict summary={summary} />}
+
+            {/* באמצע החודש אפשר כבר לומר שהוא לא יחזיק, כי החיובים
+                הקבועים מתממשים ביום הראשון. שותק עד שיש הכנסה לכל
+                חבר, אחרת צד ההכנסה חלקי וכל אזהרה היא רעש */}
+            {!isPast && (
+              <MonthOutlook
+                outlook={monthOutlook(summary, {
+                  incomeCount: byCategory.income.length,
+                  memberCount: members.sorted.length,
+                })}
+              />
+            )}
 
             {!isPast && (
               <UpcomingCharges

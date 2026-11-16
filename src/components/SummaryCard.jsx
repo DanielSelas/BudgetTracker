@@ -1,4 +1,5 @@
 import { shekels } from '../lib/format'
+import { planRemaining } from '../lib/model'
 
 /**
  * הסיכום של החודש.
@@ -35,8 +36,7 @@ export default function SummaryCard({ summary, onEditBase }) {
   // הכנסה מעל הבסיס היא עודף שאמור להופקד, ולא רשות להוציא יותר.
   // חיסור של כל ההוצאות מהבסיס היה שגוי בכיוון השני, כי הוצאות
   // בלת״ם יוצאות מהעודף ולא מהתוכנית, ולכן נחסרות רק שלוש הקבוצות.
-  const planSpent = SEGMENTS.reduce((sum, { group }) => sum + summary.groups[group].actual, 0)
-  const planRemaining = summary.baseAmount - planSpent
+  const remaining = planRemaining(summary)
   const extra = summary.unplanned.remaining
 
   return (
@@ -46,8 +46,8 @@ export default function SummaryCard({ summary, onEditBase }) {
         {pending ? (
           <span className="amount pending">יחושב אחרי הזנת ההכנסה</span>
         ) : (
-          <span className={`amount num ${planRemaining < 0 ? 'negative' : ''}`}>
-            {shekels(planRemaining)}
+          <span className={`amount num ${remaining < 0 ? 'negative' : ''}`}>
+            {shekels(remaining)}
           </span>
         )}
         {/* העודף נאמר כאן ולא נשמר לכרטיס שבתחתית: אחרת הוא נקרא
