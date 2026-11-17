@@ -902,6 +902,73 @@ describe('סימון הוצאה חד פעמית', () => {
   })
 })
 
+describe('ההכנסות של החודש', () => {
+  const income = [
+    { id: 'i1', name: 'משכורת דניאל', category: 'income', actualAmount: 14200, recurringId: 'r1' },
+    { id: 'i2', name: 'החזר מס', category: 'income', actualAmount: 820 },
+  ]
+
+  /**
+   * להכנסה אין כרטיס במסך החודש, ועד שהמגירה הזו נפתחה מהאריח
+   * שבסיכום, משכורת שהוקלדה בסכום לא נכון לא הייתה ניתנת לתיקון
+   * בשום מקום.
+   */
+  it('המגירה מציגה את השורות ואת הסך הכל', async () => {
+    const { default: IncomeSheet } = await import('../src/components/IncomeSheet')
+    const { getByText, container } = render(
+      <IncomeSheet
+        month="2026-09" entries={income}
+        actions={{ update: async () => {}, remove: () => {} }}
+        onAdd={() => {}} onClose={() => {}}
+      />,
+    )
+    expect(getByText('משכורת דניאל')).toBeTruthy()
+    expect(getByText('החזר מס')).toBeTruthy()
+    // סימני כיווניות בלתי נראים מסביב למספר, ולכן רק ספרות ופסיקים
+    const total = container.querySelector('.sheet-total .num').textContent
+    expect(total.replace(/[^\d,]/g, '')).toBe('15,020')
+  })
+
+  it('חודש בלי הכנסה אומר את זה, ועדיין מציע להוסיף', async () => {
+    const { default: IncomeSheet } = await import('../src/components/IncomeSheet')
+    const { getByText } = render(
+      <IncomeSheet
+        month="2026-09" entries={[]}
+        actions={{ update: async () => {}, remove: () => {} }}
+        onAdd={() => {}} onClose={() => {}}
+      />,
+    )
+    expect(getByText('בחודש הזה עוד לא הוזנה הכנסה.')).toBeTruthy()
+    expect(getByText('+ הוספת הכנסה')).toBeTruthy()
+  })
+
+  /** הסימון נמדד על הוצאות בלבד, וכתב "הוצאה" על שורת משכורת */
+  it('בשורת הכנסה אין סימון הוצאה חד פעמית', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const { getByLabelText, queryByText } = render(
+      <ul>
+        <EntryRow entry={income[0]} onUpdate={async () => {}} onRemove={() => {}} />
+      </ul>,
+    )
+    fireEvent.click(getByLabelText('עריכה של משכורת דניאל'))
+    expect(queryByText('הוצאה חד פעמית')).toBeNull()
+  })
+
+  it('בשורת הוצאה הסימון נשאר', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const { getByLabelText, getByText } = render(
+      <ul>
+        <EntryRow
+          entry={{ ...income[0], category: 'fixed' }}
+          onUpdate={async () => {}} onRemove={() => {}}
+        />
+      </ul>,
+    )
+    fireEvent.click(getByLabelText('עריכה של משכורת דניאל'))
+    expect(getByText('הוצאה חד פעמית')).toBeTruthy()
+  })
+})
+
 describe('קיבוץ שורה שכבר הוזנה', () => {
   const entry = {
     id: 'e1', name: 'מקס סטוק', category: 'leisure',

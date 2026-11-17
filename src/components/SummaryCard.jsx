@@ -14,7 +14,7 @@ const SEGMENTS = [
   { group: 'savings', category: 'fund', label: 'הפקדות' },
 ]
 
-export default function SummaryCard({ summary, onEditBase }) {
+export default function SummaryCard({ summary, onEditBase, onShowIncome }) {
   // בלי הכנסה אין בסיס, אין יעדים, ו"יתרה" שלילית היא לא גירעון אלא
   // פשוט חוסר נתונים. עדיף להשהות את החישוב מאשר להציג מספר מטעה.
   const pending = summary.totalIncome === 0
@@ -90,7 +90,11 @@ export default function SummaryCard({ summary, onEditBase }) {
       <div className="summary-tiles">
         <div>
           <span className="cap">הכנסות</span>
-          <span className="val num">{shekels(summary.totalIncome)}</span>
+          {/* ההכנסות אינן כרטיס במסך, ולכן האריח הזה הוא הדרך היחידה
+              להגיע לשורות עצמן ולתקן משכורת שהוקלדה לא נכון */}
+          <button type="button" className="val num as-button" onClick={onShowIncome}>
+            {shekels(summary.totalIncome)}
+          </button>
         </div>
         <div>
           <span className="cap">הוצאות</span>

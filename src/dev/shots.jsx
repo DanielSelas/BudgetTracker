@@ -17,6 +17,7 @@ import UnplannedCard from '../components/UnplannedCard'
 import SummaryCard from '../components/SummaryCard'
 import MonthOutlook from '../components/MonthOutlook'
 import MonthBreakdown from '../components/MonthBreakdown'
+import IncomeSheet from '../components/IncomeSheet'
 import BaseAmountDialog from '../components/BaseAmountDialog'
 import MonthPicker from '../components/MonthPicker'
 import EntrySheet from '../components/EntrySheet'
@@ -376,6 +377,19 @@ const GroupingRows = () => {
 
 const SCREENS = {
   grouping: <GroupingRows />,
+  // ההכנסות נפתחות מהאריח בסיכום, ולכן הן מוצגות מעל מסך החודש
+  income: (
+    <>
+      <Month />
+      <IncomeSheet
+        month="2026-09"
+        entries={byCategory.income}
+        actions={actions}
+        onAdd={noop}
+        onClose={noop}
+      />
+    </>
+  ),
   month: <Month />, reserve: <Reserve />, home: <Home />,
   types: <Types />, trip: <Trip />, goal: <Goal />, sheet: <SheetShot />, login: <LoginShot />,
   // ההסבר מוצג מעל מסך החודש, כי זה ההקשר שבו הוא מופיע באמת

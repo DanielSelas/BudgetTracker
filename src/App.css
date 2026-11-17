@@ -933,6 +933,18 @@ button:disabled {
   color: var(--color-neutral-600);
 }
 
+/* שורת הסך הכל במגירה: אותו מבנה של שם מימין וסכום משמאל כמו
+   בשורות עצמן, כדי שהיא תיקרא כסיכום שלהן ולא כשורה נוספת */
+.sheet-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-divider);
+  font-weight: 500;
+}
+
 .inline-edit {
   display: flex;
   align-items: center;

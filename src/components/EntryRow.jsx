@@ -123,15 +123,20 @@ export default function EntryRow({
             </div>
           )}
 
-          <button
-            type="button"
-            className="recur-toggle"
-            aria-pressed={oneOff}
-            onClick={() => setOneOff((on) => !on)}
-          >
-            הוצאה חד פעמית
-            <span className="switch"><span className="knob" /></span>
-          </button>
+          {/* הסימון קיים כדי שהוצאה חריגה לא תלמד מה חודש רגיל עולה,
+              והוא נמדד על הוצאות בלבד. בהכנסה הוא לא השפיע על דבר,
+              וגם כתב "הוצאה" על שורת משכורת */}
+          {category !== 'income' && (
+            <button
+              type="button"
+              className="recur-toggle"
+              aria-pressed={oneOff}
+              onClick={() => setOneOff((on) => !on)}
+            >
+              הוצאה חד פעמית
+              <span className="switch"><span className="knob" /></span>
+            </button>
+          )}
 
           {oneOff && (
             <input

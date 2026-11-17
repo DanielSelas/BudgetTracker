@@ -3,6 +3,7 @@ import CategoryCard from './CategoryCard'
 import InboxCard from './InboxCard'
 import CaptureSetup from './CaptureSetup'
 import SummaryCard from './SummaryCard'
+import IncomeSheet from './IncomeSheet'
 import MonthVerdict from './MonthVerdict'
 import MonthOutlook from './MonthOutlook'
 import EndingSoon from './EndingSoon'
@@ -76,6 +77,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
   const [editingBilling, setEditingBilling] = useState(false)
   const [editingBase, setEditingBase] = useState(false)
   const [showCommitments, setShowCommitments] = useState(false)
+  const [showIncome, setShowIncome] = useState(false)
   const [importing, setImporting] = useState(false)
   const [capturing, setCapturing] = useState(false)
   const { byCategory, entries, loading, error } = useEntries(budgetId, month)
@@ -248,7 +250,11 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
 
         {loading ? <Skeleton /> : (
           <>
-            <SummaryCard summary={summary} onEditBase={() => setEditingBase(true)} />
+            <SummaryCard
+              summary={summary}
+              onEditBase={() => setEditingBase(true)}
+              onShowIncome={() => setShowIncome(true)}
+            />
 
             {/* אחרי הסיכום ולא לפניו: היתרה היא הסיבה שהמסך נפתח, וקליטה
                 שממתינה לא אמורה להחליף אותה בטופס סיווג */}
@@ -440,6 +446,18 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
           templates={templates}
           month={month}
           onClose={() => setShowCapacity(false)}
+        />
+      )}
+
+      {showIncome && (
+        <IncomeSheet
+          month={month}
+          entries={byCategory.income}
+          authorOf={shared ? members.get : null}
+          actions={actions}
+          onAdd={() => { setShowIncome(false); openSheet('income') }}
+          onStopRecurring={(entry) => { setShowIncome(false); setPendingStop(entry) }}
+          onClose={() => setShowIncome(false)}
         />
       )}
 
