@@ -46,7 +46,14 @@ export const REST = 'שאר'
  * ולאסוף אותה ל"אחר" זה לזרוק מידע שכבר קיים.
  */
 const labelOf = (entry) =>
-  merchantSector(entry.name) || entry.groupKey || entry.name || OTHER
+  merchantSector(entry.name)
+  // גם מפתח הקיבוץ נבדק כענף ולא רק נלקח כשם. "קפה בחוץ" הוא קבוצה
+  // שהשורות בתוכה נקראות אחרת, ובלי הבדיקה הזו הקבוצה נפלה כשם
+  // ליד פלח "מסעדות ובתי קפה" שנוצר מאותן הוצאות בדיוק
+  || merchantSector(entry.groupKey)
+  || entry.groupKey
+  || entry.name
+  || OTHER
 
 /** המילה הראשונה, או ריק כשאין בה מספיק כדי לאחד לפיה. */
 const firstWord = (label) => {
@@ -92,7 +99,8 @@ export function monthBreakdown(entries = []) {
   for (const entry of chosenSpending(entries)) {
     const label = labelOf(entry)
     const amount = entry.actualAmount || 0
-    const row = totals.get(label) || { amount: 0, named: Boolean(merchantSector(entry.name)) }
+    const named = Boolean(merchantSector(entry.name) || merchantSector(entry.groupKey))
+    const row = totals.get(label) || { amount: 0, named }
     row.amount += amount
     totals.set(label, row)
     total += amount
@@ -149,7 +157,8 @@ export function headlineSector(entries = [], baseAmount = 0) {
   const totals = new Map()
   for (const entry of chosenSpending(entries)) {
     if (entry.category !== 'leisure') continue
-    const sector = merchantSector(entry.name)
+    // אותו זיהוי שהטבעת משתמשת בו, אחרת המשפט מצטט מספר אחר ממנה
+    const sector = merchantSector(entry.name) || merchantSector(entry.groupKey)
     if (!sector) continue
     totals.set(sector, (totals.get(sector) || 0) + (entry.actualAmount || 0))
   }

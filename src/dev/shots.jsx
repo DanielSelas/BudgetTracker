@@ -407,6 +407,8 @@ const SCREENS = {
         entries={[
           { category: 'leisure', name: 'מסעדות ובילויים', actualAmount: 1820 },
           { category: 'leisure', name: 'ארומה', actualAmount: 380 },
+          // קבוצה שהשורה בתוכה נקראת אחרת: אמורה להתאחד עם המסעדות
+          { category: 'leisure', name: 'ביס', groupKey: 'קפה בחוץ', actualAmount: 350 },
           { category: 'leisure', name: 'זארה', actualAmount: 740 },
           { category: 'leisure', name: 'קסטרו', actualAmount: 310 },
           { category: 'leisure', name: 'שופרסל', actualAmount: 1280 },

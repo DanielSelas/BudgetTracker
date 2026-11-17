@@ -234,7 +234,9 @@ not Egged was simply a bug.
 
 A name with no sector is **not swept into "other"**. It becomes its own slice,
 under the grouping key the month screen already shows it by, so the ring and
-the month agree. Names sharing a first word merge into it, which turns two
+the month agree. The grouping key is read as a sector first and only then
+taken as a name, otherwise a group whose rows are named something else sat
+beside the very sector it belongs to. Names sharing a first word merge into it, which turns two
 "gift for X" rows into one "gift" slice: only the first word, and only when two
 or more share it, because any-shared-word would have merged "eating out" with
 "coffee out". The ring draws the eight largest and collapses what is left into

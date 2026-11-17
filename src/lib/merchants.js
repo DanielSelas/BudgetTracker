@@ -11,18 +11,27 @@
  */
 
 /**
+ * רווח כפול, רווח קשיח וסימני כיווניות הם מה שבאמת מגיע מהמקלדת
+ * בטלפון, והם אינם אמורים להכריע אם שורה מזוהה או לא.
+ */
+const normalize = (value) => String(value || '')
+  .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
+  .replace(/\s+/g, ' ')
+  .trim()
+
+/**
  * שבר קצר נבדק כמילה שלמה ולא כתת מחרוזת: "פז" בתוך מילה אחרת אינו
  * תחנת דלק, ובעברית אין גבולות מילה ב-\b של ביטוי רגולרי.
  */
 const hasWord = (text, word) => {
   const lower = word.toLowerCase()
-  return text
+  return normalize(text)
     .split(/[\s*,.\-/()"']+/)
     .some((part) => part.toLowerCase() === lower)
 }
 
 const matches = (name, rule) => {
-  const text = String(name || '').toLowerCase()
+  const text = normalize(name).toLowerCase()
   if (!text) return false
   return (rule.match || []).some((word) => text.includes(word.toLowerCase()))
     || (rule.words || []).some((word) => hasWord(String(name), word))
@@ -140,7 +149,7 @@ export const SECTOR_RULES = [
  * חנות, ו"תחבורה" שנופל ל"אחר" מפני שאינו אגד הוא פשוט באג.
  */
 export const merchantSector = (name) => {
-  const text = String(name || '').toLowerCase()
+  const text = normalize(name).toLowerCase()
   if (!text) return ''
   return SECTOR_RULES.find((rule) =>
     text.includes(rule.sector.toLowerCase()) || matches(name, rule))?.sector || ''

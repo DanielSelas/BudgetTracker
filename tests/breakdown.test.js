@@ -59,6 +59,19 @@ describe('monthBreakdown', () => {
       .toEqual(['משהו שלא ברשימה', 'מסעדות ובתי קפה'])
   })
 
+  it('מאחד קבוצה, ענף ושם שמצביעים על אותו דבר', () => {
+    // "קפה בחוץ" היא קבוצה שהשורות בתוכה נקראות אחרת, וכשהיא נלקחה
+    // כשם היא ישבה כפלח נפרד ליד "מסעדות ובתי קפה" מאותן הוצאות
+    const { slices } = monthBreakdown([
+      entry({ name: 'ביס', groupKey: 'קפה בחוץ', actualAmount: 350 }),
+      entry({ name: 'משהו', groupKey: 'אוכל בחוץ', actualAmount: 1421 }),
+      entry({ name: 'ארומה', actualAmount: 380 }),
+    ])
+    expect(slices).toEqual([
+      { sector: 'מסעדות ובתי קפה', amount: 2151, share: 1 },
+    ])
+  })
+
   it('מעדיף את מפתח הקיבוץ על השם, כמו מסך החודש', () => {
     const { slices } = monthBreakdown([
       entry({ name: 'קפה בחוץ ביום שני', groupKey: 'קפה בחוץ', actualAmount: 30 }),
@@ -125,6 +138,15 @@ describe('headlineSector', () => {
     expect(headlineSector(rows, base).sector).toBe('ביגוד והנעלה')
   })
 
+  it('סופר את הקבוצה כמו הטבעת, ולא מצטט מספר אחר ממנה', () => {
+    const rows = [
+      entry({ name: 'ארומה', actualAmount: 1900 }),
+      entry({ name: 'ביס', groupKey: 'קפה בחוץ', actualAmount: 350 }),
+    ]
+    const { slices } = monthBreakdown(rows)
+    expect(headlineSector(rows, base).amount).toBe(slices[0].amount)
+  })
+
   it('לעולם לא מכריז על "אחר", גם כשהוא רוב החודש', () => {
     const rows = [
       entry({ name: 'מתנה לאיתן', actualAmount: 4000 }),
@@ -188,6 +210,13 @@ describe('זיהוי ענף משם שהוקלד ביד', () => {
   it('"אוכל" לבדו נשאר לא מזוהה, כי הוא גם הסופר', () => {
     expect(monthBreakdown([entry({ name: 'אוכל', actualAmount: 100 })])
       .slices[0].sector).toBe('אוכל')
+  })
+
+  it('רווח כפול או רווח קשיח לא מפילים זיהוי', () => {
+    for (const name of ['אוכל  בחוץ', 'אוכל\u00a0בחוץ', ' אוכל בחוץ ']) {
+      expect(monthBreakdown([entry({ name, actualAmount: 100 })]).slices[0].sector,
+        JSON.stringify(name)).toBe('מסעדות ובתי קפה')
+    }
   })
 
   it('לא שובר זיהוי של בתי עסק אמיתיים', () => {
