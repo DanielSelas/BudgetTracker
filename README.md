@@ -21,7 +21,7 @@ The interface is in Hebrew and right to left throughout.
 
 ## Contents
 
-[Screens](#screens) · [What it does](#what-it-does) · [How the money works](#how-the-money-works) ·
+[What it does](#what-it-does) · [How the money works](#how-the-money-works) ·
 [Budget types](#budget-types) · [Data model](#data-model) · [Security](#security) ·
 [Notifications](#notifications) · [Running locally](#running-locally) ·
 [Deployment](#deployment) · [Project layout](#project-layout)
@@ -32,60 +32,11 @@ Two companion documents carry what this one deliberately leaves out:
 
 ---
 
-## Screens
+<p align="center">
+  <img src="docs/screens/month.png" width="300" alt="The month screen" />
+</p>
 
-<table>
-<tr>
-<td width="33%"><img src="docs/screens/login.png" alt="Sign in" /></td>
-<td width="33%"><img src="docs/screens/home.png" alt="Budget list" /></td>
-<td width="33%"><img src="docs/screens/types.png" alt="Creating a budget" /></td>
-</tr>
-<tr>
-<td align="center"><b>Sign in</b><br/>Email and password, or Google</td>
-<td align="center"><b>My budgets</b><br/>Personal or shared, with an invite code</td>
-<td align="center"><b>New budget</b><br/>Pick a type, and link a trip to a household</td>
-</tr>
-<tr>
-<td><img src="docs/screens/month.png" alt="The month" /></td>
-<td><img src="docs/screens/reserve.png" alt="The remainder" /></td>
-<td><img src="docs/screens/breakdown.png" alt="Where a month went" /></td>
-</tr>
-<tr>
-<td align="center"><b>The month</b><br/>What is left of the plan, and a target per group</td>
-<td align="center"><b>The remainder</b><br/>What is left, what was unplanned, what to deposit</td>
-<td align="center"><b>Where a month went</b><br/>Opened from a bar in the history, by sector</td>
-</tr>
-<tr>
-<td><img src="docs/screens/split.png" alt="The base and its split" /></td>
-<td><img src="docs/screens/commitments.png" alt="Standing commitments" /></td>
-<td><img src="docs/screens/outlook.png" alt="A month that will not hold" /></td>
-</tr>
-<tr>
-<td align="center"><b>The base and its split</b><br/>The percentages are the household's own, and past months keep theirs</td>
-<td align="center"><b>Standing commitments</b><br/>Every recurring charge: amount, the day it moves, when it ends</td>
-<td align="center"><b>A month that will not hold</b><br/>Said mid month, while something can still be done</td>
-</tr>
-<tr>
-<td><img src="docs/screens/trip.png" alt="A trip budget" /></td>
-<td><img src="docs/screens/goal.png" alt="A saving goal" /></td>
-<td><img src="docs/screens/import.png" alt="Importing a statement" /></td>
-</tr>
-<tr>
-<td align="center"><b>A trip</b><br/>One frame, its own categories, no months</td>
-<td align="center"><b>A saving goal</b><br/>A target to fill, deposits and withdrawals</td>
-<td align="center"><b>Import a statement</b><br/>The format and the columns are read from the file</td>
-</tr>
-<tr>
-<td><img src="docs/screens/intro.png" alt="First run" /></td>
-<td><img src="docs/screens/profile.png" alt="Profile" /></td>
-<td></td>
-</tr>
-<tr>
-<td align="center"><b>First run</b><br/>One example carried through four steps</td>
-<td align="center"><b>Profile</b><br/>One name and one colour, everywhere</td>
-<td></td>
-</tr>
-</table>
+<p align="center"><i>The month: what is left of the plan, and a target per group.</i></p>
 
 ---
 
@@ -110,6 +61,11 @@ the phone, and "50 shufersal" waits in an inbox at the top of the month for one 
 to approve. The category is guessed from the merchant name through the same sector
 table the importer uses. No server and no token, because the browser that opens the
 link is already signed in. See [docs/quick-capture.md](docs/quick-capture.md).
+
+<p align="center">
+  <img src="docs/screens/import.png" width="240" alt="Importing a statement: the format and the columns are read from the file" />
+  <br/><i>Importing a statement: the format and the columns are read from the file</i>
+</p>
 
 **Keeping the month readable.** Rows that belong together collapse into one line
 with a running total, so a weekly grocery run does not bury the card. Any row can
@@ -146,6 +102,11 @@ which is the nearest multiple of 5,000 strictly **below** it. The `- 1` is what
 makes an income of exactly 25,000 drop a step to 20,000 rather than allocate every
 shekel.
 
+<p align="center">
+  <img src="docs/screens/split.png" width="240" alt="The base and its split: the percentages are the household's own" />
+  <br/><i>The base and its split: the percentages are the household's own</i>
+</p>
+
 Deriving it has a flaw, though: a month that earned 31,000 raises every target, so
 a good month silently permits more spending, which is backwards for a budget where
 the plan is meant to lead. So the base can be a number you set instead. Set 20,000
@@ -174,6 +135,11 @@ income minus expenses, which counts money above the base as spendable and is the
 one thing a chosen base exists to prevent. Unplanned spending comes out of the
 remainder rather than the plan, so it is never subtracted twice.
 
+<p align="center">
+  <img src="docs/screens/reserve.png" width="240" alt="The remainder: what is left, what was unplanned, what to deposit" />
+  <br/><i>The remainder: what is left, what was unplanned, what to deposit</i>
+</p>
+
 Overspending fixed or variable is marked in red. **Overspending deposits is not**,
 because paying in more than the target is the point, and it reads as "beyond
 target" instead.
@@ -184,6 +150,11 @@ The verdict is said while the month is still running, not after it closes, becau
 every standing charge is written as a row the moment the month opens: rent,
 insurance and both salaries are counted on day one, so the comparison is fair from
 the start.
+
+<p align="center">
+  <img src="docs/screens/outlook.png" width="240" alt="A month that will not hold, said while something can still be done" />
+  <br/><i>A month that will not hold, said while something can still be done</i>
+</p>
 
 It holds in one direction only. Spending grows, so **this will not hold** is certain
 and cannot reverse, while "this will hold" is a forecast and is never said. Two
@@ -199,6 +170,11 @@ is enough for both people to stop believing the rest.
 Every bar in the history is a button that opens that month's breakdown: a ring by
 sector with the figures listed under it, because areas of a circle cannot be
 compared by eye.
+
+<p align="center">
+  <img src="docs/screens/breakdown.png" width="240" alt="Where a month went, opened from a bar in the history" />
+  <br/><i>Where a month went, opened from a bar in the history</i>
+</p>
 
 - **Only money that was chosen is counted**, which is variable spending and the
   unplanned, never the fixed. Rent and the electricity bill are not a decision made
@@ -234,6 +210,17 @@ months to navigate between, recurring charges and a history.
 **Trip** and **saving goal** are different shapes rather than presets of it. Both
 share one amount fixed up front with entries measured against it, and differ in
 which direction that amount moves:
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screens/trip.png" alt="A trip: one frame, its own categories, no months" /></td>
+<td width="50%"><img src="docs/screens/goal.png" alt="A saving goal: a target to fill, deposits and withdrawals" /></td>
+</tr>
+<tr>
+<td align="center"><i>A trip: one frame, its own categories, no months</i></td>
+<td align="center"><i>A saving goal: a target to fill, deposits and withdrawals</i></td>
+</tr>
+</table>
 
 |  | Household | Trip | Saving goal |
 |---|---|---|---|
