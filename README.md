@@ -11,7 +11,7 @@ An installable PWA. No developer account, no app store, no native build.
 ![React](https://img.shields.io/badge/React-19-2a78d6?style=flat-square&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-1f6447?style=flat-square&logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-eb6834?style=flat-square&logo=firebase&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-457%20%2B%20129%20rules-1f6447?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-498%20%2B%20133%20rules-1f6447?style=flat-square)
 
 The interface is in Hebrew and right to left throughout.
 
@@ -64,12 +64,12 @@ The interface is in Hebrew and right to left throughout.
 </tr>
 <tr>
 <td width="33%"><img src="docs/screens/breakdown.png" alt="Where a month went" /></td>
-<td></td>
+<td width="33%"><img src="docs/screens/split.png" alt="The base and its split" /></td>
 <td></td>
 </tr>
 <tr>
 <td align="center"><b>Where a month went</b><br/>Opened from a bar in the history, by sector, without the standing charges</td>
-<td></td>
+<td align="center"><b>The base and its split</b><br/>The three percentages are the household's own, and past months keep theirs</td>
 <td></td>
 </tr>
 </table>
@@ -145,7 +145,7 @@ withdrawal reduces what is credited for that month rather than adding to it.
 
 ---
 
-## The 50/30/20 rule
+## The base and its split
 
 The ratio is not taken from the whole income but from a **base amount**, so a
 liquid margin stays in the account without being allocated to anything.
@@ -165,7 +165,28 @@ The base is the nearest multiple of 5,000 strictly **below** the income:
 The third row is the one that is easy to get wrong: an income that is an exact
 multiple of 5,000 drops a step, which is what the `- 1` is for.
 
-Targets come out of the base: **50%** fixed, **30%** variable, **20%** deposits.
+Targets come out of the base: **50%** fixed, **30%** variable, **20%** deposits
+by default.
+
+### The split is yours
+
+50/30/20 is a rule of thumb, not a law, and a household whose spending does not
+behave that way should move the line rather than argue with the target every
+month. The three percentages are editable beside the base amount, validated to
+exactly 100: any other sum either allocates money that does not exist or leaves
+money with no home, and in both cases the targets lie.
+
+**A past month never moves.** Targets are computed, not stored, so before this
+the ratios and base in force today were applied to every month ever recorded,
+and raising the base would quietly turn an overspent August into a good one.
+Every change is now written to `planHistory` on the budget with the month it
+takes effect from, and a month reads the latest record that is not later than
+itself. The first change also records what was in force until then, under the
+month `0000-00`, so older months resolve to the old plan instead of falling
+through to the new one.
+
+Both members can change it, like the base amount itself. The history is capped
+at 60 records, since it is a field every member can write to.
 
 ### Or set the base yourself
 
@@ -283,7 +304,7 @@ It is recorded in [DESIGN.md](DESIGN.md), and the product truth it serves in
 
 ```
 budgets/household_home_bc43zy    name, ownerUid, ownerEmail, type, billingDay, baseAmount,
-                                 groupNames, outlookWarned
+                                 ratios, planHistory, groupNames, outlookWarned
   members/{uid}                  membership itself; each person creates only their own
   recurring/fixed-rent-k3n9x2    a template a monthly row is derived from
   entries/2026-09_fixed_rent_a7f3   month, date, addedAt, category, budgetGroup, amounts, addedBy

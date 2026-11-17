@@ -929,6 +929,46 @@ describe('סכום בסיס מתוכנן', () => {
   })
 })
 
+describe('יחסי החלוקה והיסטוריית התוכנית', () => {
+  it('שלושה יחסים בין 0 ל-1 מתקבלים', async () => {
+    await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', BUDGET), {
+      ratios: { fixed: 0.4, leisure: 0.4, savings: 0.2 },
+    }))
+    await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', BUDGET), {
+      ratios: { fixed: 0.5, leisure: 0.3, savings: 0.2 },
+    }))
+  })
+
+  it('יחס שלילי, מעל 1 או טקסט נדחה', async () => {
+    for (const ratios of [
+      { fixed: -0.1, leisure: 0.9, savings: 0.2 },
+      { fixed: 1.4, leisure: 0, savings: 0 },
+      { fixed: '0.5', leisure: 0.3, savings: 0.2 },
+    ]) {
+      await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { ratios }))
+    }
+    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { ratios: 'חצי' }))
+  })
+
+  it('היסטוריה נשמרת, אבל לא כמקום אחסון חופשי', async () => {
+    await assertSucceeds(updateDoc(doc(as(OWNER), 'budgets', BUDGET), {
+      planHistory: [
+        { from: '0000-00', baseAmount: 20000, ratios: { fixed: 0.5, leisure: 0.3, savings: 0.2 } },
+        { from: '2026-11', baseAmount: 22000, ratios: { fixed: 0.4, leisure: 0.4, savings: 0.2 } },
+      ],
+    }))
+    const many = Array.from({ length: 61 }, (unused, index) => ({ from: `20${index}-01` }))
+    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { planHistory: many }))
+    await assertFails(updateDoc(doc(as(OWNER), 'budgets', BUDGET), { planHistory: 'כלום' }))
+  })
+
+  it('זר אינו יכול לשנות את החלוקה', async () => {
+    await assertFails(updateDoc(doc(as(STRANGER), 'budgets', BUDGET), {
+      ratios: { fixed: 0.9, leisure: 0.05, savings: 0.05 },
+    }))
+  })
+})
+
 describe('הפקדה מהיתרה', () => {
   it('הדגל מתקבל כשהוא אמת', async () => {
     const body = entry({ category: 'fund', budgetGroup: 'savings', fromRemainder: true })

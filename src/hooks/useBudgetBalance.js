@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot, query, where } from 'firebase/firestore'
 import { entriesRef } from '../lib/paths'
-import { monthKey, summarizeMonth } from '../lib/model'
+import { monthKey, planFor, summarizeMonth } from '../lib/model'
 import { useRetry } from './useRetry'
 
 /**
@@ -11,7 +11,7 @@ import { useRetry } from './useRetry'
  * מה שנוצל מתוך ההכנסה. מקבל null כשאין מה לחשב, כדי שאפשר יהיה
  * לקרוא לו בלי תנאי.
  */
-export function useMonthBalance(budgetId, fixedBase) {
+export function useMonthBalance(budgetId, budget = null) {
   const [balance, setBalance] = useState(null)
   const { attempt, retryIfTransient } = useRetry()
 
@@ -20,20 +20,25 @@ export function useMonthBalance(budgetId, fixedBase) {
       setBalance(null)
       return
     }
-    const monthQuery = query(entriesRef(budgetId), where('month', '==', monthKey()))
+    const month = monthKey()
+    const plan = planFor(budget, month)
+    const monthQuery = query(entriesRef(budgetId), where('month', '==', month))
     return onSnapshot(
       monthQuery,
       (snapshot) => {
-        const month = summarizeMonth(snapshot.docs.map((item) => item.data()), { fixedBase })
+        const summary = summarizeMonth(snapshot.docs.map((item) => item.data()), {
+          fixedBase: plan.baseAmount,
+          ratios: plan.ratios,
+        })
         setBalance({
-          balance: month.balance,
-          income: month.totalIncome,
-          expenses: month.totalExpenses,
+          balance: summary.balance,
+          income: summary.totalIncome,
+          expenses: summary.totalExpenses,
         })
       },
       (err) => { setBalance(null); retryIfTransient(err) },
     )
-  }, [budgetId, fixedBase, attempt, retryIfTransient])
+  }, [budgetId, budget, attempt, retryIfTransient])
 
   return balance
 }

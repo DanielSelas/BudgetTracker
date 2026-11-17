@@ -11,10 +11,57 @@ export const CATEGORIES = {
   unplanned: { label: 'יתרה', short: 'בלת״ם', budgetGroup: 'none' },
 }
 
+/**
+ * ברירת המחדל: 50/30/20. כלל אצבע ותו לא, ולכן אפשר לשנות אותו
+ * לכל תקציב. תקציב שלא נגע בזה ממשיך לפיו בדיוק כמו קודם.
+ */
 export const BUDGET_GROUP_RATIOS = {
   fixed: 0.5,
   leisure: 0.3,
   savings: 0.2,
+}
+
+export const RATIO_GROUPS = ['fixed', 'leisure', 'savings']
+
+/**
+ * יחסים תקינים, או ברירת המחדל.
+ *
+ * שלושתם חייבים לסכום ל-100%. סכום אחר אינו "קרוב מספיק": הוא או
+ * מחלק כסף שאינו קיים או משאיר כסף בלי בית, ובשני המקרים היעדים
+ * משקרים. סטייה של אגורה בחישוב צף כן נסלחת.
+ */
+export function normalizeRatios(ratios) {
+  if (!ratios) return BUDGET_GROUP_RATIOS
+  const values = RATIO_GROUPS.map((group) => Number(ratios[group]))
+  if (values.some((value) => !Number.isFinite(value) || value < 0)) return BUDGET_GROUP_RATIOS
+  const total = values.reduce((sum, value) => sum + value, 0)
+  if (Math.abs(total - 1) > 0.0001) return BUDGET_GROUP_RATIOS
+  return Object.fromEntries(RATIO_GROUPS.map((group, index) => [group, values[index]]))
+}
+
+/** החודש שממנו רשומה ראשונה בהיסטוריה תקפה, כלומר מאז ומעולם. */
+export const PLAN_START = '0000-00'
+
+/**
+ * התוכנית שהייתה בתוקף בחודש מסוים: הבסיס והיחסים.
+ *
+ * חודש שעבר סגור. שינוי שנעשה היום תקף מהחודש הנוכחי והלאה, ולכן
+ * כל שינוי נרשם עם החודש שממנו הוא חל, וחודש קורא את הרשומה
+ * האחרונה שאינה מאוחרת ממנו. בלי זה שינוי של הבסיס היה מחשב מחדש
+ * גם חודשים שכבר נסגרו, והיסטוריה הייתה משתנה מתחת לידיים.
+ */
+export function planFor(budget, month) {
+  const history = Array.isArray(budget?.planHistory) ? budget.planHistory : []
+  const match = history
+    .filter((item) => item && typeof item.from === 'string' && item.from <= month)
+    .sort((a, b) => a.from.localeCompare(b.from))
+    .at(-1)
+
+  const source = match || budget || {}
+  return {
+    baseAmount: Math.max(0, Number(source.baseAmount) || 0),
+    ratios: normalizeRatios(source.ratios),
+  }
 }
 
 export const BASE_STEP = 5000
@@ -63,9 +110,44 @@ export function calcUnplanned(totalIncome, baseAmount) {
   return Math.max(0, totalIncome - baseAmount)
 }
 
-/** היעד הכספי של קבוצת תקציב לפי 50/30/20 מתוך סכום הבסיס. */
-export function groupTarget(baseAmount, budgetGroup) {
-  return baseAmount * (BUDGET_GROUP_RATIOS[budgetGroup] ?? 0)
+/** היעד הכספי של קבוצת תקציב, לפי היחסים של אותו חודש. */
+export function groupTarget(baseAmount, budgetGroup, ratios = BUDGET_GROUP_RATIOS) {
+  return baseAmount * (ratios[budgetGroup] ?? 0)
+}
+
+/** כמה שינויי תוכנית נשמרים. אחד לחודש לכל היותר, ולכן חמש שנים. */
+export const PLAN_HISTORY_MAX = 60
+
+/**
+ * ההיסטוריה אחרי שינוי תוכנית.
+ *
+ * בשינוי הראשון נרשם גם מה שהיה עד כה, עם חודש התחלה ריק. בלי זה
+ * חודשים ישנים היו נופלים לערך החדש ומשתנים למפרע, וזו בדיוק
+ * ההבטחה שחודש סגור לא זז. שינוי נוסף באותו חודש דורס את הרשומה
+ * שלו, אחרת כל תיקון של טעות היה מוסיף שורה.
+ */
+export function nextPlanHistory(budget, month, baseAmount, ratios) {
+  const history = Array.isArray(budget?.planHistory) ? [...budget.planHistory] : []
+
+  if (!history.length) {
+    history.push({
+      from: PLAN_START,
+      baseAmount: Math.max(0, Number(budget?.baseAmount) || 0),
+      ratios: normalizeRatios(budget?.ratios),
+    })
+  }
+
+  const row = {
+    from: month,
+    baseAmount: Math.max(0, Number(baseAmount) || 0),
+    ratios: normalizeRatios(ratios),
+  }
+  const at = history.findIndex((item) => item?.from === month)
+  if (at >= 0) history[at] = row
+  else history.push(row)
+
+  history.sort((a, b) => String(a?.from).localeCompare(String(b?.from)))
+  return history.slice(-PLAN_HISTORY_MAX)
 }
 
 /** פורמט חודש כמו שנשמר ב-Firestore: 2026-09 */
@@ -77,7 +159,8 @@ export function monthKey(date = new Date()) {
  * כל החישובים של מסך החודש במקום אחד, כפונקציה טהורה.
  * baseAmount נגזר מההכנסה בפועל ולעולם אינו נתון לעריכה ידנית.
  */
-export function summarizeMonth(entries, { fixedBase } = {}) {
+export function summarizeMonth(entries, { fixedBase, ratios: given } = {}) {
+  const ratios = normalizeRatios(given)
   const sumActual = (list) => list.reduce((total, entry) => total + (entry.actualAmount || 0), 0)
   const sumPlanned = (list) => list.reduce((total, entry) => total + (entry.plannedAmount || 0), 0)
 
@@ -103,10 +186,10 @@ export function summarizeMonth(entries, { fixedBase } = {}) {
   const unplannedSpent = sumActual(unplannedEntries) + depositedFromRemainder
 
   const groups = {}
-  for (const group of Object.keys(BUDGET_GROUP_RATIOS)) {
+  for (const group of RATIO_GROUPS) {
     const inGroup = entries.filter((entry) => entry.budgetGroup === group)
     const actual = sumActual(inGroup)
-    const target = groupTarget(baseAmount, group)
+    const target = groupTarget(baseAmount, group, ratios)
     groups[group] = {
       actual,
       planned: sumPlanned(inGroup),
@@ -121,6 +204,9 @@ export function summarizeMonth(entries, { fixedBase } = {}) {
     totalIncome,
     totalExpenses,
     balance: totalIncome - totalExpenses,
+    // היחסים נוסעים עם הסיכום: מי שקורא אותו לא אמור לדעת מאיזה
+    // חודש הוא בא כדי לדעת לפי מה הוא חושב
+    ratios,
     baseAmount,
     usesFixedBase,
     // כמה מהבסיס שתוכנן לא נכנס בפועל, כדי שאפשר יהיה לומר זאת
@@ -348,7 +434,7 @@ export function incomeOverage(summary, addedAmount = 0) {
 /** מה יצא בתוך התוכנית: שלוש הקבוצות, בלי בלת״ם. */
 export function planSpent(summary) {
   if (!summary?.groups) return 0
-  return Object.keys(BUDGET_GROUP_RATIOS)
+  return RATIO_GROUPS
     .reduce((sum, group) => sum + (summary.groups[group]?.actual || 0), 0)
 }
 

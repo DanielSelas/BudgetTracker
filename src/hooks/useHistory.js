@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { onSnapshot, query, where } from 'firebase/firestore'
 import { entriesRef } from '../lib/paths'
 import { useRetry } from './useRetry'
-import { monthKey, shiftMonth, summarizeMonth } from '../lib/model'
+import { monthKey, planFor, shiftMonth, summarizeMonth } from '../lib/model'
 
 /** רשימת מפתחות החודשים מהישן לחדש, מסתיימת בחודש הנוכחי. */
 export function recentMonths(count) {
@@ -14,7 +14,7 @@ export function recentMonths(count) {
  * מאזין לכל הרשומות של התקציב מחודש מסוים ואילך, ומסכם כל חודש בנפרד.
  * הסינון הוא טווח על מחרוזת החודש, שמסודרת לקסיקוגרפית בדיוק כמו כרונולוגית.
  */
-export function useHistory(budgetId, monthCount = 6, fixedBase = 0) {
+export function useHistory(budgetId, monthCount = 6, budget = null) {
   const months = useMemo(() => recentMonths(monthCount), [monthCount])
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
@@ -51,8 +51,18 @@ export function useHistory(budgetId, monthCount = 6, fixedBase = 0) {
     for (const entry of entries) {
       if (byMonth.has(entry.month)) byMonth.get(entry.month).push(entry)
     }
-    return months.map((month) => ({ month, ...summarizeMonth(byMonth.get(month), { fixedBase }) }))
-  }, [entries, months, fixedBase])
+    // כל חודש נמדד לפי התוכנית שהייתה בתוקף בו, ולא לפי זו של היום
+    return months.map((month) => {
+      const plan = planFor(budget, month)
+      return {
+        month,
+        ...summarizeMonth(byMonth.get(month), {
+          fixedBase: plan.baseAmount,
+          ratios: plan.ratios,
+        }),
+      }
+    })
+  }, [entries, months, budget])
 
   const hasData = useMemo(
     () => series.some((point) => point.totalIncome > 0 || point.totalExpenses > 0),

@@ -1,5 +1,5 @@
 import { merchantSector } from './merchants'
-import { BUDGET_GROUP_RATIOS } from './model'
+import { normalizeRatios } from './model'
 
 /**
  * על מה יצא הכסף החודש, לפי ענף.
@@ -150,8 +150,8 @@ export function ringSlices(slices = []) {
  * ונבדק רק על הוצאות משתנות. סופר הוא ענף גדול בכל חודש, והוא
  * אינו בחירה שמעניין להצביע עליה.
  */
-export function headlineSector(entries = [], baseAmount = 0) {
-  const target = baseAmount * BUDGET_GROUP_RATIOS.leisure
+export function headlineSector(entries = [], baseAmount = 0, ratios) {
+  const target = baseAmount * normalizeRatios(ratios).leisure
   if (target <= 0) return null
 
   const totals = new Map()

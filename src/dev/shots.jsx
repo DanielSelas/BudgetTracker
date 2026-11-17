@@ -17,6 +17,7 @@ import UnplannedCard from '../components/UnplannedCard'
 import SummaryCard from '../components/SummaryCard'
 import MonthOutlook from '../components/MonthOutlook'
 import MonthBreakdown from '../components/MonthBreakdown'
+import BaseAmountDialog from '../components/BaseAmountDialog'
 import MonthPicker from '../components/MonthPicker'
 import EntrySheet from '../components/EntrySheet'
 import EntryRow from '../components/EntryRow'
@@ -396,6 +397,17 @@ const SCREENS = {
       </div>
       <BottomNav active="month" onChange={noop} />
     </main>
+  ),
+  split: (
+    <>
+      <main className="app"><div className="app-scroll" /></main>
+      <BaseAmountDialog
+        value={20000}
+        ratios={{ fixed: 0.4, leisure: 0.4, savings: 0.2 }}
+        onSave={noop}
+        onCancel={noop}
+      />
+    </>
   ),
   breakdown: (
     <>

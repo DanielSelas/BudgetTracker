@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { calcBaseAmount, monthKey, summarizeMonth } from '../src/lib/model'
+import {
+  BUDGET_GROUP_RATIOS, PLAN_HISTORY_MAX, PLAN_START, calcBaseAmount, monthKey,
+  nextPlanHistory, normalizeRatios, planFor, summarizeMonth,
+} from '../src/lib/model'
 
 const entry = (overrides) => ({
   category: 'fixed', budgetGroup: 'fixed', name: 'x',
@@ -617,5 +620,100 @@ describe('חיוב שנגמר לא מופיע בציר', () => {
     const after = buildTimeline({ templates: [loan], today: new Date(2026, 8, 1) })
     expect(before.map((event) => event.name)).toEqual(['הלוואה'])
     expect(after).toEqual([])
+  })
+})
+
+describe('תוכנית לפי חודש', () => {
+  const ratios = (fixed, leisure, savings) => ({ fixed, leisure, savings })
+
+  it('בלי היסטוריה משתמש במה שעל התקציב', () => {
+    const plan = planFor({ baseAmount: 20000 }, '2026-11')
+    expect(plan.baseAmount).toBe(20000)
+    expect(plan.ratios).toEqual(BUDGET_GROUP_RATIOS)
+  })
+
+  it('חודש שעבר נשאר על התוכנית שהייתה בו', () => {
+    const budget = {
+      baseAmount: 24000,
+      ratios: ratios(0.4, 0.4, 0.2),
+      planHistory: [
+        { from: PLAN_START, baseAmount: 20000, ratios: ratios(0.5, 0.3, 0.2) },
+        { from: '2026-11', baseAmount: 24000, ratios: ratios(0.4, 0.4, 0.2) },
+      ],
+    }
+    expect(planFor(budget, '2026-10')).toEqual({
+      baseAmount: 20000, ratios: ratios(0.5, 0.3, 0.2),
+    })
+    expect(planFor(budget, '2026-11')).toEqual({
+      baseAmount: 24000, ratios: ratios(0.4, 0.4, 0.2),
+    })
+    expect(planFor(budget, '2027-03').baseAmount).toBe(24000)
+  })
+
+  it('יחסים לא תקינים חוזרים לברירת המחדל', () => {
+    expect(normalizeRatios(ratios(0.5, 0.3, 0.1))).toEqual(BUDGET_GROUP_RATIOS)
+    expect(normalizeRatios(ratios(0.6, 0.6, -0.2))).toEqual(BUDGET_GROUP_RATIOS)
+    expect(normalizeRatios({ fixed: '0.5', leisure: 0.3, savings: 0.2 }))
+      .toEqual(BUDGET_GROUP_RATIOS)
+    expect(normalizeRatios(null)).toEqual(BUDGET_GROUP_RATIOS)
+    expect(normalizeRatios(ratios(0.4, 0.4, 0.2))).toEqual(ratios(0.4, 0.4, 0.2))
+  })
+
+  it('היעדים נגזרים מהיחסים של אותו חודש', () => {
+    const entries = [
+      { category: 'income', actualAmount: 20000 },
+      { category: 'fixed', budgetGroup: 'fixed', actualAmount: 1000 },
+    ]
+    const half = summarizeMonth(entries, { fixedBase: 20000 })
+    const forty = summarizeMonth(entries, { fixedBase: 20000, ratios: ratios(0.4, 0.4, 0.2) })
+    expect(half.groups.fixed.target).toBe(10000)
+    expect(forty.groups.fixed.target).toBe(8000)
+    expect(forty.groups.leisure.target).toBe(8000)
+    expect(forty.ratios).toEqual(ratios(0.4, 0.4, 0.2))
+  })
+})
+
+describe('רישום שינוי תוכנית', () => {
+  const ratios = (fixed, leisure, savings) => ({ fixed, leisure, savings })
+  const now = ratios(0.4, 0.4, 0.2)
+
+  it('השינוי הראשון שומר גם את מה שהיה, כדי שחודש ישן לא יזוז', () => {
+    const history = nextPlanHistory({ baseAmount: 20000 }, '2026-11', 24000, now)
+    expect(history).toEqual([
+      { from: PLAN_START, baseAmount: 20000, ratios: BUDGET_GROUP_RATIOS },
+      { from: '2026-11', baseAmount: 24000, ratios: now },
+    ])
+    // וזו ההבטחה עצמה, דרך הקורא
+    expect(planFor({ planHistory: history }, '2026-10').baseAmount).toBe(20000)
+    expect(planFor({ planHistory: history }, '2026-11').baseAmount).toBe(24000)
+  })
+
+  it('שינוי נוסף באותו חודש דורס ולא מוסיף', () => {
+    const first = nextPlanHistory({ baseAmount: 20000 }, '2026-11', 24000, now)
+    const second = nextPlanHistory({ planHistory: first }, '2026-11', 25000, now)
+    expect(second).toHaveLength(2)
+    expect(second.at(-1).baseAmount).toBe(25000)
+  })
+
+  it('שומר על סדר כרונולוגי גם כשנרשם לאחור', () => {
+    const history = nextPlanHistory(
+      { planHistory: [{ from: '2026-11', baseAmount: 24000, ratios: now }] },
+      '2026-09', 18000, BUDGET_GROUP_RATIOS,
+    )
+    expect(history.map((item) => item.from)).toEqual(['2026-09', '2026-11'])
+  })
+
+  it('חסום באורך, כדי שלא יהפוך למקום אחסון על המסמך', () => {
+    let budget = { baseAmount: 1000 }
+    for (let index = 0; index < PLAN_HISTORY_MAX + 10; index += 1) {
+      const month = `2${String(index).padStart(3, '0')}-01`
+      budget = { planHistory: nextPlanHistory(budget, month, 1000 + index, BUDGET_GROUP_RATIOS) }
+    }
+    expect(budget.planHistory).toHaveLength(PLAN_HISTORY_MAX)
+  })
+
+  it('יחסים לא תקינים נרשמים כברירת המחדל ולא כפי שהם', () => {
+    const history = nextPlanHistory({}, '2026-11', 20000, ratios(0.9, 0.9, 0.9))
+    expect(history.at(-1).ratios).toEqual(BUDGET_GROUP_RATIOS)
   })
 })

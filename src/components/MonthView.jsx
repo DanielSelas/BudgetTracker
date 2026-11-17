@@ -26,7 +26,7 @@ import { useEntries, entryActions } from '../hooks/useEntries'
 import { useRecurring } from '../hooks/useRecurring'
 import { createTemplate, endingSoon, skipMonth, upcomingCharge } from '../lib/recurring'
 import {
-  CATEGORIES, activeMonth, isMonthClosed, monthOutlook, summarizeMonth, todayDate,
+  CATEGORIES, activeMonth, isMonthClosed, monthOutlook, planFor, summarizeMonth, todayDate,
 } from '../lib/model'
 import { groupOptions, usedGroups, withRemembered } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
@@ -37,7 +37,7 @@ import { useHistory } from '../hooks/useHistory'
 import { buildChatContext } from '../lib/chatContext'
 import { chatEnabled } from '../lib/features'
 import {
-  deleteBudget, rememberGroupNames, renameBudget, setBaseAmount, setBillingDay,
+  deleteBudget, rememberGroupNames, renameBudget, setBasePlan, setBillingDay,
 } from '../lib/budgets'
 import { importEntries } from '../lib/importEntries'
 import { rememberSectors } from '../lib/sectors'
@@ -143,11 +143,14 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
     },
   }), [base, budgetId, month, uid])
 
-  const fixedBase = budget?.baseAmount
+  // התוכנית של החודש הזה, ולא של היום: חודש שעבר נמדד לפי הבסיס
+  // והיחסים שהיו בתוקף אז
+  const current = activeMonth(billingDay)
+  const plan = useMemo(() => planFor(budget, month), [budget, month])
   const summary = useMemo(() => {
-    const base = summarizeMonth(entries, { fixedBase })
+    const base = summarizeMonth(entries, { fixedBase: plan.baseAmount, ratios: plan.ratios })
     return { ...base, upcoming: upcomingCharge(entries, templates) }
-  }, [entries, fixedBase, templates])
+  }, [entries, plan, templates])
   // הקבוצות שכבר בשימוש החודש ומה שנשמר מחודשים שעברו, כדי שהוספה
   // חוזרת תהיה בחירה ולא הקלדה גם ב-1 בחודש
   const groups = useMemo(() => usedGroups(entries, remembered), [entries, remembered])
@@ -218,7 +221,7 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
         <MonthPicker
           month={month}
           onChange={setMonth}
-          current={activeMonth(billingDay)}
+          current={current}
           subtitle={budget ? `${budget.name} · ${shared ? 'משותף' : 'אישי'}` : ''}
           billingDay={billingDay}
         />
@@ -455,8 +458,10 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
       {editingBase && (
         <BaseAmountDialog
           value={budget?.baseAmount}
-          onSave={async (next) => {
-            await setBaseAmount({ budgetId, baseAmount: next })
+          ratios={planFor(budget, current).ratios}
+          appliesFrom={month === current ? '' : current}
+          onSave={async (next, ratios) => {
+            await setBasePlan({ budgetId, budget, month: current, baseAmount: next, ratios })
             setEditingBase(false)
           }}
           onCancel={() => setEditingBase(false)}

@@ -11,7 +11,7 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { db } from './firebase'
-import { DEFAULT_BILLING_DAY } from './model'
+import { DEFAULT_BILLING_DAY, nextPlanHistory, normalizeRatios } from './model'
 import { budgetId as readableBudgetId, entriesRef, entryRef } from './paths'
 
 const INVITE_TTL_DAYS = 7
@@ -262,9 +262,21 @@ export function setBillingDay({ budgetId, billingDay }) {
 }
 
 /** סכום הבסיס שהמשתמש מתכנן. אפס מחזיר לגזירה אוטומטית מההכנסה. */
-export function setBaseAmount({ budgetId, baseAmount }) {
+/**
+ * הבסיס והיחסים, עם החודש שממנו הם חלים.
+ *
+ * חודש שעבר סגור: שינוי היום תקף מהחודש הנוכחי והלאה. בניית
+ * ההיסטוריה עצמה יושבת ב-model.js כפונקציה טהורה, כי היא ההבטחה
+ * שחודש סגור לא זז ולא משהו שכדאי לבדוק רק מול Firestore.
+ */
+export function setBasePlan({ budgetId, budget, month, baseAmount, ratios }) {
+  const amount = Math.max(0, Number(baseAmount) || 0)
+  const next = normalizeRatios(ratios)
+
   return updateDoc(doc(db, 'budgets', budgetId), {
-    baseAmount: Math.max(0, Number(baseAmount) || 0),
+    baseAmount: amount,
+    ratios: next,
+    planHistory: nextPlanHistory(budget, month, amount, next),
   })
 }
 

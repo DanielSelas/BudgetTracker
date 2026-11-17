@@ -15,7 +15,7 @@ function Remaining({ budget }) {
   const frame = isFrameBudget(budget)
   const goal = isGoal(budget)
   // שני ה-hooks נקראים תמיד, ומי שלא רלוונטי מקבל null ולא מאזין לכלום
-  const balance = useMonthBalance(frame ? null : budget.id, budget.baseAmount)
+  const balance = useMonthBalance(frame ? null : budget.id, budget)
   const spent = useFrameTotal(frame ? budget.id : null, goal)
 
   if (frame) {

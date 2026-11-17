@@ -2939,3 +2939,24 @@ input[type='file'] {
   font-size: 13px;
   color: var(--color-neutral-600);
 }
+
+/* ========== עריכת החלוקה ========== */
+
+/* שדה אחוז צר: שלוש ספרות לכל היותר, ורוחב שמרמז על כך */
+.ratio-input {
+  width: 68px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.row-unit {
+  flex-shrink: 0;
+  margin-inline-start: -4px;
+  color: var(--color-neutral-600);
+}
+
+/* הסכום שאינו 100% הוא שגיאה ולא עצה, ולכן הוא נקרא כמו שגיאה */
+.hint.warn {
+  font-weight: 500;
+  color: var(--color-danger);
+}

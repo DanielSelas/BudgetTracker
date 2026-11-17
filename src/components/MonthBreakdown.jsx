@@ -45,9 +45,10 @@ const ring = (slices, fills) => slices.reduce((built, slice) => {
  * גזרה בעין, ולכן לכל שורה יש שם, סכום ואחוז. הצבע מקבץ ענפים
  * קרובים למשפחה אחת, והוא תוספת לזהות ולא הזהות עצמה.
  */
-export default function MonthBreakdown({ month, entries, baseAmount = 0, onClose }) {
+export default function MonthBreakdown({ month, entries, baseAmount = 0, ratios, onClose }) {
   const { slices, total } = useMemo(() => monthBreakdown(entries), [entries])
-  const headline = useMemo(() => headlineSector(entries, baseAmount), [entries, baseAmount])
+  const headline = useMemo(
+    () => headlineSector(entries, baseAmount, ratios), [entries, baseAmount, ratios])
   // הטבעת מציירת את הגדולים, והרשימה שמתחת מפרטת את כולם
   const shown = useMemo(() => ringSlices(slices), [slices])
   const fills = useMemo(() => sliceColors([...slices, ...shown]), [slices, shown])

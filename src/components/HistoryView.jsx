@@ -14,8 +14,8 @@ const shortMonth = (key) => SHORT[Number(key.split('-')[1]) - 1]
 
 const BAR_HEIGHT = 160
 
-export default function HistoryView({ budgetId, fixedBase = 0 }) {
-  const { entries, series, loading, error, hasData } = useHistory(budgetId, 6, fixedBase)
+export default function HistoryView({ budgetId, budget = null }) {
+  const { entries, series, loading, error, hasData } = useHistory(budgetId, 6, budget)
   const [opened, setOpened] = useState('')
   const current = monthKey()
 
@@ -138,6 +138,7 @@ export default function HistoryView({ budgetId, fixedBase = 0 }) {
           month={opened}
           entries={entries.filter((entry) => entry.month === opened)}
           baseAmount={series.find((point) => point.month === opened)?.baseAmount || 0}
+          ratios={series.find((point) => point.month === opened)?.ratios}
           onClose={() => setOpened('')}
         />
       )}
