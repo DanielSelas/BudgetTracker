@@ -333,7 +333,46 @@ function Goal() {
   )
 }
 
+/**
+ * עריכת שורה עם הקיבוץ שבה. נפתחת בלחיצה, ולכן הצילום נעשה אחרי
+ * לחיצה על השם ולא מהמצב ההתחלתי.
+ */
+const GroupingRows = () => {
+  const rows = [
+    { id: 'g1', name: 'מקס סטוק', category: 'leisure', actualAmount: 92, date: '2026-09-04' },
+    { id: 'g2', name: 'מקס סטוק סניף 12', category: 'leisure', actualAmount: 41, date: '2026-09-11' },
+    { id: 'g3', name: 'מקס סטוק רמת גן', category: 'leisure', actualAmount: 67, date: '2026-09-19' },
+  ]
+  return (
+    <main className="app">
+      <div className="app-scroll">
+        <section className="cat-card" data-category="leisure">
+          <div className="cat-head">
+            <span className="cat-title"><span className="dot" /><h2>משתנות</h2></span>
+            <span className="cat-total num"><strong>{shekels(200)}</strong></span>
+          </div>
+          <ul className="entry-list">
+            {rows.map((row) => (
+              <EntryRow
+                key={row.id}
+                entry={row}
+                categories={[]}
+                groups={['מסעדות', 'סופר', 'ביגוד']}
+                samePlace={(entry) => rows.filter((other) => other.id !== entry.id)}
+                onUpdate={async () => {}}
+                onRemove={noop}
+              />
+            ))}
+          </ul>
+        </section>
+      </div>
+      <BottomNav active="month" onChange={noop} />
+    </main>
+  )
+}
+
 const SCREENS = {
+  grouping: <GroupingRows />,
   month: <Month />, reserve: <Reserve />, home: <Home />,
   types: <Types />, trip: <Trip />, goal: <Goal />, sheet: <SheetShot />, login: <LoginShot />,
   // ההסבר מוצג מעל מסך החודש, כי זה ההקשר שבו הוא מופיע באמת

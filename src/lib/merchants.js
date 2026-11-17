@@ -14,7 +14,7 @@
  * רווח כפול, רווח קשיח וסימני כיווניות הם מה שבאמת מגיע מהמקלדת
  * בטלפון, והם אינם אמורים להכריע אם שורה מזוהה או לא.
  */
-const normalize = (value) => String(value || '')
+export const normalize = (value) => String(value || '')
   .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
   .replace(/\s+/g, ' ')
   .trim()

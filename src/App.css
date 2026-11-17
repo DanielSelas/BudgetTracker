@@ -1528,6 +1528,12 @@ button:disabled {
 
 .recur-toggle:hover { background: var(--color-neutral-100); }
 
+/* תווית ארוכה נשברת לשתי שורות במקום לדחוף את המתג אל מחוץ לכפתור */
+.recur-toggle.wrap {
+  white-space: normal;
+  text-align: start;
+}
+
 .switch {
   width: 42px;
   height: 24px;

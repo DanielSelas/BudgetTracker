@@ -98,6 +98,9 @@ export function entryActions({ budgetId, month, uid }) {
       // הסימון נשמר כנוכחות השדה ולא כערך, ולכן ביטול חייב למחוק
       // אותו. כתיבת false הייתה נדחית בכללים ונשארת במסמך
       ...('oneOff' in changes && !changes.oneOff ? { oneOff: deleteField() } : {}),
+      // אותו דבר בקיבוץ: שורה בלי קיבוץ היא שורה בלי השדה, ומחרוזת
+      // ריקה הייתה קבוצה בשם ריק שמאחדת אליה כל מי שיצא מקבוצה
+      ...('groupKey' in changes && !changes.groupKey ? { groupKey: deleteField() } : {}),
     }),
 
     remove: (id) => deleteDoc(entryRef(budgetId, id)),

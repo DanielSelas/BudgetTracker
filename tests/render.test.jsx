@@ -902,6 +902,130 @@ describe('סימון הוצאה חד פעמית', () => {
   })
 })
 
+describe('קיבוץ שורה שכבר הוזנה', () => {
+  const entry = {
+    id: 'e1', name: 'מקס סטוק', category: 'leisure',
+    actualAmount: 90, month: '2025-10',
+  }
+  const others = [
+    { id: 'e2', name: 'מקס סטוק סניף 12', actualAmount: 40 },
+    { id: 'e3', name: 'מקס סטוק רמת גן', actualAmount: 70 },
+  ]
+
+  /**
+   * זה מה שהיה חסר: מי ששכח ללחוץ על הקיבוץ בשעת ההוצאה נאלץ למחוק
+   * את השורה ולהזין אותה מחדש כדי לצרף אותה לקבוצה.
+   */
+  it('בחירת קבוצה בעריכה נשמרת על השורה', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const onUpdate = vi.fn(async () => {})
+    const { getByText, getByLabelText } = render(
+      <ul>
+        <EntryRow
+          entry={entry} groups={['מסעדות', 'סופר']}
+          onUpdate={onUpdate} onRemove={() => {}}
+        />
+      </ul>,
+    )
+    fireEvent.click(getByLabelText(`עריכה של ${entry.name}`))
+    fireEvent.click(getByText('מסעדות'))
+    fireEvent.click(getByText('שמור'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(onUpdate).toHaveBeenCalledWith('e1', expect.objectContaining({
+      groupKey: 'מסעדות',
+    }))
+  })
+
+  it('שורה שלא נגעו בקיבוץ שלה אינה שולחת את השדה', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const onUpdate = vi.fn(async () => {})
+    const { getByText, getByLabelText } = render(
+      <ul><EntryRow entry={entry} onUpdate={onUpdate} onRemove={() => {}} /></ul>,
+    )
+    fireEvent.click(getByLabelText(`עריכה של ${entry.name}`))
+    fireEvent.click(getByText('שמור'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(onUpdate.mock.calls[0][1]).not.toHaveProperty('groupKey')
+  })
+
+  /** ריק במפורש, כדי שהשדה יימחק ולא יישאר כקבוצה בשם ריק */
+  it('ניקוי הקבוצה נשלח כריק', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const onUpdate = vi.fn(async () => {})
+    const { getByText, getByLabelText, getByPlaceholderText } = render(
+      <ul>
+        <EntryRow
+          entry={{ ...entry, groupKey: 'ביגוד' }}
+          onUpdate={onUpdate} onRemove={() => {}}
+        />
+      </ul>,
+    )
+    fireEvent.click(getByLabelText(`עריכה של ${entry.name}`))
+    fireEvent.change(getByPlaceholderText('קיבוץ תחת שם (לא חובה)'), {
+      target: { value: '' },
+    })
+    fireEvent.click(getByText('שמור'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(onUpdate.mock.calls[0][1].groupKey).toBe('')
+  })
+
+  it('ההצעה לצרף את השאר מופיעה רק אחרי שנבחרה קבוצה', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const { getByText, getByLabelText, queryByText } = render(
+      <ul>
+        <EntryRow
+          entry={entry} groups={['ביגוד']} samePlace={() => others}
+          onUpdate={async () => {}} onRemove={() => {}}
+        />
+      </ul>,
+    )
+    fireEvent.click(getByLabelText(`עריכה של ${entry.name}`))
+    expect(queryByText('לצרף גם עוד 2 שורות מאותו מקום')).toBeNull()
+    fireEvent.click(getByText('ביגוד'))
+    expect(getByText('לצרף גם עוד 2 שורות מאותו מקום')).toBeTruthy()
+  })
+
+  it('צירוף השאר מקבץ את כולן באותו שם', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const onUpdate = vi.fn(async () => {})
+    const { getByText, getByLabelText } = render(
+      <ul>
+        <EntryRow
+          entry={entry} groups={['ביגוד']} samePlace={() => others}
+          onUpdate={onUpdate} onRemove={() => {}}
+        />
+      </ul>,
+    )
+    fireEvent.click(getByLabelText(`עריכה של ${entry.name}`))
+    fireEvent.click(getByText('ביגוד'))
+    fireEvent.click(getByText('לצרף גם עוד 2 שורות מאותו מקום'))
+    fireEvent.click(getByText('שמור'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(onUpdate.mock.calls.map(([id]) => id)).toEqual(['e1', 'e2', 'e3'])
+    expect(onUpdate.mock.calls[1][1]).toEqual({ groupKey: 'ביגוד' })
+  })
+
+  it('בלי סימון ההצעה, השאר נשארות כפי שהן', async () => {
+    const { default: EntryRow } = await import('../src/components/EntryRow')
+    const onUpdate = vi.fn(async () => {})
+    const { getByText, getByLabelText } = render(
+      <ul>
+        <EntryRow
+          entry={entry} groups={['ביגוד']} samePlace={() => others}
+          onUpdate={onUpdate} onRemove={() => {}}
+        />
+      </ul>,
+    )
+    fireEvent.click(getByLabelText(`עריכה של ${entry.name}`))
+    fireEvent.click(getByText('ביגוד'))
+    fireEvent.click(getByText('שמור'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('מסך כמה פנוי לי', () => {
   const templates = [
     { id: 'salary', name: 'משכורת', active: true, category: 'income', actualAmount: 20000, startMonth: '2026-01' },

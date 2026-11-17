@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { dayMonth, shekels, stampDay } from '../lib/format'
 import { displayName } from '../lib/members'
+import { MAX_GROUP_LENGTH, normalizeGroup } from '../lib/groups'
 
 /**
  * שורה בכרטיס קטגוריה, ועריכה שלה במקום.
@@ -11,7 +12,8 @@ import { displayName } from '../lib/members'
  * לא לחזור, בלי שאמרו לו.
  */
 export default function EntryRow({
-  entry, author, categories = [], onUpdate, onRemove, onStopRecurring,
+  entry, author, categories = [], groups = [], samePlace,
+  onUpdate, onRemove, onStopRecurring,
 }) {
   const [editing, setEditing] = useState(false)
   const [actual, setActual] = useState(String(entry.actualAmount ?? 0))
@@ -19,7 +21,14 @@ export default function EntryRow({
   const [category, setCategory] = useState(entry.category)
   const [oneOff, setOneOff] = useState(Boolean(entry.oneOff))
   const [note, setNote] = useState(entry.note || '')
+  const [group, setGroup] = useState(normalizeGroup(entry.groupKey))
+  const [alsoPlace, setAlsoPlace] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  // השורות האחרות מאותו מקום, שעוד לא קובצו. נקראות רק כשהעריכה
+  // פתוחה, כי זו השאלה שנשאלת שם ולא בכל שורה במסך
+  const others = useMemo(
+    () => (editing && samePlace ? samePlace(entry) : []), [editing, samePlace, entry])
 
   function open() {
     setActual(String(entry.actualAmount ?? 0))
@@ -27,6 +36,8 @@ export default function EntryRow({
     setCategory(entry.category)
     setOneOff(Boolean(entry.oneOff))
     setNote(entry.note || '')
+    setGroup(normalizeGroup(entry.groupKey))
+    setAlsoPlace(false)
     setEditing(true)
   }
 
@@ -40,7 +51,14 @@ export default function EntryRow({
       if (category !== entry.category) changes.category = category
       if (oneOff !== Boolean(entry.oneOff)) changes.oneOff = oneOff
       if (note.trim() !== (entry.note || '')) changes.note = note.trim()
+      const key = normalizeGroup(group)
+      if (key !== normalizeGroup(entry.groupKey)) changes.groupKey = key
       await onUpdate(entry.id, changes)
+      // האחרות אחרי השורה שנערכה ובאותו שם, כדי שהקבוצה תיראה
+      // בבת אחת ולא תיבנה שורה שורה לעיני המשתמש
+      if (key && alsoPlace) {
+        for (const other of others) await onUpdate(other.id, { groupKey: key })
+      }
       setEditing(false)
     } finally {
       setBusy(false)
@@ -130,6 +148,58 @@ export default function EntryRow({
               השורה נשארת בחודש הזה במלואה. היא רק לא תיחשב כשמחשבים
               כמה חודש רגיל עולה לכם.
             </span>
+          )}
+
+          {/* הקיבוץ בעריכה ולא רק בהזנה: מי ששכח ללחוץ עליו בשעת
+              ההוצאה מתקן את זה כאן, במקום למחוק ולהזין מחדש.
+              בהכנסה אין קיבוץ, בדיוק כמו במגירת ההזנה */}
+          {category !== 'income' && (
+            <div className="group-field">
+              {groups.length > 0 && (
+                <div className="group-chips">
+                  {groups.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      className="cat-pill"
+                      aria-pressed={group === name}
+                      onClick={() => setGroup((current) => (current === name ? '' : name))}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <input
+                className="input"
+                maxLength={MAX_GROUP_LENGTH}
+                placeholder="קיבוץ תחת שם (לא חובה)"
+                value={group}
+                onChange={(event) => setGroup(event.target.value)}
+              />
+
+              {/* ההצעה מופיעה רק כשיש קבוצה ויש למי לצרף, כי בלי
+                  אחד מהם היא שאלה בלי תשובה */}
+              {normalizeGroup(group) && others.length > 0 && (
+                <button
+                  type="button"
+                  className="recur-toggle wrap"
+                  aria-pressed={alsoPlace}
+                  onClick={() => setAlsoPlace((on) => !on)}
+                >
+                  {others.length === 1
+                    ? 'לצרף גם עוד שורה מאותו מקום'
+                    : `לצרף גם עוד ${others.length} שורות מאותו מקום`}
+                  <span className="switch"><span className="knob" /></span>
+                </button>
+              )}
+
+              {normalizeGroup(group) && others.length > 0 && alsoPlace && (
+                <span className="type-hint">
+                  {others.map((other) => other.name).join(', ')}
+                </span>
+              )}
+            </div>
           )}
 
           <div className="row-edit-foot">

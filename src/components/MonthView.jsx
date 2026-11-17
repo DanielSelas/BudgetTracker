@@ -28,7 +28,7 @@ import { createTemplate, endingSoon, skipMonth, upcomingCharge } from '../lib/re
 import {
   CATEGORIES, activeMonth, isMonthClosed, monthOutlook, planFor, summarizeMonth, todayDate,
 } from '../lib/model'
-import { groupOptions, usedGroups, withRemembered } from '../lib/groups'
+import { groupOptions, samePlace, usedGroups, withRemembered } from '../lib/groups'
 import { displayName, memberIndex } from '../lib/members'
 import { useProfiles } from '../hooks/useProfiles'
 import { useSectorRules } from '../hooks/useSectorRules'
@@ -128,6 +128,11 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
   // מערך חדש בכל רינדור, אחרת כל מי שתלוי בזה היה מחושב מחדש תמיד
   const remembered = budget?.groupNames || NO_GROUPS
 
+  // הקבוצות שכבר בשימוש החודש ומה שנשמר מחודשים שעברו, כדי שהוספה
+  // חוזרת תהיה בחירה ולא הקלדה גם ב-1 בחודש
+  const groups = useMemo(() => usedGroups(entries, remembered), [entries, remembered])
+  const monthGroups = useMemo(() => usedGroups(entries), [entries])
+
   const actions = useMemo(() => ({
     ...base,
     add: async ({ recurring, ...values }) => {
@@ -141,7 +146,11 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
       if (entry?.recurringId) await skipMonth(budgetId, entry.recurringId, month)
       return base.remove(entryId)
     },
-  }), [base, budgetId, month, uid])
+    // שמות הקבוצות והשורות מאותו מקום נוסעים עם הפעולות ולא כ-props
+    // נפרדים: הם נצרכים בשורה, שלוש שכבות מכאן
+    groups,
+    samePlace: (entry) => samePlace(entries, entry),
+  }), [base, budgetId, month, uid, entries, groups])
 
   // התוכנית של החודש הזה, ולא של היום: חודש שעבר נמדד לפי הבסיס
   // והיחסים שהיו בתוקף אז
@@ -151,10 +160,6 @@ export default function MonthView({ budgetId, budget, uid, nudge, capture, onBac
     const base = summarizeMonth(entries, { fixedBase: plan.baseAmount, ratios: plan.ratios })
     return { ...base, upcoming: upcomingCharge(entries, templates) }
   }, [entries, plan, templates])
-  // הקבוצות שכבר בשימוש החודש ומה שנשמר מחודשים שעברו, כדי שהוספה
-  // חוזרת תהיה בחירה ולא הקלדה גם ב-1 בחודש
-  const groups = useMemo(() => usedGroups(entries, remembered), [entries, remembered])
-  const monthGroups = useMemo(() => usedGroups(entries), [entries])
 
   /**
    * כל קבוצה שרואים בחודש נשמרת על התקציב.

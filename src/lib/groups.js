@@ -6,6 +6,8 @@
  * דלק, בית מרקחת וכל דבר אחר שחוזר, בלי להוסיף קטגוריות למודל.
  */
 
+import { normalize } from './merchants'
+
 export const MAX_GROUP_LENGTH = 40
 
 /**
@@ -148,4 +150,42 @@ export function groupOptions(entries = [], remembered = []) {
     .map((key) => ({ key, total: 0, category: '' }))
 
   return [...open, ...waiting]
+}
+
+/**
+ * המזהה של המקום שבו נעשתה ההוצאה, לפי השם.
+ *
+ * שתי המילים הראשונות ולא השם המלא: אותה חנות חוזרת עם זנב שונה
+ * בכל חיוב, "מקס סטוק" פעם אחת ו"מקס סטוק סניף 12" בפעם הבאה, ושם
+ * מלא היה הופך אותן לשני מקומות. ולא מילה אחת, כי "מקס" לבדו היה
+ * מצרף גם "מקס ברנר".
+ *
+ * שם של מילה אחת נשאר כפי שהוא, ושם קצר מדי אינו מקום בכלל: שלוש
+ * אותיות הן הסף שמתחתיו צירוף הוא ניחוש ולא זיהוי.
+ */
+export function placeKey(name) {
+  const words = normalize(name).toLowerCase().split(/[\s,./\-־()"']+/).filter(Boolean)
+  if (words.length === 0) return ''
+  const key = words.slice(0, 2).join(' ')
+  return key.length >= 3 ? key : ''
+}
+
+/**
+ * שורות אחרות באותו חודש מאותו מקום, שעוד אינן מקובצות.
+ *
+ * זו התשובה ל"פתאום כמה הוצאות במקס סטוק": מי שעורך שורה אחת רואה
+ * מיד את האחרות ויכול לקבץ את כולן בלחיצה, במקום לפתוח כל שורה
+ * בנפרד ולהקליד את אותו שם שוב.
+ *
+ * רק שורות בלי קיבוץ. שורה שכבר שייכת לקבוצה אחרת נבחרה לשם בכוונה,
+ * והעברה שלה משם היא החלטה ולא תוצר צד של עריכת שורה אחרת.
+ */
+export function samePlace(entries = [], entry) {
+  const key = placeKey(entry?.name)
+  if (!key) return []
+  return entries.filter((other) =>
+    other.id !== entry.id
+    && !normalizeGroup(other.groupKey)
+    && !other.linkedTripId
+    && placeKey(other.name) === key)
 }

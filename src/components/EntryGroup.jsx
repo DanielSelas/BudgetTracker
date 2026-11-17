@@ -34,6 +34,8 @@ export default function EntryGroup({
               entry={entry}
               author={authorOf?.(entry.addedBy)}
               categories={categories}
+              groups={actions.groups}
+              samePlace={actions.samePlace}
               onUpdate={actions.update}
               onRemove={actions.remove}
               onStopRecurring={onStopRecurring}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  MAX_REMEMBERED_GROUPS, groupEntries, groupOptions, normalizeGroup, usedGroups, withRemembered,
+  MAX_REMEMBERED_GROUPS, groupEntries, groupOptions, normalizeGroup, placeKey, samePlace,
+  usedGroups, withRemembered,
 } from '../src/lib/groups'
 
 const entry = (id, actualAmount, groupKey) => ({ id, actualAmount, groupKey, name: id })
@@ -168,5 +169,44 @@ describe('קבוצות שנשמרות מחודש לחודש', () => {
   it('הקבוצה שנשמרה מציעה שם ולא קטגוריה', () => {
     const [option] = groupOptions([], ['סופר'])
     expect(option.category).toBe('')
+  })
+})
+
+describe('שורות מאותו מקום', () => {
+  const row = (id, name, groupKey) => ({ id, name, actualAmount: 50, groupKey })
+
+  it('זנב שונה בשם אינו מקום אחר', () => {
+    expect(placeKey('מקס סטוק סניף 12')).toBe(placeKey('מקס סטוק'))
+  })
+
+  it('מילה ראשונה משותפת לבדה אינה אותו מקום', () => {
+    expect(placeKey('מקס סטוק')).not.toBe(placeKey('מקס ברנר'))
+  })
+
+  it('שם קצר מדי אינו מקום', () => {
+    expect(placeKey('בר')).toBe('')
+    expect(placeKey('')).toBe('')
+  })
+
+  it('מציע את האחרות מאותו מקום, בלי השורה עצמה', () => {
+    const entries = [
+      row('a', 'מקס סטוק'),
+      row('b', 'מקס סטוק סניף 12'),
+      row('c', 'מקס סטוק תל אביב'),
+      row('d', 'רמי לוי'),
+    ]
+    const others = samePlace(entries, entries[0])
+    expect(others.map((other) => other.id)).toEqual(['b', 'c'])
+  })
+
+  /** קבוצה אחרת נבחרה בכוונה, ואין לשנות אותה בדרך אגב */
+  it('שורה שכבר מקובצת אינה מוצעת', () => {
+    const entries = [row('a', 'מקס סטוק'), row('b', 'מקס סטוק', 'ביגוד')]
+    expect(samePlace(entries, entries[0])).toEqual([])
+  })
+
+  it('שורה בלי שם אינה מקום, ולכן אין למה לצרף', () => {
+    const entries = [row('a', ''), row('b', '')]
+    expect(samePlace(entries, entries[0])).toEqual([])
   })
 })

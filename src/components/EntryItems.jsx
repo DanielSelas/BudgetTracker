@@ -26,6 +26,8 @@ export default function EntryItems({
             entry={item.entry}
             author={authorOf?.(item.entry.addedBy)}
             categories={categories}
+            groups={actions.groups}
+            samePlace={actions.samePlace}
             onUpdate={actions.update}
             onRemove={actions.remove}
             onStopRecurring={onStopRecurring}
