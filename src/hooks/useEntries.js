@@ -7,6 +7,27 @@ import { CATEGORIES, todayDate } from '../lib/model'
 import { useRetry } from './useRetry'
 
 /**
+ * הרשומות לפי קטגוריה, כשחיוב שנולד מתבנית עולה לראש שלה.
+ *
+ * בקבועות זה ההבדל בין שתי רשימות שונות באותו כרטיס: שכר דירה,
+ * ארנונה וביטוח הם מה שהחודש כבר מחויב בו בלי שאיש נגע, ומה שהוקלד
+ * ביד החודש הוא מה שבאמת קרה. בלי זה הסדר היה לפי מזהה המסמך,
+ * כלומר לפי השם, ושכר הדירה נפל באמצע הרשימה.
+ *
+ * מיון יציב, ולכן בתוך כל אחת משתי הקבוצות הסדר נשאר כשהיה.
+ */
+export function groupByCategory(entries = []) {
+  const grouped = { income: [], fixed: [], leisure: [], fund: [], unplanned: [] }
+  for (const entry of entries) {
+    if (grouped[entry.category]) grouped[entry.category].push(entry)
+  }
+  for (const list of Object.values(grouped)) {
+    list.sort((a, b) => Boolean(b.recurringId) - Boolean(a.recurringId))
+  }
+  return grouped
+}
+
+/**
  * מאזין לרשומות של תקציב וחודש מסוימים.
  * onSnapshot מחזיר עדכון מיידי גם כשבן/בת הזוג מזינים משורה אחרת.
  */
@@ -42,13 +63,7 @@ export function useEntries(budgetId, month) {
     )
   }, [budgetId, month, attempt, retryIfTransient])
 
-  const byCategory = useMemo(() => {
-    const grouped = { income: [], fixed: [], leisure: [], fund: [], unplanned: [] }
-    for (const entry of entries) {
-      if (grouped[entry.category]) grouped[entry.category].push(entry)
-    }
-    return grouped
-  }, [entries])
+  const byCategory = useMemo(() => groupByCategory(entries), [entries])
 
   return { entries, byCategory, loading, error }
 }

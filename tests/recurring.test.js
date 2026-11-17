@@ -20,6 +20,7 @@ import {
   materializedEntryId,
   pendingTemplates,
 } from '../src/lib/recurring'
+import { groupByCategory } from '../src/hooks/useEntries'
 
 const template = (overrides = {}) => ({
   id: 't1',
@@ -317,5 +318,34 @@ describe('חיוב שאינו חודשי', () => {
     expect(intervalLabel(1)).toBe('כל חודש')
     expect(intervalLabel(2)).toBe('כל חודשיים')
     expect(intervalLabel(3)).toBe('כל 3 חודשים')
+  })
+})
+
+describe('סדר השורות בכרטיס', () => {
+  const row = (id, category, recurringId) => ({ id, category, name: id, recurringId })
+
+  /**
+   * שכר דירה נפל באמצע הרשימה כי הסדר הגיע ממזהה המסמך, כלומר מהשם.
+   * מה שהחודש כבר מחויב בו עומד למעלה, ומה שהוקלד ביד אחריו.
+   */
+  it('חיוב מתבנית עולה לראש הקטגוריה', () => {
+    const { fixed } = groupByCategory([
+      row('ארנונה', 'fixed'),
+      row('שכר דירה', 'fixed', 'r1'),
+      row('תיקון דוד', 'fixed'),
+      row('ביטוח', 'fixed', 'r2'),
+    ])
+    expect(fixed.map((entry) => entry.id)).toEqual(['שכר דירה', 'ביטוח', 'ארנונה', 'תיקון דוד'])
+  })
+
+  it('בתוך כל קבוצה הסדר נשאר כשהיה', () => {
+    const { leisure } = groupByCategory([
+      row('ב', 'leisure'), row('א', 'leisure'), row('ג', 'leisure'),
+    ])
+    expect(leisure.map((entry) => entry.id)).toEqual(['ב', 'א', 'ג'])
+  })
+
+  it('קטגוריה שאינה מוכרת אינה מפילה את החישוב', () => {
+    expect(groupByCategory([row('x', 'שטויות')]).fixed).toEqual([])
   })
 })

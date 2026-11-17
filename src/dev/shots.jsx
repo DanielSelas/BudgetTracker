@@ -22,6 +22,7 @@ import MonthPicker from '../components/MonthPicker'
 import EntrySheet from '../components/EntrySheet'
 import EntryRow from '../components/EntryRow'
 import { shekels } from '../lib/format'
+import { groupByCategory } from '../hooks/useEntries'
 import {
   BUDGET_TYPES, CATEGORIES, GOAL_CATEGORIES, GOAL_ORDER,
   TRIP_CATEGORIES, TRIP_ORDER,
@@ -59,8 +60,8 @@ const summary = {
   ...summarizeMonth(entries, { fixedBase: 20000 }),
   upcoming: upcomingCharge(entries, templates),
 }
-const byCategory = { income: [], fixed: [], leisure: [], fund: [], unplanned: [] }
-entries.forEach((e) => byCategory[e.category].push(e))
+// דרך אותה פונקציה כמו באפליקציה, אחרת הצילום מראה סדר אחר מהמסך
+const byCategory = groupByCategory(entries)
 // אותו סדר כמו ב-MonthView: הכנסה אינה כרטיס קטגוריה
 const ORDER = ['fixed', 'leisure', 'fund']
 
